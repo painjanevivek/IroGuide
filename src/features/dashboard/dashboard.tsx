@@ -22,6 +22,7 @@ export function Dashboard() {
     if (!user) return;
     const db = getFirebaseClientFirestore();
     const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", user.uid), limit(30));
+
     return onSnapshot(
       reviewsQuery,
       (snapshot) => {
@@ -30,15 +31,19 @@ export function Dashboard() {
           .filter((review): review is StoredReview => review !== null)
           .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
           .slice(0, 12);
+        setLoadError("");
         setReviews(nextReviews);
         setLoading(false);
       },
       (error) => {
         setLoadError(error.message);
+        setReviews([]);
         setLoading(false);
       },
     );
   }, [user]);
+
+  if (!user) return null;
 
   const progress = calculateProgress(reviews);
 

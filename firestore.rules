@@ -6,8 +6,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function ownsExistingReview() {
+    function ownsExistingDocument() {
       return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function ownsReview(reviewId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/reviews/$(reviewId)).data.userId == request.auth.uid;
     }
 
     match /users/{userId} {
@@ -16,18 +21,17 @@ service cloud.firestore {
     }
 
     match /reviews/{reviewId} {
-      allow read: if ownsExistingReview();
+      allow read: if ownsExistingDocument();
       allow write: if false;
 
       match /messages/{messageId} {
-        allow read: if signedIn()
-          && get(/databases/$(database)/documents/reviews/$(reviewId)).data.userId == request.auth.uid;
+        allow read: if ownsReview(reviewId);
         allow write: if false;
       }
     }
 
     match /uploads/{uploadId} {
-      allow read: if ownsExistingReview();
+      allow read: if ownsExistingDocument();
       allow write: if false;
     }
   }
