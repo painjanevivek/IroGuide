@@ -4,8 +4,7 @@ import { useState } from "react";
 import { Check, Clipboard, LoaderCircle, Sparkles, WandSparkles } from "lucide-react";
 import { improvementOutputSchema, type ImprovementOutput } from "@/domain/improvement";
 import type { ReviewOutput } from "@/domain/review";
-import { apiBaseUrl } from "@/config/api";
-import { getErrorMessage, readJsonResponse } from "@/lib/http";
+import { postJsonWithFallback } from "@/lib/api-client";
 
 export function ImprovementPanel({ review }: { review: ReviewOutput }) {
   const [output, setOutput] = useState<ImprovementOutput | null>(null);
@@ -16,9 +15,12 @@ export function ImprovementPanel({ review }: { review: ReviewOutput }) {
   async function generate() {
     setLoading(true); setError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/improvements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review, target: "human-designer" }) });
-      const payload = await readJsonResponse(response, "The improvement plan is unavailable right now.");
-      if (!response.ok) throw new Error(getErrorMessage(payload, "The improvement plan is unavailable right now."));
+      const payload = await postJsonWithFallback({
+        path: "/api/improvements",
+        unavailableMessage: "The improvement plan is unavailable right now.",
+        failureMessage: "The improvement plan is unavailable right now.",
+        init: { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review, target: "human-designer" }) },
+      });
       setOutput(improvementOutputSchema.parse(payload));
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The improvement plan failed."); }
     finally { setLoading(false); }

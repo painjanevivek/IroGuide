@@ -5,9 +5,8 @@ import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LoaderCircle, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
 import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
-import { apiBaseUrl } from "@/config/api";
 import { useAuth } from "@/features/auth/auth-provider";
-import { getErrorMessage, readJsonResponse } from "@/lib/http";
+import { postJsonWithFallback } from "@/lib/api-client";
 import { ImprovementPanel } from "./improvement-panel";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -70,12 +69,16 @@ export function ReviewStudio() {
     try {
       const idToken = await user?.getIdToken();
       if (!idToken) throw new Error("Sign in again before starting a critique.");
-      const response = await fetch(`${apiBaseUrl}/api/reviews`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ category, mode, file: { name: file.name, type: file.type, size: file.size }, brief }),
+      const payload = await postJsonWithFallback({
+        path: "/api/reviews",
+        unavailableMessage: "The review service is not available right now.",
+        failureMessage: "Review failed.",
+        init: {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ category, mode, file: { name: file.name, type: file.type, size: file.size }, brief }),
+        },
       });
-      const payload = await readJsonResponse(response, "The review service is not available right now.");
-      if (!response.ok) throw new Error(getErrorMessage(payload, "Review failed."));
       const parsed = reviewOutputSchema.parse(payload);
       setReview(parsed);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : "Review failed. Please try again."); }
