@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import { siteConfig } from "@/config/site";
+import { AuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <a className="skip-link" href="#app-content">Skip to main content</a>
-        <div id="app-content">{children}</div>
+        <AuthProvider>
+          <div id="app-content">{children}</div>
+        </AuthProvider>
       </body>
     </html>
   );

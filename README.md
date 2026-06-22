@@ -12,6 +12,16 @@ npm run dev
 The frontend runs on `http://localhost:3000` and expects the backend defined by
 `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`).
 
+## Firebase setup
+
+1. Copy `.env.example` to `.env.local` and fill the Firebase web app values.
+2. Keep Google sign-in enabled in Firebase Authentication.
+3. Publish the rules in `firestore.rules` to allow signed-in users to read only
+   their own backend-created reviews.
+
+The browser signs in with Firebase, sends the ID token to the backend, and reads
+review history from Firestore.
+
 ## Quality checks
 
 ```powershell
