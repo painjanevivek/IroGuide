@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-  signOut as firebaseSignOut,
-  type User,
-} from "firebase/auth";
+import type { User } from "firebase/auth";
 import {
   createContext,
   useCallback,
@@ -35,25 +29,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsubscribe = () => {};
+    let active = true;
+
     try {
       const auth = getFirebaseClientAuth();
-      unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-        setUser(nextUser);
-        setLoading(false);
-      });
+      void import("firebase/auth")
+        .then(({ onAuthStateChanged }) => {
+          if (!active) return;
+          unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+            setUser(nextUser);
+            setLoading(false);
+          });
+        })
+        .catch((setupError) => {
+          if (!active) return;
+          const message = setupError instanceof Error ? setupError.message : "Firebase authentication could not load.";
+          setError(message);
+          setLoading(false);
+        });
     } catch (setupError) {
       const message = setupError instanceof Error ? setupError.message : "Firebase is not configured.";
       queueMicrotask(() => {
+        if (!active) return;
         setError(message);
         setLoading(false);
       });
     }
-    return () => unsubscribe();
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
+      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(getFirebaseClientAuth(), provider);
@@ -65,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     setError("");
     try {
+      const { signOut: firebaseSignOut } = await import("firebase/auth");
       await firebaseSignOut(getFirebaseClientAuth());
     } catch (signOutError) {
       setError(signOutError instanceof Error ? signOutError.message : "Sign-out failed.");
