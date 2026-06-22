@@ -1,33 +1,37 @@
 import { categoryLabels, type ReviewOutput, type ReviewRequest } from "./review";
+import { getReviewRubric } from "./rubrics";
 import type { ImprovementOutput, ImprovementRequest } from "./improvement";
+
+const demoScorePattern = [6.4, 7.1, 7.5, 7.8, 7.2] as const;
 
 export function createDemoReview(request: ReviewRequest): ReviewOutput {
   const category = categoryLabels[request.category];
+  const rubric = getReviewRubric(request.category);
   const audience = request.brief.audience.trim();
   const goal = request.brief.goal.trim();
   const style = request.brief.style.trim();
   const primaryConcern = request.brief.concern?.trim();
   const modePrefix = request.mode === "friendly" ? "Clear next step" : request.mode === "direct" ? "Priority fix" : "Mentor note";
+  const scoreDimensions = rubric.dimensions.map((dimension, index) => ({
+    label: dimension.label,
+    score: demoScorePattern[index] ?? 7,
+  }));
 
   return {
     id: `demo-${stableHash(`${request.file.name}:${audience}:${goal}`)}`,
     createdAt: new Date().toISOString(),
     overallScore: 7.2,
-    summary: `The ${category.toLowerCase()} has a workable foundation for ${audience}, but the visual hierarchy needs a clearer first read before it can fully support ${goal}.`,
+    summary: `The ${category.toLowerCase()} has a workable foundation for ${audience}, but ${rubric.dimensions[0].label.toLowerCase()} needs a clearer first read before it can fully support ${goal}.`,
     strengths: [
       `The ${style.toLowerCase()} direction gives the work a recognizable starting point.`,
       `The brief is specific enough to judge the design against audience and purpose.`,
       "The core asset is simple enough to refine without rebuilding the whole concept.",
     ],
-    scores: [
-      { label: "Hierarchy", score: 6.4 },
-      { label: "Clarity", score: 7.1 },
-      { label: "Audience fit", score: 7.5 },
-      { label: "Execution", score: 7.8 },
-    ],
+    scores: scoreDimensions,
+    rubricVersion: rubric.version,
     issues: [
       {
-        category: "Hierarchy",
+        category: rubric.dimensions[0].label,
         score: 6.4,
         priority: "high",
         observation: primaryConcern || "The main idea and supporting details compete for attention.",
@@ -40,7 +44,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
         ],
       },
       {
-        category: "Purpose fit",
+        category: rubric.dimensions[1].label,
         score: 7,
         priority: "medium",
         observation: `The design direction is promising, but it does not yet make "${goal}" unmistakable.`,
@@ -52,7 +56,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
         ],
       },
       {
-        category: "Polish",
+        category: rubric.dimensions[2].label,
         score: 8,
         priority: "low",
         observation: "The composition has enough restraint to be refined through spacing and alignment.",

@@ -11,6 +11,7 @@ function review(overrides: ReviewFixture): ReviewOutput & { category?: string } 
     overallScore: overrides.overallScore ?? 7.2,
     summary: overrides.summary ?? "The design has a clear foundation. It needs a more deliberate first read.",
     strengths: overrides.strengths ?? ["Clear audience direction"],
+    rubricVersion: overrides.rubricVersion ?? "2026-06-iroguide-v1",
     scores: overrides.scores ?? [
       { label: "Hierarchy", score: 6 },
       { label: "Audience fit", score: 8 },

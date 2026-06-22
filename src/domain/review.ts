@@ -4,6 +4,8 @@ export const reviewCategories = [
   "logo", "poster", "social", "ui", "website", "book-cover", "packaging", "other",
 ] as const;
 
+export type ReviewCategory = (typeof reviewCategories)[number];
+
 export const feedbackModes = ["friendly", "mentor", "direct"] as const;
 
 export const reviewRequestSchema = z.object({
@@ -40,6 +42,7 @@ export const reviewOutputSchema = z.object({
   summary: z.string(),
   strengths: z.array(z.string()).min(1),
   scores: z.array(z.object({ label: z.string(), score: z.number().min(0).max(10) })),
+  rubricVersion: z.string().min(1).default("legacy"),
   issues: z.array(reviewIssueSchema).min(1),
   checklist: z.array(z.object({ label: z.string(), priority: z.enum(["high", "medium", "low"]) })),
   followUps: z.array(z.string()),
@@ -49,7 +52,7 @@ export const reviewOutputSchema = z.object({
 export type ReviewRequest = z.infer<typeof reviewRequestSchema>;
 export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
 
-export const categoryLabels: Record<(typeof reviewCategories)[number], string> = {
+export const categoryLabels: Record<ReviewCategory, string> = {
   logo: "Logo",
   poster: "Poster",
   social: "Social media",

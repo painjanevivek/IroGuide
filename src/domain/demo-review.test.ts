@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { improvementOutputSchema } from "./improvement";
 import { createDemoImprovementPlan, createDemoReview } from "./demo-review";
 import { reviewOutputSchema, type ReviewRequest } from "./review";
+import { getReviewRubric } from "./rubrics";
 
 const request: ReviewRequest = {
   category: "logo",
@@ -22,6 +23,8 @@ describe("demo review generation", () => {
 
     expect(reviewOutputSchema.safeParse(review).success).toBe(true);
     expect(review.provider).toBe("demo");
+    expect(review.rubricVersion).toBe(getReviewRubric("logo").version);
+    expect(review.scores.map((score) => score.label)).toContain("Memorability");
     expect(review.summary).toContain("Teen designers");
     expect(review.issues[0].observation).toBe("The mark feels too plain.");
   });
