@@ -73,13 +73,15 @@ button, input, textarea, select { font: inherit; }
 .critique-float strong { display: block; margin: .75rem 0 .4rem; font-size: .88rem; }
 .critique-float p { margin: 0; color: var(--graphite); font-size: .72rem; line-height: 1.55; }
 .cursor-note { position: absolute; z-index: 4; right: 40px; bottom: 90px; display: flex; align-items: center; gap: .35rem; background: var(--lime); padding: .4rem .55rem; border-radius: 6px; font: 600 .62rem var(--font-mono); transform: rotate(2deg); animation: cursorNudge 3.8s var(--ease-standard) infinite; }
-.category-rail { min-width: 100%; display: flex; align-items: center; gap: clamp(1.2rem, 3vw, 3rem); padding: 1.2rem var(--gutter); background: var(--ink); color: white; overflow: hidden; white-space: nowrap; }
-.category-rail-track { flex: 0 0 auto; display: inline-flex; align-items: center; gap: clamp(1.2rem,3vw,3rem); animation: categoryMarquee 38s linear infinite; }.category-rail-track span { display: inline-flex; align-items: center; gap: clamp(1.2rem,3vw,3rem); font: 570 .88rem var(--font-display); }
-.category-rail:hover .category-rail-track { animation-play-state: paused; }.category-rail svg { color: var(--lime); }
+.category-rail { min-width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(1.2rem, 3vw, 3rem); padding: 1.2rem var(--gutter); background: var(--ink); color: white; overflow: hidden; white-space: nowrap; }
+.category-rail > .mono-label { position: relative; z-index: 1; flex: 0 0 auto; letter-spacing: .12em; }
+.category-rail-marquee { min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 2rem, #000 calc(100% - 2rem), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 2rem, #000 calc(100% - 2rem), transparent 100%); }
+.category-rail-track { width: max-content; display: inline-flex; align-items: center; gap: clamp(1.2rem,3vw,3rem); animation: categoryMarquee 42s linear infinite; will-change: transform; }.category-rail-track span { display: inline-flex; align-items: center; gap: clamp(1.2rem,3vw,3rem); font: 570 .88rem var(--font-display); }
+.category-rail:hover .category-rail-track { animation-play-state: paused; }.category-rail svg { flex: 0 0 auto; color: var(--lime); }
 @keyframes specimenFloat { 0%,100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-3deg) translateY(-3px); } }
 @keyframes priorityPulse { 0%,100% { box-shadow: 0 20px 50px rgba(9,9,15,.25); } 50% { box-shadow: 0 20px 50px rgba(9,9,15,.25), 0 0 0 5px rgba(255,107,87,.12); } }
 @keyframes cursorNudge { 0%,100% { transform: rotate(2deg) translate(0,0); } 50% { transform: rotate(2deg) translate(3px,-2px); } }
-@keyframes categoryMarquee { from { transform: translateX(0); } to { transform: translateX(calc(-100% - clamp(1.2rem, 3vw, 3rem))); } }
+@keyframes categoryMarquee { from { transform: translateX(0); } to { transform: translateX(calc(-50% - clamp(1.2rem, 3vw, 3rem) / 2)); } }
 .section-intro h2, .section-heading-row h2, .example-review h2, .audience-section h2, .faq-section h2 { font-size: clamp(2.6rem, 5vw, 5rem); line-height: .98; }
 .section-intro { max-width: 980px; margin-bottom: clamp(3rem, 7vw, 6rem); }
 .section-intro .eyebrow, .example-review .eyebrow, .faq-section .eyebrow { color: var(--violet); }

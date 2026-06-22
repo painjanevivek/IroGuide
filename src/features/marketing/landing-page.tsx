@@ -120,11 +120,11 @@ export function LandingPage() {
 
       <div className="category-rail" aria-label="Supported design categories">
         <span className="mono-label">CRITIQUE FOR</span>
-        <div className="category-rail-track">
-          {categories.map((category) => <span key={category}>{category}<Sparkles size={13} /></span>)}
-        </div>
-        <div className="category-rail-track" aria-hidden="true">
-          {categories.map((category) => <span key={category}>{category}<Sparkles size={13} /></span>)}
+        <span className="sr-only">{categories.join(", ")}</span>
+        <div className="category-rail-marquee" aria-hidden="true">
+          <div className="category-rail-track">
+            {[...categories, ...categories].map((category, index) => <span key={`${category}-${index}`}>{category}<Sparkles size={13} /></span>)}
+          </div>
         </div>
       </div>
 
