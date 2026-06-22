@@ -203,6 +203,10 @@ function getPhoneAuthErrorMessage(error: unknown, region: PhoneRegion) {
     return `SMS is blocked for ${countryHint} in Firebase. Open Firebase Console > Authentication > Settings > SMS region policy, choose Allow, select ${countryHint}, then save.`;
   }
 
+  if (message.includes("auth/billing-not-enabled")) {
+    return "Phone OTP needs Firebase billing enabled for real SMS. Upgrade the Firebase project to the Blaze plan, link a Cloud Billing account, then try again. Firebase test phone numbers still work without sending SMS.";
+  }
+
   if (message.includes("auth/operation-not-allowed")) {
     return "Phone OTP is not enabled for this Firebase project. Open Firebase Console > Authentication > Sign-in method and enable Phone.";
   }
