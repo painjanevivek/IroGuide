@@ -15,12 +15,15 @@ import { getFirebaseClientAuth } from "@/lib/firebase/client";
 type AuthState = {
   user: User | null;
   avatarUrl: string;
+  providerIds: string[];
   loading: boolean;
   error: string;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
+  linkGoogleProvider: () => Promise<void>;
   updateAvatar: (dataUrl: string) => void;
   resetAvatar: () => void;
 };
@@ -30,6 +33,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [providerIds, setProviderIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -45,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           unsubscribe = onAuthStateChanged(auth, (nextUser) => {
             setUser(nextUser);
             setAvatarUrl(nextUser ? getStoredAvatar(nextUser) : "");
+            setProviderIds(getProviderIds(nextUser));
             setLoading(false);
           });
           void getRedirectResult(auth).catch((redirectError) => {
@@ -134,6 +139,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const changePassword = useCallback(async (currentPassword: string, nextPassword: string) => {
+    setError("");
+    try {
+      const currentUser = getFirebaseClientAuth().currentUser;
+      if (!currentUser?.email) throw new Error("Sign in again before changing your password.");
+      const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import("firebase/auth");
+      const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, nextPassword);
+    } catch (passwordError) {
+      const message = getAuthErrorMessage(passwordError);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
+  const linkGoogleProvider = useCallback(async () => {
+    setError("");
+    try {
+      const currentUser = getFirebaseClientAuth().currentUser;
+      if (!currentUser) throw new Error("Sign in again before linking Google.");
+      const { GoogleAuthProvider, linkWithPopup } = await import("firebase/auth");
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await linkWithPopup(currentUser, provider);
+      await currentUser.reload();
+      const refreshedUser = getFirebaseClientAuth().currentUser;
+      setUser(refreshedUser);
+      setProviderIds(getProviderIds(refreshedUser));
+    } catch (linkError) {
+      const message = getAuthErrorMessage(linkError);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
   const updateAvatar = useCallback((dataUrl: string) => {
     if (!user) return;
     try {
@@ -156,8 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const value = useMemo<AuthState>(
-    () => ({ user, avatarUrl, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, updateAvatar, resetAvatar }),
-    [avatarUrl, error, loading, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
+    () => ({ user, avatarUrl, providerIds, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, changePassword, linkGoogleProvider, updateAvatar, resetAvatar }),
+    [avatarUrl, changePassword, error, linkGoogleProvider, loading, providerIds, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -179,6 +220,22 @@ function getAuthErrorMessage(error: unknown) {
 
   if (code === "auth/popup-blocked" || message.includes("auth/popup-blocked")) {
     return "Your browser blocked the Google sign-in popup. Allow popups for IroGuide and try again.";
+  }
+
+  if (code === "auth/requires-recent-login" || message.includes("auth/requires-recent-login")) {
+    return "For security, sign out and sign in again before changing this account setting.";
+  }
+
+  if (code === "auth/provider-already-linked" || message.includes("auth/provider-already-linked")) {
+    return "Google is already linked to this account.";
+  }
+
+  if (code === "auth/credential-already-in-use" || message.includes("auth/credential-already-in-use")) {
+    return "That Google account is already linked to another IroGuide account.";
+  }
+
+  if (code === "auth/account-exists-with-different-credential" || message.includes("auth/account-exists-with-different-credential")) {
+    return "An account already exists with that Google email. Sign in with that method first.";
   }
 
   if (code === "auth/unauthorized-domain" || message.includes("auth/unauthorized-domain")) {
@@ -230,4 +287,8 @@ function getStoredAvatar(user: User) {
   } catch {
     return user.photoURL ?? "";
   }
+}
+
+function getProviderIds(user: User | null) {
+  return user?.providerData.map((provider) => provider.providerId) ?? [];
 }
