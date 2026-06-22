@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
+import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
-import { categoryLabels, reviewOutputSchema } from "@/domain/review";
+import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
 import { DataControls } from "./data-controls";
+import { RecentReviewPanel } from "./recent-review-panel";
 
-type StoredReview = ProgressReview & { id: string; category?: string; summary: string };
+type StoredReview = ReviewOutput & ProgressReview & { category?: string };
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -46,6 +48,7 @@ export function Dashboard() {
   if (!user) return null;
 
   const progress = calculateProgress(reviews);
+  const recentReview = getRecentReviewSummary(reviews);
 
   return (
     <main className="dashboard-main">
@@ -78,6 +81,7 @@ export function Dashboard() {
         </div>
       ) : (
         <>
+          {recentReview && <RecentReviewPanel review={recentReview} />}
           <section className="progress-grid" aria-label="Design progress summary">
             <article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to Firestore</p></article>
             <article className="metric-violet"><span>Average score</span><strong>{progress.averageScore}<small>/10</small></strong><p>{progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article>
@@ -86,7 +90,7 @@ export function Dashboard() {
           </section>
           <section className="learning-card"><Sparkles /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p></div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
           <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved in Firestore</span></div>
-          <div className="review-history">{reviews.map((review) => <article className="history-card" key={review.id}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article>)}</div>
+          <div className="review-history">{reviews.map((review) => <article className="history-card" id={`review-${review.id}`} key={review.id}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article>)}</div>
         </>
       )}
 
