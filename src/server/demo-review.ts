@@ -1,5 +1,6 @@
 import type { ReviewOutput, ReviewRequest } from "@/domain/review";
 import { categoryLabels } from "@/domain/review";
+import { assertReviewQuality } from "@/domain/review-quality";
 
 const modeLead = {
   friendly: "There is a clear idea worth developing here.",
@@ -13,7 +14,7 @@ export function createDemoReview(input: ReviewRequest): ReviewOutput {
   const shift = (seed % 7) / 10;
   const overallScore = Number((6.4 + shift).toFixed(1));
 
-  return {
+  return assertReviewQuality({
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     overallScore,
@@ -68,5 +69,5 @@ export function createDemoReview(input: ReviewRequest): ReviewOutput {
     ],
     followUps: ["What should I fix first?", "Suggest a stronger type direction", "How can I make this feel more premium?"],
     provider: "demo",
-  };
+  });
 }
