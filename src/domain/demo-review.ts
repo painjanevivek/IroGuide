@@ -1,4 +1,5 @@
 import { categoryLabels, type ReviewOutput, type ReviewRequest } from "./review";
+import { getAccessibilityIssue } from "./accessibility-review";
 import { getReviewRubric } from "./rubrics";
 import type { ImprovementOutput, ImprovementRequest } from "./improvement";
 
@@ -13,10 +14,54 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
   const primaryConcern = request.brief.concern?.trim();
   const modePrefix = request.mode === "friendly" ? "Clear next step" : request.mode === "direct" ? "Priority fix" : "Mentor note";
   const issueIds = ["primary-read", "purpose-fit", "polish-rhythm"] as const;
+  const accessibilityIssue = getAccessibilityIssue(request.category);
   const scoreDimensions = rubric.dimensions.map((dimension, index) => ({
     label: dimension.label,
     score: demoScorePattern[index] ?? 7,
   }));
+  const issues: ReviewOutput["issues"] = [
+    {
+      id: issueIds[0],
+      category: rubric.dimensions[0].label,
+      score: 6.4,
+      priority: "high",
+      observation: primaryConcern || "The main idea and supporting details compete for attention.",
+      impact: `For ${audience}, the design should communicate the primary promise quickly before style details take over.`,
+      recommendation: "Create one dominant entry point, then reduce or simplify the elements around it.",
+      actions: [
+        "Choose the single element viewers should notice first.",
+        "Reduce nearby competing contrast, scale, or spacing by about 20 percent.",
+        "Check the design at a small size before adding more detail.",
+      ],
+    },
+    {
+      id: issueIds[1],
+      category: rubric.dimensions[1].label,
+      score: 7,
+      priority: "medium",
+      observation: `The design direction is promising, but it does not yet make "${goal}" unmistakable.`,
+      impact: "A viewer may understand the style before they understand what action or impression the work is meant to create.",
+      recommendation: "Tie the strongest visual choice more directly to the intended outcome.",
+      actions: [
+        "Rewrite the primary message as a short outcome statement.",
+        "Remove visual choices that do not support that statement.",
+      ],
+    },
+    {
+      id: issueIds[2],
+      category: rubric.dimensions[2].label,
+      score: 8,
+      priority: "low",
+      observation: "The composition has enough restraint to be refined through spacing and alignment.",
+      impact: "Small consistency fixes can make the work feel more intentional without changing the concept.",
+      recommendation: "Use one spacing rhythm and align the most important edges.",
+      actions: [
+        "Audit margins and internal padding for consistency.",
+        "Export one small preview and one full-size preview to compare legibility.",
+      ],
+    },
+    ...(accessibilityIssue ? [accessibilityIssue] : []),
+  ];
 
   return {
     id: `demo-${stableHash(`${request.file.name}:${audience}:${goal}`)}`,
@@ -30,48 +75,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
     ],
     scores: scoreDimensions,
     rubricVersion: rubric.version,
-    issues: [
-      {
-        id: issueIds[0],
-        category: rubric.dimensions[0].label,
-        score: 6.4,
-        priority: "high",
-        observation: primaryConcern || "The main idea and supporting details compete for attention.",
-        impact: `For ${audience}, the design should communicate the primary promise quickly before style details take over.`,
-        recommendation: "Create one dominant entry point, then reduce or simplify the elements around it.",
-        actions: [
-          "Choose the single element viewers should notice first.",
-          "Reduce nearby competing contrast, scale, or spacing by about 20 percent.",
-          "Check the design at a small size before adding more detail.",
-        ],
-      },
-      {
-        id: issueIds[1],
-        category: rubric.dimensions[1].label,
-        score: 7,
-        priority: "medium",
-        observation: `The design direction is promising, but it does not yet make "${goal}" unmistakable.`,
-        impact: "A viewer may understand the style before they understand what action or impression the work is meant to create.",
-        recommendation: "Tie the strongest visual choice more directly to the intended outcome.",
-        actions: [
-          "Rewrite the primary message as a short outcome statement.",
-          "Remove visual choices that do not support that statement.",
-        ],
-      },
-      {
-        id: issueIds[2],
-        category: rubric.dimensions[2].label,
-        score: 8,
-        priority: "low",
-        observation: "The composition has enough restraint to be refined through spacing and alignment.",
-        impact: "Small consistency fixes can make the work feel more intentional without changing the concept.",
-        recommendation: "Use one spacing rhythm and align the most important edges.",
-        actions: [
-          "Audit margins and internal padding for consistency.",
-          "Export one small preview and one full-size preview to compare legibility.",
-        ],
-      },
-    ],
+    issues,
     annotations: [
       {
         id: "annotation-primary-read",
@@ -111,6 +115,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
       { label: `${modePrefix}: define the first-read element.`, priority: "high" },
       { label: "Reduce secondary contrast around the focal point.", priority: "high" },
       { label: "Connect the visual hook more directly to the stated goal.", priority: "medium" },
+      ...(accessibilityIssue ? [{ label: "Check contrast, touch targets, and non-color cues.", priority: "medium" as const }] : []),
       { label: "Run a small-size legibility check before final export.", priority: "low" },
     ],
     followUps: [

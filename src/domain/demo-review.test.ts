@@ -38,4 +38,11 @@ describe("demo review generation", () => {
     expect(plan.provider).toBe("demo");
     expect(plan.prompt).toContain(review.summary);
   });
+
+  it("includes accessibility guidance for interface categories", () => {
+    const review = createDemoReview({ ...request, category: "website" });
+
+    expect(review.issues.some((issue) => issue.category === "Accessibility")).toBe(true);
+    expect(review.checklist.some((item) => item.label.includes("touch targets"))).toBe(true);
+  });
 });
