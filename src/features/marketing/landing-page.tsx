@@ -120,7 +120,12 @@ export function LandingPage() {
 
       <div className="category-rail" aria-label="Supported design categories">
         <span className="mono-label">CRITIQUE FOR</span>
-        {categories.map((category) => <span key={category}>{category}<Sparkles size={13} /></span>)}
+        <div className="category-rail-track">
+          {categories.map((category) => <span key={category}>{category}<Sparkles size={13} /></span>)}
+        </div>
+        <div className="category-rail-track" aria-hidden="true">
+          {categories.map((category) => <span key={category}>{category}<Sparkles size={13} /></span>)}
+        </div>
       </div>
 
       <section className="problem-section section-pad" id="how-it-works">
