@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LoaderCircle, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
 import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
+import { apiBaseUrl } from "@/config/api";
 import { ImprovementPanel } from "./improvement-panel";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -64,7 +65,7 @@ export function ReviewStudio() {
     if (!file || !briefValid || submitting) return;
     setSubmitting(true); setSubmitError("");
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch(`${apiBaseUrl}/api/reviews`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category, mode, file: { name: file.name, type: file.type, size: file.size }, brief }),
       });

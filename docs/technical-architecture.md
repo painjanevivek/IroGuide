@@ -34,20 +34,23 @@ flowchart LR
 
 For the first deploy, the job boundary may execute synchronously with a hard timeout, but it retains an explicit interface so a durable queue can replace it without changing the review UI or domain service.
 
-## Module layout
+## Repository and module layout
 
 ```text
-src/
-  app/                 routes, metadata, route handlers, layouts
-  components/          reusable presentational and interaction components
-  features/            review, upload, history, dashboard feature modules
-  domain/              entities, schemas, rubrics, use-case contracts
-  server/              auth, database, storage, AI, rate limiting, telemetry
-  styles/              global tokens and shared visual utilities
-  test/                fixtures and test setup
+frontend/
+  src/app/             Next.js routes, metadata, and layouts
+  src/features/        review, marketing, dashboard, and portfolio UI
+  src/domain/          browser-safe schemas and view-model logic
+backend/
+  src/domain/          review schemas, rubrics, and quality rules
+  src/services/        AI/provider-facing application services
+  src/app.ts           HTTP composition and API routes
+  src/server.ts        standalone Fastify process
 ```
 
-Feature modules may depend on domain and components. Domain code must not depend on Next.js, database, storage, or a provider SDK.
+The frontend communicates with the backend over HTTP and contains no server API
+routes. Backend domain code does not depend on Fastify, Next.js, storage, or a
+provider SDK. Each application owns its dependency lockfile and quality pipeline.
 
 ## Core data model
 
@@ -211,4 +214,3 @@ Local development may use an explicit deterministic demo provider. Production mu
 - Accessibility scan has no serious or critical findings on primary routes.
 - Security headers, rate limits, secret validation, and private storage are verified in staging.
 - Provider timeouts and invalid-response recovery are exercised before release.
-

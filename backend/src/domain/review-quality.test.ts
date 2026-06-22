@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDemoReview } from "@/server/demo-review";
+import { createDemoReview } from "@/services/demo-review";
 import { inspectReviewQuality } from "./review-quality";
 import type { ReviewRequest } from "./review";
 
