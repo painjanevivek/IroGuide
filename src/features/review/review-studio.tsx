@@ -12,6 +12,7 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
 import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
+import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -193,7 +194,7 @@ function ReviewResult({ review, preview, onRestart }: { review: ReviewOutput; pr
           </section>
           <ImprovementPanel review={review} />
           <ComparisonPanel review={review} originalPreview={preview} />
-          <section className="follow-up"><Sparkles /><p className="eyebrow light">Keep the conversation going</p><h2>Ask your mentor.</h2><div>{review.followUps.map((question) => <button key={question}>{question} <ArrowRight /></button>)}</div><p className="follow-note">Live follow-up conversation arrives with the configured AI adapter.</p></section>
+          <FollowUpChat review={review} />
         </section>
       </div>
     </main>
