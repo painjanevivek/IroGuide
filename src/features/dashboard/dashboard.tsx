@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
+import { Reveal } from "@/components/motion/reveal";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
 import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
@@ -52,45 +54,61 @@ export function Dashboard() {
 
   return (
     <main className="dashboard-main">
-      <div className="dashboard-heading">
-        <div>
-          <p className="eyebrow">Your design practice</p>
-          <h1>Progress,<br />not perfection.</h1>
+      <Reveal>
+        <div className="dashboard-heading">
+          <div>
+            <p className="eyebrow">Your design practice</p>
+            <h1>Progress,<br />not perfection.</h1>
+          </div>
+          <Link className="button" href="/review/new">New review <ArrowRight /></Link>
         </div>
-        <Link className="button" href="/review/new">New review <ArrowRight /></Link>
-      </div>
-      <div className="workspace-badge">
-        <ShieldCheck />
-        <div>
-          <strong>Private signed-in workspace</strong>
-          <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected.</span>
+      </Reveal>
+      <Reveal delay={0.05}>
+        <div className="workspace-badge">
+          <ShieldCheck />
+          <div>
+            <strong>Private signed-in workspace</strong>
+            <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected.</span>
+          </div>
         </div>
-      </div>
+      </Reveal>
 
       {loading ? (
-        <div className="dashboard-empty">
-          <div><LoaderCircle className="spin" size={38} /><h2>Loading reviews</h2><p>Fetching your Firestore review history.</p></div>
-        </div>
+        <Reveal delay={0.08}>
+          <div className="dashboard-empty is-loading">
+            <div><LoaderCircle className="spin" size={38} /><h2>Loading reviews</h2><p>Fetching your Firestore review history.</p></div>
+          </div>
+        </Reveal>
       ) : loadError ? (
-        <div className="dashboard-empty">
-          <div><LayoutDashboard size={38} /><h2>Could not load reviews</h2><p>{loadError}</p></div>
-        </div>
+        <Reveal delay={0.08}>
+          <div className="dashboard-empty is-error">
+            <div><LayoutDashboard size={38} /><h2>Could not load reviews</h2><p>{loadError}</p></div>
+          </div>
+        </Reveal>
       ) : reviews.length === 0 ? (
-        <div className="dashboard-empty">
-          <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>Your dashboard becomes useful after the first critique—no fake charts, no invented progress.</p><Link className="button button-dark" href="/review/new">Review a design <Sparkles /></Link></div>
-        </div>
+        <Reveal delay={0.08}>
+          <div className="dashboard-empty is-empty">
+            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>Your dashboard becomes useful after the first critique—no fake charts, no invented progress.</p><Link className="button button-dark" href="/review/new">Review a design <Sparkles /></Link></div>
+          </div>
+        </Reveal>
       ) : (
         <>
-          {recentReview && <RecentReviewPanel review={recentReview} />}
-          <section className="progress-grid" aria-label="Design progress summary">
-            <article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to Firestore</p></article>
-            <article className="metric-violet"><span>Average score</span><strong>{progress.averageScore}<small>/10</small></strong><p>{progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article>
-            <article><span>Strongest area</span><strong className="metric-word">{progress.strongest?.label}</strong><p>{progress.strongest?.score}/10 average</p></article>
-            <article className="metric-coral"><span>Practice next</span><strong className="metric-word">{progress.weakest?.label}</strong><p>{progress.weakest?.score}/10 average</p></article>
+          {recentReview && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} /></Reveal>}
+          <section aria-label="Design progress summary">
+            <Stagger className="progress-grid">
+              <StaggerItem><article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to Firestore</p></article></StaggerItem>
+              <StaggerItem><article className="metric-violet"><span>Average score</span><strong>{progress.averageScore}<small>/10</small></strong><p>{progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article></StaggerItem>
+              <StaggerItem><article><span>Strongest area</span><strong className="metric-word">{progress.strongest?.label}</strong><p>{progress.strongest?.score}/10 average</p></article></StaggerItem>
+              <StaggerItem><article className="metric-coral"><span>Practice next</span><strong className="metric-word">{progress.weakest?.label}</strong><p>{progress.weakest?.score}/10 average</p></article></StaggerItem>
+            </Stagger>
           </section>
-          <section className="learning-card"><Sparkles /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
-          <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved in Firestore</span></div>
-          <div className="review-history">{reviews.map((review) => <article className="history-card" id={`review-${review.id}`} key={review.id}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article>)}</div>
+          <Reveal delay={0.12}>
+            <section className="learning-card"><Sparkles /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
+          </Reveal>
+          <Reveal delay={0.14}>
+            <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved in Firestore</span></div>
+          </Reveal>
+          <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.id}><article className="history-card" id={`review-${review.id}`}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article></StaggerItem>)}</Stagger>
         </>
       )}
 
