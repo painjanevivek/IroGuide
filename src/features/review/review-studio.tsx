@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LoaderCircle, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
+import { StepTransition } from "@/components/motion/step-transition";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
@@ -18,6 +19,11 @@ import { ImprovementPanel } from "./improvement-panel";
 const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 type Step = 1 | 2 | 3 | 4;
+type DragState = "idle" | "accept" | "reject";
+
+const stepLabels = ["Upload", "Design brief", "Feedback mode", "Confirm"] as const;
+const stepSummaries = ["Choose one design image", "Tell us what success means", "Choose your critic", "Review the details"] as const;
+const STEP_FOCUS_DELAY_MS = 340;
 
 const modeCopy = {
   friendly: ["Friendly", "Simple, encouraging, and educational."],
@@ -28,11 +34,16 @@ const modeCopy = {
 export function ReviewStudio() {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const hasNavigatedRef = useRef(false);
   const previewRef = useRef<string | null>(null);
   const [step, setStep] = useState<Step>(1);
+  const [stepDirection, setStepDirection] = useState<1 | -1>(1);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileError, setFileError] = useState("");
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [dragState, setDragState] = useState<DragState>("idle");
   const [category, setCategory] = useState<(typeof reviewCategories)[number]>("website");
   const [mode, setMode] = useState<(typeof feedbackModes)[number]>("mentor");
   const [brief, setBrief] = useState({ audience: "", purpose: "", style: "", goal: "", concern: "" });
@@ -44,8 +55,36 @@ export function ReviewStudio() {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
   }, []);
 
+  useEffect(() => {
+    if (!hasNavigatedRef.current) return;
+    const focusTimer = window.setTimeout(() => stepHeadingRef.current?.focus(), STEP_FOCUS_DELAY_MS);
+
+    return () => window.clearTimeout(focusTimer);
+  }, [step]);
+
+  function goToStep(nextStep: Step) {
+    if (nextStep === step) return;
+    hasNavigatedRef.current = true;
+    setStepDirection(nextStep > step ? 1 : -1);
+    setStep(nextStep);
+  }
+
+  function getDragState(event: DragEvent<HTMLDivElement>): DragState {
+    const item = event.dataTransfer.items?.[0];
+    if (!item) return "accept";
+    if (item.kind !== "file") return "reject";
+
+    return !item.type || ACCEPTED.includes(item.type) ? "accept" : "reject";
+  }
+
+  function onDragOver(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setDragState(getDragState(event));
+  }
+
   function acceptFile(candidate?: File) {
     setFileError("");
+    setUploadStatus("");
     if (!candidate) return;
     if (!ACCEPTED.includes(candidate.type)) { setFileError("Choose a PNG, JPEG, or WebP image."); return; }
     if (candidate.size > MAX_SIZE) { setFileError("This file is larger than the 10 MB limit."); return; }
@@ -55,6 +94,7 @@ export function ReviewStudio() {
     previewRef.current = nextPreview;
     setPreview(nextPreview);
     setFile(candidate);
+    setUploadStatus(`${candidate.name} is ready for critique.`);
   }
 
   function removeFile() {
@@ -62,10 +102,11 @@ export function ReviewStudio() {
     previewRef.current = null;
     setPreview(null);
     setFile(null);
+    setUploadStatus("Selected image removed.");
   }
 
   function onInput(event: ChangeEvent<HTMLInputElement>) { acceptFile(event.target.files?.[0]); event.target.value = ""; }
-  function onDrop(event: DragEvent<HTMLDivElement>) { event.preventDefault(); acceptFile(event.dataTransfer.files?.[0]); }
+  function onDrop(event: DragEvent<HTMLDivElement>) { event.preventDefault(); setDragState("idle"); acceptFile(event.dataTransfer.files?.[0]); }
   const briefValid = Object.entries(brief).filter(([key]) => key !== "concern").every(([, value]) => value.trim().length >= 2);
 
   async function submit(event: FormEvent) {
@@ -101,20 +142,34 @@ export function ReviewStudio() {
           <Link href="/" className="back-link"><ArrowLeft size={16} /> Back home</Link>
           <p className="eyebrow light">New critique</p><h1>Let&apos;s see the<br />work in context.</h1>
           <ol className="step-list">
-            {["Upload", "Design brief", "Feedback mode", "Confirm"].map((label, index) => <li key={label} className={step === index + 1 ? "active" : step > index + 1 ? "complete" : ""}><button type="button" onClick={() => step > index && setStep((index + 1) as Step)}><span>{step > index + 1 ? <Check size={14} /> : index + 1}</span>{label}</button></li>)}
+            {stepLabels.map((label, index) => {
+              const targetStep = (index + 1) as Step;
+              const isActive = step === targetStep;
+              const isComplete = step > targetStep;
+
+              return (
+                <li key={label} className={isActive ? "active" : isComplete ? "complete" : ""}>
+                  <button type="button" aria-current={isActive ? "step" : undefined} disabled={targetStep > step} onClick={() => goToStep(targetStep)}>
+                    <span>{isComplete ? <Check size={14} /> : index + 1}</span>{label}
+                  </button>
+                </li>
+              );
+            })}
           </ol>
           <div className="privacy-note"><LockKeyhole size={18} /><div><strong>Private by default</strong><p>Signed in as {user?.email ?? "your Firebase account"}.</p></div></div>
         </aside>
 
         <section className="studio-workspace">
-          <div className="workspace-top"><span className="mono-label">STEP {step} / 4</span><span>{["Choose one design image", "Tell us what success means", "Choose your critic", "Review the details"][step - 1]}</span></div>
-          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()}><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" onDragOver={(event) => event.preventDefault()} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>Drop your design here</h3><p>or choose a file from your device</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()}>Browse files</button><span>PNG, JPEG, or WebP · 10 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}<div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => setStep(2)}>Continue <ArrowRight size={17} /></button></div></div>}
+          <div className="workspace-top" aria-live="polite"><span className="mono-label">STEP {step} / 4</span><span>{stepSummaries[step - 1]}</span></div>
+          <StepTransition direction={stepDirection} stepKey={step}>
+          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()}><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" data-drag-state={dragState} onDragEnter={onDragOver} onDragOver={onDragOver} onDragLeave={() => setDragState("idle")} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>{dragState === "reject" ? "This file type is not supported" : dragState === "accept" ? "Release to add this design" : "Drop your design here"}</h3><p>{dragState === "reject" ? "Use a PNG, JPEG, or WebP image." : "or choose a file from your device"}</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()}>Browse files</button><span>PNG, JPEG, or WebP · 10 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{uploadStatus && <p className="upload-status" role="status" aria-live="polite"><Check size={16} /> {uploadStatus}</p>}{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}<div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => goToStep(2)}>Continue <ArrowRight size={17} /></button></div></div>}
 
-          {step === 2 && <div className="form-panel"><div className="panel-heading"><span>02</span><div><h2>Give us the brief</h2><p>A good critique depends on audience, purpose, and intent.</p></div></div><fieldset className="category-field"><legend>Design category</legend><div className="category-grid">{reviewCategories.map((item) => <label key={item}><input type="radio" name="category" checked={category === item} onChange={() => setCategory(item)} /><span>{categoryLabels[item]}</span></label>)}</div></fieldset><div className="field-grid">{([['audience','Target audience','e.g. Independent designers aged 22–35'],['purpose','Purpose','e.g. Launch a creative conference'],['style','Style direction','e.g. Bold, editorial, energetic'],['goal','Primary goal','e.g. Drive early-bird registrations']] as const).map(([key,label,placeholder]) => <label className="field" key={key}><span>{label} <b>Required</b></span><textarea rows={2} value={brief[key]} placeholder={placeholder} onChange={(event) => setBrief({...brief, [key]: event.target.value})} required /></label>)}</div><label className="field"><span>Specific concern <em>Optional</em></span><textarea rows={3} value={brief.concern} placeholder="What already feels unresolved?" onChange={(event) => setBrief({...brief, concern: event.target.value})} /></label><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(1)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" disabled={!briefValid} onClick={() => setStep(3)}>Choose feedback <ArrowRight size={17} /></button></div></div>}
+          {step === 2 && <div className="form-panel"><div className="panel-heading"><span>02</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Give us the brief</h2><p>A good critique depends on audience, purpose, and intent.</p></div></div><fieldset className="category-field"><legend>Design category</legend><div className="category-grid">{reviewCategories.map((item) => <label key={item}><input type="radio" name="category" checked={category === item} onChange={() => setCategory(item)} /><span>{categoryLabels[item]}</span></label>)}</div></fieldset><div className="field-grid">{([['audience','Target audience','e.g. Independent designers aged 22–35'],['purpose','Purpose','e.g. Launch a creative conference'],['style','Style direction','e.g. Bold, editorial, energetic'],['goal','Primary goal','e.g. Drive early-bird registrations']] as const).map(([key,label,placeholder]) => <label className="field" key={key}><span>{label} <b>Required</b></span><textarea rows={2} value={brief[key]} placeholder={placeholder} onChange={(event) => setBrief({...brief, [key]: event.target.value})} required /></label>)}</div><label className="field"><span>Specific concern <em>Optional</em></span><textarea rows={3} value={brief.concern} placeholder="What already feels unresolved?" onChange={(event) => setBrief({...brief, concern: event.target.value})} /></label><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(1)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" disabled={!briefValid} onClick={() => goToStep(3)}>Choose feedback <ArrowRight size={17} /></button></div></div>}
 
-          {step === 3 && <div className="form-panel"><div className="panel-heading"><span>03</span><div><h2>How should we talk?</h2><p>The standards stay consistent. You choose the voice.</p></div></div><div className="mode-selector">{feedbackModes.map((item, index) => <label key={item} className={`select-mode mode-${item}`}><input type="radio" name="mode" checked={mode === item} onChange={() => setMode(item)} /><span className="mode-index">0{index + 1}</span><MessageIcon mode={item} /><div><h3>{modeCopy[item][0]}</h3><p>{modeCopy[item][1]}</p><blockquote>“{item === 'friendly' ? 'Let’s make the main message easier to notice.' : item === 'mentor' ? 'The hierarchy needs a more deliberate first reading point.' : 'The hierarchy is unresolved. Fix it before adding anything else.'}”</blockquote></div><span className="radio-mark"><Check /></span></label>)}</div><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(2)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" onClick={() => setStep(4)}>Review details <ArrowRight size={17} /></button></div></div>}
+          {step === 3 && <div className="form-panel"><div className="panel-heading"><span>03</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>How should we talk?</h2><p>The standards stay consistent. You choose the voice.</p></div></div><div className="mode-selector">{feedbackModes.map((item, index) => <label key={item} className={`select-mode mode-${item}`}><input type="radio" name="mode" checked={mode === item} onChange={() => setMode(item)} /><span className="mode-index">0{index + 1}</span><MessageIcon mode={item} /><div><h3>{modeCopy[item][0]}</h3><p>{modeCopy[item][1]}</p><blockquote>“{item === 'friendly' ? 'Let’s make the main message easier to notice.' : item === 'mentor' ? 'The hierarchy needs a more deliberate first reading point.' : 'The hierarchy is unresolved. Fix it before adding anything else.'}”</blockquote></div><span className="radio-mark"><Check /></span></label>)}</div><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(2)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" onClick={() => goToStep(4)}>Review details <ArrowRight size={17} /></button></div></div>}
 
-          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured demo critique is returned. Durable Firestore saving arrives with the live backend.</p></div></div>{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" /> Building your critique…</> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
+          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured demo critique is returned. Durable Firestore saving arrives with the live backend.</p></div></div>{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" /> Building your critique…</> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
+          </StepTransition>
         </section>
       </form>
     </main>
