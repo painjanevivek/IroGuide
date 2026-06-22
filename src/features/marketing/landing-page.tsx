@@ -19,7 +19,20 @@ import {
 import { siteConfig } from "@/config/site";
 import { LandingFinalAuthActions, LandingHeaderActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
 
-const categories = ["Brand identity", "Web & UI", "Posters", "Social", "Packaging", "Book covers"];
+const categories = [
+  "Brand identity",
+  "Web & UI",
+  "Landing pages",
+  "Posters",
+  "Social",
+  "Packaging",
+  "Book covers",
+  "Color grading",
+  "Thumbnails",
+  "Ad creatives",
+  "Pitch decks",
+  "App screens",
+];
 
 const modes = [
   {
