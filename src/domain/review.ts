@@ -26,6 +26,7 @@ export const reviewRequestSchema = z.object({
 });
 
 export const reviewIssueSchema = z.object({
+  id: z.string().min(1).optional(),
   category: z.string(),
   score: z.number().min(0).max(10),
   priority: z.enum(["high", "medium", "low"]),
@@ -33,6 +34,18 @@ export const reviewIssueSchema = z.object({
   impact: z.string(),
   recommendation: z.string(),
   actions: z.array(z.string()).min(1),
+});
+
+export const reviewAnnotationSchema = z.object({
+  id: z.string().min(1),
+  issueId: z.string().min(1),
+  label: z.string().min(1).max(80),
+  description: z.string().min(1).max(240),
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  width: z.number().min(0.02).max(1),
+  height: z.number().min(0.02).max(1),
+  confidence: z.number().min(0).max(1),
 });
 
 export const reviewOutputSchema = z.object({
@@ -44,6 +57,7 @@ export const reviewOutputSchema = z.object({
   scores: z.array(z.object({ label: z.string(), score: z.number().min(0).max(10) })),
   rubricVersion: z.string().min(1).default("legacy"),
   issues: z.array(reviewIssueSchema).min(1),
+  annotations: z.array(reviewAnnotationSchema).default([]),
   checklist: z.array(z.object({ label: z.string(), priority: z.enum(["high", "medium", "low"]) })),
   followUps: z.array(z.string()),
   provider: z.literal("demo"),

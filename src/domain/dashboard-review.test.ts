@@ -16,6 +16,7 @@ function review(overrides: ReviewFixture): ReviewOutput & { category?: string } 
       { label: "Hierarchy", score: 6 },
       { label: "Audience fit", score: 8 },
     ],
+    annotations: overrides.annotations ?? [],
     issues: overrides.issues ?? [
       {
         category: "Hierarchy",

@@ -25,6 +25,7 @@ describe("demo review generation", () => {
     expect(review.provider).toBe("demo");
     expect(review.rubricVersion).toBe(getReviewRubric("logo").version);
     expect(review.scores.map((score) => score.label)).toContain("Memorability");
+    expect(review.annotations[0]?.issueId).toBe(review.issues[0].id);
     expect(review.summary).toContain("Teen designers");
     expect(review.issues[0].observation).toBe("The mark feels too plain.");
   });

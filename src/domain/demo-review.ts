@@ -12,6 +12,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
   const style = request.brief.style.trim();
   const primaryConcern = request.brief.concern?.trim();
   const modePrefix = request.mode === "friendly" ? "Clear next step" : request.mode === "direct" ? "Priority fix" : "Mentor note";
+  const issueIds = ["primary-read", "purpose-fit", "polish-rhythm"] as const;
   const scoreDimensions = rubric.dimensions.map((dimension, index) => ({
     label: dimension.label,
     score: demoScorePattern[index] ?? 7,
@@ -31,6 +32,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
     rubricVersion: rubric.version,
     issues: [
       {
+        id: issueIds[0],
         category: rubric.dimensions[0].label,
         score: 6.4,
         priority: "high",
@@ -44,6 +46,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
         ],
       },
       {
+        id: issueIds[1],
         category: rubric.dimensions[1].label,
         score: 7,
         priority: "medium",
@@ -56,6 +59,7 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
         ],
       },
       {
+        id: issueIds[2],
         category: rubric.dimensions[2].label,
         score: 8,
         priority: "low",
@@ -66,6 +70,41 @@ export function createDemoReview(request: ReviewRequest): ReviewOutput {
           "Audit margins and internal padding for consistency.",
           "Export one small preview and one full-size preview to compare legibility.",
         ],
+      },
+    ],
+    annotations: [
+      {
+        id: "annotation-primary-read",
+        issueId: issueIds[0],
+        label: "First read",
+        description: "This area should carry the strongest immediate visual signal.",
+        x: 0.24,
+        y: 0.22,
+        width: 0.42,
+        height: 0.24,
+        confidence: 0.78,
+      },
+      {
+        id: "annotation-purpose-fit",
+        issueId: issueIds[1],
+        label: "Goal signal",
+        description: "Connect this supporting area more directly to the intended outcome.",
+        x: 0.58,
+        y: 0.46,
+        width: 0.28,
+        height: 0.18,
+        confidence: 0.68,
+      },
+      {
+        id: "annotation-polish-rhythm",
+        issueId: issueIds[2],
+        label: "Spacing rhythm",
+        description: "Use this region to check edge alignment and spacing consistency.",
+        x: 0.14,
+        y: 0.66,
+        width: 0.48,
+        height: 0.2,
+        confidence: 0.62,
       },
     ],
     checklist: [
