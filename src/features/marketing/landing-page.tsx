@@ -64,6 +64,7 @@ export function LandingPage() {
           {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
         </nav>
         <div className="header-actions">
+          <Link className="text-link desktop-only" href="/community">Community</Link>
           <Link className="text-link desktop-only" href="/dashboard">Dashboard</Link>
           <Link className="button button-small" href="/review/new">Review a design <ArrowRight size={16} /></Link>
         </div>
