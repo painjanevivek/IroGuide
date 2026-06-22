@@ -8,6 +8,7 @@ describe("calculateProgress", () => {
     expect(summary.totalReviews).toBe(0);
     expect(summary.weakest).toBeNull();
     expect(summary.scoreChange).toBeNull();
+    expect(summary.insights).toEqual([]);
   });
 
   it("waits for a second review before calculating score change", () => {
@@ -22,6 +23,7 @@ describe("calculateProgress", () => {
     expect(summary.averageScore).toBe(7.4);
     expect(summary.scoreChange).toBeNull();
     expect(summary.strongest?.label).toBe("Hierarchy");
+    expect(summary.insights[0]).toContain("baseline");
   });
 
   it("calculates chronological change and recurring dimensions", () => {
@@ -47,5 +49,7 @@ describe("calculateProgress", () => {
     expect(summary.scoreChange).toBe(1);
     expect(summary.strongest?.label).toBe("Color");
     expect(summary.weakest?.label).toBe("Hierarchy");
+    expect(summary.insights).toContain("Your overall score changed by +1 points from first to latest review.");
+    expect(summary.insights).toContain("Hierarchy is your recurring weak spot at 4.5/10 average.");
   });
 });

@@ -16,6 +16,7 @@ export type ProgressSummary = {
   strongest: ProgressDimensionScore | null;
   weakest: ProgressDimensionScore | null;
   lesson: string;
+  insights: string[];
 };
 
 const emptyProgressSummary: ProgressSummary = {
@@ -25,6 +26,7 @@ const emptyProgressSummary: ProgressSummary = {
   strongest: null,
   weakest: null,
   lesson: "Complete a first review to unlock a personalized practice suggestion.",
+  insights: [],
 };
 
 export function calculateProgress(reviews: ProgressReview[]): ProgressSummary {
@@ -35,14 +37,17 @@ export function calculateProgress(reviews: ProgressReview[]): ProgressSummary {
   const chronologicalReviews = [...reviews].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
   const dimensionAverages = getDimensionAverages(reviews);
   const weakest = dimensionAverages.at(-1) ?? null;
+  const strongest = dimensionAverages[0] ?? null;
+  const scoreChange = getScoreChange(chronologicalReviews);
 
   return {
     totalReviews: reviews.length,
     averageScore: roundToOneDecimal(average(reviews.map((review) => review.overallScore))),
-    scoreChange: getScoreChange(chronologicalReviews),
-    strongest: dimensionAverages[0] ?? null,
+    scoreChange,
+    strongest,
     weakest,
     lesson: getPracticeLesson(weakest),
+    insights: getProgressInsights({ totalReviews: reviews.length, scoreChange, strongest, weakest }),
   };
 }
 
@@ -79,6 +84,33 @@ function getPracticeLesson(weakest: ProgressDimensionScore | null): string {
   }
 
   return `Practice ${weakest.label.toLowerCase()} by creating one version with fewer elements and one unmistakable focal point. Compare it against your original at thumbnail size.`;
+}
+
+function getProgressInsights({
+  totalReviews,
+  scoreChange,
+  strongest,
+  weakest,
+}: Pick<ProgressSummary, "totalReviews" | "scoreChange" | "strongest" | "weakest">): string[] {
+  if (totalReviews === 0) {
+    return [];
+  }
+
+  if (totalReviews === 1) {
+    return [
+      "This first critique is your baseline. Complete one more review to unlock trend language.",
+      strongest ? `${strongest.label} is the strongest starting point at ${strongest.score}/10.` : "Add scored dimensions to identify a strength.",
+      weakest ? `${weakest.label} is the first practice area to watch.` : "Add scored dimensions to identify a practice area.",
+    ];
+  }
+
+  return [
+    scoreChange === null
+      ? "Your score trend needs one more dated review to become reliable."
+      : `Your overall score changed by ${scoreChange >= 0 ? "+" : ""}${scoreChange} points from first to latest review.`,
+    strongest ? `${strongest.label} is your recurring strength at ${strongest.score}/10 average.` : "No recurring strength is available yet.",
+    weakest ? `${weakest.label} is your recurring weak spot at ${weakest.score}/10 average.` : "No recurring weak spot is available yet.",
+  ];
 }
 
 function average(values: number[]): number {
