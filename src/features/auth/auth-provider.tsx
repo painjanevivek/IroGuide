@@ -14,18 +14,22 @@ import { getFirebaseClientAuth } from "@/lib/firebase/client";
 
 type AuthState = {
   user: User | null;
+  avatarUrl: string;
   loading: boolean;
   error: string;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  updateAvatar: (dataUrl: string) => void;
+  resetAvatar: () => void;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!active) return;
           unsubscribe = onAuthStateChanged(auth, (nextUser) => {
             setUser(nextUser);
+            setAvatarUrl(nextUser ? getStoredAvatar(nextUser) : "");
             setLoading(false);
           });
           void getRedirectResult(auth).catch((redirectError) => {
@@ -129,9 +134,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateAvatar = useCallback((dataUrl: string) => {
+    if (!user) return;
+    try {
+      localStorage.setItem(getAvatarStorageKey(user.uid), dataUrl);
+    } catch {
+      setError("The avatar could not be saved in this browser. Try a smaller image.");
+      return;
+    }
+    setAvatarUrl(dataUrl);
+  }, [user]);
+
+  const resetAvatar = useCallback(() => {
+    if (!user) return;
+    try {
+      localStorage.removeItem(getAvatarStorageKey(user.uid));
+    } catch {
+      // Keeping the in-memory fallback is still useful if localStorage is unavailable.
+    }
+    setAvatarUrl(user.photoURL ?? "");
+  }, [user]);
+
   const value = useMemo<AuthState>(
-    () => ({ user, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut }),
-    [error, loading, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, user],
+    () => ({ user, avatarUrl, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, updateAvatar, resetAvatar }),
+    [avatarUrl, error, loading, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -192,4 +218,16 @@ function getAuthErrorMessage(error: unknown) {
 
 function getAuthErrorCode(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : "";
+}
+
+function getAvatarStorageKey(uid: string) {
+  return `iroguide:avatar:${uid}`;
+}
+
+function getStoredAvatar(user: User) {
+  try {
+    return localStorage.getItem(getAvatarStorageKey(user.uid)) ?? user.photoURL ?? "";
+  } catch {
+    return user.photoURL ?? "";
+  }
 }

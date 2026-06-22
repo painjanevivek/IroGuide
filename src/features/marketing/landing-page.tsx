@@ -14,10 +14,10 @@ import {
   ScanLine,
   Sparkles,
   Target,
-  Upload,
   WandSparkles,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { LandingFinalAuthActions, LandingHeaderActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
 
 const categories = ["Brand identity", "Web & UI", "Posters", "Social", "Packaging", "Book covers"];
 
@@ -63,12 +63,7 @@ export function LandingPage() {
         <nav className="desktop-nav" aria-label="Main navigation">
           {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
         </nav>
-        <div className="header-actions">
-          <Link className="text-link desktop-only" href="/community">Community</Link>
-          <Link className="text-link desktop-only" href="/dashboard">Dashboard</Link>
-          <Link className="text-link desktop-only" href="/auth?mode=sign-in">Sign in</Link>
-          <Link className="button button-small" href="/auth?mode=sign-up">Sign up <ArrowRight size={16} /></Link>
-        </div>
+        <LandingHeaderActions />
       </header>
 
       <section className="hero section-pad">
@@ -78,7 +73,7 @@ export function LandingPage() {
           <p className="hero-lede">Upload your work. Get a professional critique that explains <strong>what</strong> is off, <strong>why</strong> it matters, and <strong>how</strong> to fix it.</p>
           <div className="hero-actions">
             <Link className="button button-large" href="/review/new">Review my design <WandSparkles size={19} /></Link>
-            <Link className="button-secondary hero-auth-button" href="/auth?mode=sign-up">Sign up free <ArrowRight size={18} /></Link>
+            <LandingHeroAuthButton />
             <Link className="button-quiet" href="#example">See a real critique <ArrowRight size={18} /></Link>
           </div>
           <div className="micro-proof">
@@ -188,10 +183,7 @@ export function LandingPage() {
         <p className="eyebrow light">Your next version starts here</p>
         <h2>Stop guessing.<br /><span>Start refining.</span></h2>
         <p>Bring the design. IroGuide will bring the clarity.</p>
-        <div className="final-cta-actions">
-          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up <ArrowRight size={19} /></Link>
-          <Link className="button-quiet beta-link" href="/auth?mode=sign-in">Sign in <Upload size={19} /></Link>
-        </div>
+        <LandingFinalAuthActions />
       </section>
 
       <footer className="site-footer">

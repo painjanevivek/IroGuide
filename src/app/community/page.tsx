@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, CalendarDays, Heart, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
+import { HeaderAuthLinks } from "@/features/auth/auth-nav";
 
 export const metadata: Metadata = { title: "Community preview" };
 
@@ -11,5 +12,78 @@ const critiques = [
 ] as const;
 
 export default function CommunityPage() {
-  return <div className="community-page"><header className="simple-header community-nav"><Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link><nav><Link href="/dashboard">Dashboard</Link><Link href="/auth?mode=sign-in">Sign in</Link><Link className="button button-small" href="/auth?mode=sign-up">Sign up <ArrowRight /></Link></nav></header><main><section className="community-hero"><div><p className="eyebrow light"><Users /> Community preview</p><h1>Critique with<br /><span>more signal.</span></h1><p>A future space for thoughtful feedback, visible improvement, and weekly creative practice—designed to make “looks good” the beginning, not the end.</p><div className="preview-notice"><ShieldCheck /><span><strong>Preview only</strong> Public posting stays disabled until identity, moderation, reporting, and consent controls are live.</span></div></div><div className="community-orbit" aria-hidden="true"><span>WHAT WORKS</span><span>WHY IT MATTERS</span><span>WHAT TO TRY</span><div><MessageSquareText /></div></div></section><section className="community-feed section-pad"><div className="community-section-title"><div><p className="eyebrow">Featured improvement stories</p><h2>Work worth<br />talking about.</h2></div><p>Each future post pairs the design with AI context and a structured human critique template.</p></div><div className="critique-grid">{critiques.map((item,index) => <article key={item.title} className={`critique-tile tile-${item.color}`}><div className="critique-canvas"><span>{String(index + 1).padStart(2,"0")}</span><strong>{item.title.split(" ").slice(0,3).join(" ")}<br /><em>{item.title.split(" ").slice(3).join(" ")}</em></strong><div /></div><div className="critique-info"><span className="mono-label">{item.category}</span><h3>{item.title}</h3><div className="maker"><span>{item.maker.charAt(0)}</span><p>{item.maker}<small><BadgeCheck /> Structured critic</small></p><strong>{item.score}<small>/10</small></strong></div><blockquote>{item.note}</blockquote><footer><span><Heart /> Preview</span><span><MessageSquareText /> Critique template</span></footer></div></article>)}</div></section><section className="challenge-section section-pad"><div className="challenge-copy"><p className="eyebrow light"><Trophy /> Weekly challenge preview</p><h2>One brief.<br />Many answers.</h2><p>Practice with a bounded prompt, receive the same rubric, and compare improvement—not popularity alone.</p><div><span><CalendarDays /> Week 01</span><span>Poster design</span><span>72-hour sprint</span></div><button className="button button-lime" disabled>Challenges coming later</button></div><div className="challenge-card"><span className="mono-label">THE BRIEF</span><p>Design a poster that makes five quiet minutes feel culturally urgent.</p><strong>PAUSE<br /><em>IS A</em><br />PRACTICE.</strong><div className="challenge-shape" /></div></section><section className="peer-template section-pad"><div><p className="eyebrow">A better comment box</p><h2>Structure makes<br />feedback useful.</h2></div><div className="template-card"><span>01 / WHAT WORKS</span><p>Name the specific decision and the effect it creates.</p><span>02 / WHAT CAN IMPROVE</span><p>Describe the design—not the designer.</p><span>03 / WHY</span><p>Connect the observation to purpose, audience, or principle.</p><span>04 / SUGGESTION</span><p>Offer a practical direction while leaving room for authorship.</p></div></section><section className="community-cta"><Sparkles /><h2>Build in public.<br /><span>Improve with purpose.</span></h2><p>For now, start with a private critique. Community publishing will remain opt-in when it arrives.</p><Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up for private critique <ArrowRight /></Link></section></main></div>;
+  return (
+    <div className="community-page">
+      <header className="simple-header community-nav">
+        <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
+        <nav><HeaderAuthLinks /></nav>
+      </header>
+      <main>
+        <section className="community-hero">
+          <div>
+            <p className="eyebrow light"><Users /> Community preview</p>
+            <h1>Critique with<br /><span>more signal.</span></h1>
+            <p>A future space for thoughtful feedback, visible improvement, and weekly creative practice - designed to make &quot;looks good&quot; the beginning, not the end.</p>
+            <div className="preview-notice"><ShieldCheck /><span><strong>Preview only</strong> Public posting stays disabled until identity, moderation, reporting, and consent controls are live.</span></div>
+          </div>
+          <div className="community-orbit" aria-hidden="true">
+            <span>WHAT WORKS</span><span>WHY IT MATTERS</span><span>WHAT TO TRY</span><div><MessageSquareText /></div>
+          </div>
+        </section>
+
+        <section className="community-feed section-pad">
+          <div className="community-section-title">
+            <div><p className="eyebrow">Featured improvement stories</p><h2>Work worth<br />talking about.</h2></div>
+            <p>Each future post pairs the design with AI context and a structured human critique template.</p>
+          </div>
+          <div className="critique-grid">
+            {critiques.map((item, index) => (
+              <article key={item.title} className={`critique-tile tile-${item.color}`}>
+                <div className="critique-canvas">
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{item.title.split(" ").slice(0, 3).join(" ")}<br /><em>{item.title.split(" ").slice(3).join(" ")}</em></strong>
+                  <div />
+                </div>
+                <div className="critique-info">
+                  <span className="mono-label">{item.category}</span>
+                  <h3>{item.title}</h3>
+                  <div className="maker"><span>{item.maker.charAt(0)}</span><p>{item.maker}<small><BadgeCheck /> Structured critic</small></p><strong>{item.score}<small>/10</small></strong></div>
+                  <blockquote>{item.note}</blockquote>
+                  <footer><span><Heart /> Preview</span><span><MessageSquareText /> Critique template</span></footer>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="challenge-section section-pad">
+          <div className="challenge-copy">
+            <p className="eyebrow light"><Trophy /> Weekly challenge preview</p>
+            <h2>One brief.<br />Many answers.</h2>
+            <p>Practice with a bounded prompt, receive the same rubric, and compare improvement - not popularity alone.</p>
+            <div><span><CalendarDays /> Week 01</span><span>Poster design</span><span>72-hour sprint</span></div>
+            <button className="button button-lime" disabled>Challenges coming later</button>
+          </div>
+          <div className="challenge-card"><span className="mono-label">THE BRIEF</span><p>Design a poster that makes five quiet minutes feel culturally urgent.</p><strong>PAUSE<br /><em>IS A</em><br />PRACTICE.</strong><div className="challenge-shape" /></div>
+        </section>
+
+        <section className="peer-template section-pad">
+          <div><p className="eyebrow">A better comment box</p><h2>Structure makes<br />feedback useful.</h2></div>
+          <div className="template-card">
+            <span>01 / WHAT WORKS</span><p>Name the specific decision and the effect it creates.</p>
+            <span>02 / WHAT CAN IMPROVE</span><p>Describe the design - not the designer.</p>
+            <span>03 / WHY</span><p>Connect the observation to purpose, audience, or principle.</p>
+            <span>04 / SUGGESTION</span><p>Offer a practical direction while leaving room for authorship.</p>
+          </div>
+        </section>
+
+        <section className="community-cta">
+          <Sparkles />
+          <h2>Build in public.<br /><span>Improve with purpose.</span></h2>
+          <p>For now, start with a private critique. Community publishing will remain opt-in when it arrives.</p>
+          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up for private critique <ArrowRight /></Link>
+        </section>
+      </main>
+    </div>
+  );
 }

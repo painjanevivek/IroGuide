@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowRight, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
 import { categoryLabels, reviewOutputSchema } from "@/domain/review";
@@ -55,6 +55,13 @@ export function Dashboard() {
           <h1>Progress,<br />not perfection.</h1>
         </div>
         <Link className="button" href="/review/new">New review <ArrowRight /></Link>
+      </div>
+      <div className="workspace-badge">
+        <ShieldCheck />
+        <div>
+          <strong>Private signed-in workspace</strong>
+          <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected.</span>
+        </div>
       </div>
 
       {loading ? (
