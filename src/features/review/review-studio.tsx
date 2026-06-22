@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
+import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
+import { Reveal } from "@/components/motion/reveal";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { StepTransition } from "@/components/motion/step-transition";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
@@ -202,55 +205,68 @@ function ReviewResult({ review, preview, onRestart }: { review: ReviewOutput; pr
           <div className="preview-caption"><span className="mono-label">SOURCE DESIGN</span><p>Private · Local preview</p></div>
         </aside>
         <section className="result-content">
-          <div className="result-hero">
-            <div>
-              <p className="eyebrow">Your critique is ready</p>
-              <h1>{review.summary.split(".")[0]}.</h1>
-              <p>{review.summary}</p>
+          <Reveal>
+            <div className="result-hero">
+              <div>
+                <p className="eyebrow">Your critique is ready</p>
+                <h1>{review.summary.split(".")[0]}.</h1>
+                <p>{review.summary}</p>
+              </div>
+              <div className="result-score"><span className="mono-label">OVERALL</span><strong>{review.overallScore}<small> / 10</small></strong><span>A useful baseline</span></div>
             </div>
-            <div className="result-score"><span className="mono-label">OVERALL</span><strong>{review.overallScore}<small> / 10</small></strong><span>A useful baseline</span></div>
-          </div>
-          <div className="demo-warning"><AlertCircle /><p><strong>Transparent demo:</strong> this structured sample validates the IroGuide experience but does not analyze pixels. Configure a live vision adapter for real critique.</p></div>
-          {fixFirst && <FixThisFirstCard action={fixFirst} />}
-          <section className="result-section">
-            <div className="result-section-title"><span>01</span><div><p className="eyebrow">What is working</p><h2>Keep these decisions.</h2></div></div>
-            <ul className="strength-list">{review.strengths.map((item) => <li key={item}><Check />{item}</li>)}</ul>
-          </section>
-          <section className="result-section">
-            <div className="result-section-title"><span>02</span><div><p className="eyebrow">Score map</p><h2>Where to focus.</h2></div></div>
-            <div className="result-scores">{review.scores.map((item) => <div key={item.label}><span>{item.label}</span><i><b style={{ width: `${item.score * 10}%` }} /></i><strong>{item.score}</strong></div>)}</div>
-          </section>
-          <section className="result-section">
-            <div className="result-section-title"><span>03</span><div><p className="eyebrow">Priority critique</p><h2>What, why, and how.</h2></div></div>
-            <div className="issue-list">
-              {review.issues.map((issue, index) => {
-                const issueId = getAnnotationIssueId(issue, index);
+          </Reveal>
+          <Reveal delay={0.05}>
+            <div className="demo-warning"><AlertCircle /><p><strong>Transparent demo:</strong> this structured sample validates the IroGuide experience but does not analyze pixels. Configure a live vision adapter for real critique.</p></div>
+          </Reveal>
+          {fixFirst && <Reveal delay={0.08}><FixThisFirstCard action={fixFirst} /></Reveal>}
+          <Reveal delay={0.1}>
+            <section className="result-section">
+              <div className="result-section-title"><span>01</span><div><p className="eyebrow">What is working</p><h2>Keep these decisions.</h2></div></div>
+              <ul className="strength-list">{review.strengths.map((item) => <li key={item}><Check />{item}</li>)}</ul>
+            </section>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <section className="result-section">
+              <div className="result-section-title"><span>02</span><div><p className="eyebrow">Score map</p><h2>Where to focus.</h2></div></div>
+              <div className="result-scores">{review.scores.map((item) => <div key={item.label}><span>{item.label}</span><i><AnimatedScoreBar value={item.score} /></i><strong>{item.score}</strong></div>)}</div>
+            </section>
+          </Reveal>
+          <Reveal delay={0.14}>
+            <section className="result-section">
+              <div className="result-section-title"><span>03</span><div><p className="eyebrow">Priority critique</p><h2>What, why, and how.</h2></div></div>
+              <Stagger className="issue-list">
+                {review.issues.map((issue, index) => {
+                  const issueId = getAnnotationIssueId(issue, index);
 
-                return (
-                  <article
-                    id={`review-${issueId}`}
-                    tabIndex={0}
-                    className={`issue-card priority-${issue.priority}${activeIssueId === issueId ? " is-active" : ""}`}
-                    key={issue.id ?? issue.category}
-                    onFocus={() => setActiveIssueId(issueId)}
-                    onBlur={() => setActiveIssueId(null)}
-                    onMouseEnter={() => setActiveIssueId(issueId)}
-                    onMouseLeave={() => setActiveIssueId(null)}
-                  >
-                    <header><span>{String(index + 1).padStart(2, "0")}</span><div><p>{issue.category}</p><strong>{issue.score}/10</strong></div><b>{issue.priority} priority</b></header>
-                    <div><h3>What we see</h3><p>{issue.observation}</p><h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul></div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-          <section className="result-section">
-            <div className="result-section-title"><span>04</span><div><p className="eyebrow">Fix checklist</p><h2>Make the next version.</h2></div></div>
-            <div className="checklist">{review.checklist.map((item, index) => <label key={item.label} className={checked.includes(index) ? "checked" : ""}><input type="checkbox" checked={checked.includes(index)} onChange={() => setChecked((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index])} /><span><Check /></span><p>{item.label}</p><b>{item.priority}</b></label>)}</div>
-          </section>
-          <ImprovementPanel review={review} />
-          <ComparisonPanel review={review} originalPreview={preview} />
-          <FollowUpChat review={review} />
+                  return (
+                    <StaggerItem key={issue.id ?? issue.category}>
+                      <article
+                        id={`review-${issueId}`}
+                        tabIndex={0}
+                        className={`issue-card priority-${issue.priority}${activeIssueId === issueId ? " is-active" : ""}`}
+                        onFocus={() => setActiveIssueId(issueId)}
+                        onBlur={() => setActiveIssueId(null)}
+                        onMouseEnter={() => setActiveIssueId(issueId)}
+                        onMouseLeave={() => setActiveIssueId(null)}
+                      >
+                        <header><span>{String(index + 1).padStart(2, "0")}</span><div><p>{issue.category}</p><strong>{issue.score}/10</strong></div><b>{issue.priority} priority</b></header>
+                        <div><h3>What we see</h3><p>{issue.observation}</p><h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul></div>
+                      </article>
+                    </StaggerItem>
+                  );
+                })}
+              </Stagger>
+            </section>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <section className="result-section">
+              <div className="result-section-title"><span>04</span><div><p className="eyebrow">Fix checklist</p><h2>Make the next version.</h2></div></div>
+              <div className="checklist">{review.checklist.map((item, index) => <label key={item.label} className={checked.includes(index) ? "checked" : ""}><input type="checkbox" checked={checked.includes(index)} onChange={() => setChecked((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index])} /><span><Check /></span><p>{item.label}</p><b>{item.priority}</b></label>)}</div>
+            </section>
+          </Reveal>
+          <Reveal delay={0.18}><ImprovementPanel review={review} /></Reveal>
+          <Reveal delay={0.2}><ComparisonPanel review={review} originalPreview={preview} /></Reveal>
+          <Reveal delay={0.22}><FollowUpChat review={review} /></Reveal>
         </section>
       </div>
     </main>
