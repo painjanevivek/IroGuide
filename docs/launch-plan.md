@@ -19,7 +19,7 @@ Launch the smallest trustworthy critique loop, learn from real design submission
 
 ### Required before external alpha
 
-- Choose and configure authentication, PostgreSQL, private object storage, and AI providers.
+- Configure Firebase Authentication, Cloud Firestore, private Firebase Storage, and OpenRouter.
 - Implement provider adapters, ownership checks, retention jobs, rate limits, and abuse controls.
 - Add durable review jobs, timeout/retry behavior, observability, and incident alerts.
 - Complete legal privacy/terms review and provider data-processing review.
@@ -118,7 +118,7 @@ The product should preserve drafts and communicate status honestly during a paus
 1. Production auth and ownership model.
 2. Private storage and server-side image validation.
 3. Live vision provider adapter with schema repair and evaluation set.
-4. PostgreSQL persistence and durable review history.
+4. Cloud Firestore persistence and durable review history.
 5. Rate limits, job reliability, observability, and deletion jobs.
 6. Staging security/accessibility review.
 7. Private-alpha invitation and feedback operations.

@@ -8,10 +8,10 @@ Phase: 4 — Technical architecture planning
 - **Application:** Next.js 16 App Router, React 19, TypeScript 6 in strict mode.
 - **Styling:** Tailwind CSS 4 plus CSS custom-property design tokens.
 - **Validation:** Zod 4 at every untrusted boundary.
-- **Persistence:** PostgreSQL with Drizzle ORM and SQL migrations.
-- **Authentication:** standards-based session provider behind a local `AuthService` interface.
-- **Storage:** private S3-compatible object storage behind a `DesignStorage` interface.
-- **AI:** server-only, vision-capable provider behind an `AiReviewProvider` interface.
+- **Persistence:** Cloud Firestore accessed through trusted backend repositories.
+- **Authentication:** Firebase Authentication with Google sign-in and backend ID-token verification.
+- **Storage:** private Firebase Storage objects scoped by authenticated user ownership.
+- **AI:** server-only OpenRouter access behind an `AiReviewProvider` interface, using Qwen by default with a Gemini fallback.
 - **Testing:** Vitest and Testing Library for unit/component behavior; Playwright for critical flows.
 - **Observability:** structured server logs, request correlation IDs, error reporting adapter, and privacy-safe product events.
 
@@ -21,15 +21,15 @@ Dependencies are pinned by the lockfile. Provider SDKs must not be imported from
 
 ```mermaid
 flowchart LR
-  Browser["Browser UI"] --> Web["Next.js server"]
-  Web --> Auth["Auth adapter"]
-  Web --> DB["PostgreSQL"]
-  Web --> Storage["Private object storage"]
-  Web --> Queue["Review job boundary"]
-  Queue --> AI["AI provider adapter"]
+  Browser["IroGuide website"] --> Auth["Firebase Google login"]
+  Browser --> Storage["Private Firebase Storage upload"]
+  Browser --> API["IroGuide backend"]
+  Auth --> API
+  Storage --> API
+  API --> AI["OpenRouter"]
   AI --> Validator["Zod response validator"]
-  Validator --> DB
-  Web --> Telemetry["Privacy-safe telemetry"]
+  Validator --> DB["Cloud Firestore"]
+  API --> DB
 ```
 
 For the first deploy, the job boundary may execute synchronously with a hard timeout, but it retains an explicit interface so a durable queue can replace it without changing the review UI or domain service.
@@ -37,26 +37,27 @@ For the first deploy, the job boundary may execute synchronously with a hard tim
 ## Repository and module layout
 
 ```text
-frontend/
+IroGuide/
   src/app/             Next.js routes, metadata, and layouts
   src/features/        review, marketing, dashboard, and portfolio UI
   src/domain/          browser-safe schemas and view-model logic
-backend/
+IroGuide-backend/
   src/domain/          review schemas, rubrics, and quality rules
   src/services/        AI/provider-facing application services
   src/app.ts           HTTP composition and API routes
   src/server.ts        standalone Fastify process
 ```
 
-The frontend communicates with the backend over HTTP and contains no server API
-routes. Backend domain code does not depend on Fastify, Next.js, storage, or a
-provider SDK. Each application owns its dependency lockfile and quality pipeline.
+The frontend and backend are separate Git repositories and communicate over HTTP.
+The frontend contains no server API routes. Backend domain code does not depend
+on Fastify, Next.js, Firebase, or a provider SDK. Each repository owns its
+dependency lockfile and quality pipeline.
 
 ## Core data model
 
 ### users
 
-- `id` UUID primary key
+- Firebase Authentication UID as the document ID
 - `email` case-normalized unique value
 - `display_name`, `avatar_url`, `plan`
 - `created_at`, `updated_at`, `deleted_at`
@@ -64,7 +65,7 @@ provider SDK. Each application owns its dependency lockfile and quality pipeline
 ### design_uploads
 
 - `id`, `user_id`
-- `storage_key` (never a permanent public URL)
+- `storage_key` under `users/{userId}/uploads/{uploadId}/original`
 - `original_name`, `mime_type`, `byte_size`, `width`, `height`
 - `sha256`, `category`, `status`
 - `created_at`, `deleted_at`
@@ -98,7 +99,11 @@ provider SDK. Each application owns its dependency lockfile and quality pipeline
 - `id`, `review_id`, `kind`, `storage_key`, `prompt`, `change_summary` JSONB
 - `created_at`, `deleted_at`
 
-Ownership checks are mandatory on every user-scoped query. Soft deletion supports recovery while a scheduled retention process removes database and storage objects permanently.
+Firestore collections use `users/{userId}`, `uploads/{uploadId}`,
+`reviews/{reviewId}`, and `reviews/{reviewId}/messages/{messageId}`. Ownership
+checks are mandatory in both Firebase Security Rules and backend repositories.
+Soft deletion supports recovery while a scheduled retention process removes
+database and storage objects permanently.
 
 ## HTTP contract
 
@@ -190,18 +195,14 @@ Prompts are versioned in source. User text cannot override system instructions o
 ## Environment contract
 
 ```text
-DATABASE_URL=
-AUTH_SECRET=
-APP_URL=
-OBJECT_STORAGE_ENDPOINT=
-OBJECT_STORAGE_REGION=
-OBJECT_STORAGE_BUCKET=
-OBJECT_STORAGE_ACCESS_KEY_ID=
-OBJECT_STORAGE_SECRET_ACCESS_KEY=
-AI_PROVIDER=
-AI_API_KEY=
-AI_VISION_MODEL=
-AI_TEXT_MODEL=
+GOOGLE_APPLICATION_CREDENTIALS=
+FIREBASE_PROJECT_ID=
+FIREBASE_STORAGE_BUCKET=
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=qwen/qwen3.5-flash-02-23
+OPENROUTER_FALLBACK_MODEL=google/gemini-2.5-flash
+OPENROUTER_SITE_URL=
+OPENROUTER_APP_NAME=IroGuide
 ```
 
 Local development may use an explicit deterministic demo provider. Production must fail closed if configured with demo AI, in-memory auth, or public storage.
