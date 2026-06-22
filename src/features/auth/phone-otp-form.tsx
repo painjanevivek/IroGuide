@@ -51,7 +51,7 @@ export function PhoneOtpForm({ intent = "sign-in", setupError = "" }: PhoneOtpFo
       setMessage("OTP sent. Enter the 6-digit code from the SMS.");
     } catch (sendError) {
       await resetRecaptcha();
-      setFormError(sendError instanceof Error ? sendError.message : "SMS could not be sent. Please try again.");
+      setFormError(getPhoneAuthErrorMessage(sendError, normalizedPhone));
     } finally {
       setSending(false);
     }
@@ -142,4 +142,27 @@ export function PhoneOtpForm({ intent = "sign-in", setupError = "" }: PhoneOtpFo
       </form>
     </>
   );
+}
+
+function getPhoneAuthErrorMessage(error: unknown, phoneNumber: string) {
+  const message = error instanceof Error ? error.message : "";
+  const countryHint = phoneNumber.startsWith("+91") ? "India (IN)" : "this phone number's country";
+
+  if (message.includes("auth/operation-not-allowed") && message.toLowerCase().includes("region")) {
+    return `SMS is blocked for ${countryHint} in Firebase. Open Firebase Console > Authentication > Settings > SMS region policy, choose Allow, select ${countryHint}, then save.`;
+  }
+
+  if (message.includes("auth/operation-not-allowed")) {
+    return "Phone OTP is not enabled for this Firebase project. Open Firebase Console > Authentication > Sign-in method and enable Phone.";
+  }
+
+  if (message.includes("auth/too-many-requests")) {
+    return "Firebase has temporarily blocked OTP requests from this device or number. Please wait a few minutes and try again.";
+  }
+
+  if (message.includes("auth/invalid-phone-number")) {
+    return "Enter a valid phone number with country code, for example +919876543210.";
+  }
+
+  return message || "SMS could not be sent. Please try again.";
 }
