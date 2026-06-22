@@ -12,6 +12,7 @@ This repository follows the phased product plan in
 - [Visual system](./docs/design-system.md)
 - [Technical architecture](./docs/technical-architecture.md)
 - [Trust, safety, and accessibility](./docs/trust-and-safety.md)
+- [Launch plan](./docs/launch-plan.md)
 
 The website implementation will evolve phase by phase, with each completed phase
 kept in a focused conventional commit.

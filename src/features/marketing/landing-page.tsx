@@ -192,7 +192,7 @@ export function LandingPage() {
       <footer className="site-footer">
         <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">D</span><span>DinoDesign</span></Link>
         <p>Critique that makes the work—and the designer—better.</p>
-        <div><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>© 2026 DinoDesign</span></div>
+        <div><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>© 2026 DinoDesign</span></div>
       </footer>
     </main>
   );
