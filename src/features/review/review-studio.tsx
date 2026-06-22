@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LoaderCircle, Loc
 import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
 import { apiBaseUrl } from "@/config/api";
 import { useAuth } from "@/features/auth/auth-provider";
+import { getErrorMessage, readJsonResponse } from "@/lib/http";
 import { ImprovementPanel } from "./improvement-panel";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -73,8 +74,8 @@ export function ReviewStudio() {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ category, mode, file: { name: file.name, type: file.type, size: file.size }, brief }),
       });
-      const payload: unknown = await response.json();
-      if (!response.ok) throw new Error(typeof payload === "object" && payload && "error" in payload ? String(payload.error) : "Review failed.");
+      const payload = await readJsonResponse(response, "The review service is not available right now.");
+      if (!response.ok) throw new Error(getErrorMessage(payload, "Review failed."));
       const parsed = reviewOutputSchema.parse(payload);
       setReview(parsed);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : "Review failed. Please try again."); }
@@ -104,7 +105,7 @@ export function ReviewStudio() {
 
           {step === 3 && <div className="form-panel"><div className="panel-heading"><span>03</span><div><h2>How should we talk?</h2><p>The standards stay consistent. You choose the voice.</p></div></div><div className="mode-selector">{feedbackModes.map((item, index) => <label key={item} className={`select-mode mode-${item}`}><input type="radio" name="mode" checked={mode === item} onChange={() => setMode(item)} /><span className="mode-index">0{index + 1}</span><MessageIcon mode={item} /><div><h3>{modeCopy[item][0]}</h3><p>{modeCopy[item][1]}</p><blockquote>“{item === 'friendly' ? 'Let’s make the main message easier to notice.' : item === 'mentor' ? 'The hierarchy needs a more deliberate first reading point.' : 'The hierarchy is unresolved. Fix it before adding anything else.'}”</blockquote></div><span className="radio-mark"><Check /></span></label>)}</div><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(2)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" onClick={() => setStep(4)}>Review details <ArrowRight size={17} /></button></div></div>}
 
-          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>The backend verifies your Firebase ID token and saves the structured critique to Firestore. Image pixel analysis arrives with the live vision provider.</p></div></div>{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" /> Building your critique…</> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
+          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured demo critique is returned. Durable Firestore saving arrives with the live backend.</p></div></div>{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => setStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" /> Building your critique…</> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
         </section>
       </form>
     </main>
