@@ -11,6 +11,7 @@ import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, ty
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
 import { AnnotationOverlay } from "./annotation-overlay";
+import { ComparisonPanel } from "./comparison-panel";
 import { ImprovementPanel } from "./improvement-panel";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -191,6 +192,7 @@ function ReviewResult({ review, preview, onRestart }: { review: ReviewOutput; pr
             <div className="checklist">{review.checklist.map((item, index) => <label key={item.label} className={checked.includes(index) ? "checked" : ""}><input type="checkbox" checked={checked.includes(index)} onChange={() => setChecked((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index])} /><span><Check /></span><p>{item.label}</p><b>{item.priority}</b></label>)}</div>
           </section>
           <ImprovementPanel review={review} />
+          <ComparisonPanel review={review} originalPreview={preview} />
           <section className="follow-up"><Sparkles /><p className="eyebrow light">Keep the conversation going</p><h2>Ask your mentor.</h2><div>{review.followUps.map((question) => <button key={question}>{question} <ArrowRight /></button>)}</div><p className="follow-note">Live follow-up conversation arrives with the configured AI adapter.</p></section>
         </section>
       </div>

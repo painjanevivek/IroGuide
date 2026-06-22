@@ -28,7 +28,7 @@ export function RecentReviewPanel({ review }: { review: DashboardReviewSummary }
 
       <div className="recent-review-actions">
         <Link className="button button-dark" href={`#review-${review.id}`}>Open critique <ArrowRight size={17} /></Link>
-        <Link className="button-secondary" href="/review/new">Review next version <RotateCcw size={16} /></Link>
+        <Link className="button-secondary" href="/review/new?revision=latest">Review next version <RotateCcw size={16} /></Link>
       </div>
     </section>
   );
