@@ -16,6 +16,8 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   error: string;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -78,6 +80,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    setError("");
+    try {
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      await signInWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
+    } catch (signInError) {
+      const message = getAuthErrorMessage(signInError);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
+  const signUpWithEmail = useCallback(async (email: string, password: string, displayName?: string) => {
+    setError("");
+    try {
+      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
+      const credential = await createUserWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
+      if (displayName?.trim()) {
+        await updateProfile(credential.user, { displayName: displayName.trim() });
+      }
+    } catch (signUpError) {
+      const message = getAuthErrorMessage(signUpError);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     setError("");
     try {
@@ -89,8 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, error, signInWithGoogle, signOut }),
-    [error, loading, signInWithGoogle, signOut, user],
+    () => ({ user, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut }),
+    [error, loading, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -119,11 +148,31 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   if (code === "auth/operation-not-allowed" || message.includes("auth/operation-not-allowed")) {
-    return "Google login is not enabled in Firebase. Open Firebase Authentication > Sign-in method and enable Google.";
+    return "This sign-in method is not enabled in Firebase. Open Firebase Authentication > Sign-in method and enable the provider you want to use.";
   }
 
   if (code === "auth/internal-error" || message.includes("auth/internal-error")) {
     return "Google sign-in failed inside Firebase. Confirm the Google provider is enabled in Firebase Authentication, refresh the page, and try again.";
+  }
+
+  if (code === "auth/email-already-in-use" || message.includes("auth/email-already-in-use")) {
+    return "An account already exists for this email. Sign in instead.";
+  }
+
+  if (code === "auth/invalid-credential" || message.includes("auth/invalid-credential")) {
+    return "The email or password is incorrect.";
+  }
+
+  if (code === "auth/invalid-email" || message.includes("auth/invalid-email")) {
+    return "Enter a valid email address.";
+  }
+
+  if (code === "auth/weak-password" || message.includes("auth/weak-password")) {
+    return "Use a stronger password with at least 6 characters.";
+  }
+
+  if (code === "auth/user-disabled" || message.includes("auth/user-disabled")) {
+    return "This account has been disabled.";
   }
 
   return message || "Google sign-in failed. Please try again.";

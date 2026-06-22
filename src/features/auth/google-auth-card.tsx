@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./auth-provider";
@@ -36,6 +37,9 @@ export function GoogleAuthCard({ intent = "sign-in", setupError = "" }: GoogleAu
         <button className="button button-dark google-button" type="button" onClick={() => void onGoogleClick()} disabled={submitting}>
           {submitting ? <><LoaderCircle className="spin" /> Redirecting to Google...</> : <><GoogleMark /> Continue with Google</>}
         </button>
+        <Link className="button-secondary" href={isSignUp ? "/auth/sign-up" : "/auth/sign-in"}>
+          {isSignUp ? "Sign up manually with email" : "Sign in manually with email"}
+        </Link>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>
       </div>
     </>
