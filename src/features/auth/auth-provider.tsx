@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPopup,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
@@ -22,13 +20,10 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   error: string;
-  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -53,16 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    setError("");
-    try {
-      const auth = getFirebaseClientAuth();
-      await signInWithPopup(auth, googleProvider);
-    } catch (signInError) {
-      setError(signInError instanceof Error ? signInError.message : "Google sign-in failed.");
-    }
-  }, []);
-
   const signOut = useCallback(async () => {
     setError("");
     try {
@@ -73,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, error, signInWithGoogle, signOut }),
-    [error, loading, signInWithGoogle, signOut, user],
+    () => ({ user, loading, error, signOut }),
+    [error, loading, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
