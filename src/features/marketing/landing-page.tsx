@@ -66,7 +66,8 @@ export function LandingPage() {
         <div className="header-actions">
           <Link className="text-link desktop-only" href="/community">Community</Link>
           <Link className="text-link desktop-only" href="/dashboard">Dashboard</Link>
-          <Link className="button button-small" href="/review/new">Review a design <ArrowRight size={16} /></Link>
+          <Link className="text-link desktop-only" href="/auth?mode=sign-in">Sign in</Link>
+          <Link className="button button-small" href="/auth?mode=sign-up">Sign up <ArrowRight size={16} /></Link>
         </div>
       </header>
 
@@ -77,6 +78,7 @@ export function LandingPage() {
           <p className="hero-lede">Upload your work. Get a professional critique that explains <strong>what</strong> is off, <strong>why</strong> it matters, and <strong>how</strong> to fix it.</p>
           <div className="hero-actions">
             <Link className="button button-large" href="/review/new">Review my design <WandSparkles size={19} /></Link>
+            <Link className="button-secondary hero-auth-button" href="/auth?mode=sign-up">Sign up free <ArrowRight size={18} /></Link>
             <Link className="button-quiet" href="#example">See a real critique <ArrowRight size={18} /></Link>
           </div>
           <div className="micro-proof">
@@ -186,7 +188,10 @@ export function LandingPage() {
         <p className="eyebrow light">Your next version starts here</p>
         <h2>Stop guessing.<br /><span>Start refining.</span></h2>
         <p>Bring the design. IroGuide will bring the clarity.</p>
-        <Link className="button button-lime button-large" href="/review/new">Review my design <Upload size={19} /></Link>
+        <div className="final-cta-actions">
+          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up <ArrowRight size={19} /></Link>
+          <Link className="button-quiet beta-link" href="/auth?mode=sign-in">Sign in <Upload size={19} /></Link>
+        </div>
       </section>
 
       <footer className="site-footer">
