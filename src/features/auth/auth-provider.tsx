@@ -44,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           void getRedirectResult(auth).catch((redirectError) => {
             if (!active) return;
+            if (getAuthErrorCode(redirectError) === "auth/internal-error") {
+              return;
+            }
             setError(getAuthErrorMessage(redirectError));
           });
         })
@@ -71,10 +74,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
-      const { GoogleAuthProvider, signInWithRedirect } = await import("firebase/auth");
+      const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithRedirect(getFirebaseClientAuth(), provider);
+      try {
+        await signInWithPopup(getFirebaseClientAuth(), provider);
+      } catch (popupError) {
+        const code = getAuthErrorCode(popupError);
+        if (code === "auth/popup-blocked") {
+          await signInWithRedirect(getFirebaseClientAuth(), provider);
+          return;
+        }
+        throw popupError;
+      }
     } catch (signInError) {
       setError(getAuthErrorMessage(signInError));
     }
@@ -132,7 +144,7 @@ export function useAuth() {
 }
 
 function getAuthErrorMessage(error: unknown) {
-  const code = typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : "";
+  const code = getAuthErrorCode(error);
   const message = error instanceof Error ? error.message : "";
 
   if (code === "auth/popup-closed-by-user" || message.includes("auth/popup-closed-by-user")) {
@@ -152,7 +164,7 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   if (code === "auth/internal-error" || message.includes("auth/internal-error")) {
-    return "Google sign-in failed inside Firebase. Confirm the Google provider is enabled in Firebase Authentication, refresh the page, and try again.";
+    return "Google sign-in could not complete. Try again, or use manual email sign-in below.";
   }
 
   if (code === "auth/email-already-in-use" || message.includes("auth/email-already-in-use")) {
@@ -176,4 +188,8 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   return message || "Google sign-in failed. Please try again.";
+}
+
+function getAuthErrorCode(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : "";
 }
