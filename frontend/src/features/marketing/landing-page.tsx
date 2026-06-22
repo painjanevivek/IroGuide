@@ -46,7 +46,7 @@ const modes = [
 ] as const;
 
 const faqs = [
-  ["Will DinoDesign redesign my work automatically?", "No. Critique comes first. You stay in control and can optionally request an improvement plan later."],
+  ["Will IroGuide redesign my work automatically?", "No. Critique comes first. You stay in control and can optionally request an improvement plan later."],
   ["What kinds of design can I review?", "The first release supports logos, posters, social posts, UI screens, websites, book covers, and packaging."],
   ["Is my uploaded work private?", "Yes. Work is private by default, never added to a public gallery without permission, and can be deleted."],
   ["Does the score decide whether my design is good?", "No. Scores are navigation aids. The evidence, audience fit, and recommended changes matter more than a single number."],
@@ -57,8 +57,8 @@ export function LandingPage() {
     <main className="site-shell">
       <header className="site-header">
         <Link className="wordmark" href="/" aria-label={`${siteConfig.name} home`}>
-          <span className="wordmark-mark" aria-hidden="true">D</span>
-          <span>DinoDesign</span>
+          <span className="wordmark-mark" aria-hidden="true">I</span>
+          <span>IroGuide</span>
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
           {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
@@ -86,7 +86,7 @@ export function LandingPage() {
           </div>
         </div>
 
-        <div className="hero-specimen" aria-label="Example DinoDesign critique interface">
+        <div className="hero-specimen" aria-label="Example IroGuide critique interface">
           <div className="specimen-grid" aria-hidden="true" />
           <div className="specimen-toolbar"><span>POSTER_03.PNG</span><span>MENTOR MODE</span></div>
           <div className="specimen-art">
@@ -185,14 +185,14 @@ export function LandingPage() {
         <div className="cta-spark" aria-hidden="true"><Sparkles /><Sparkles /><Sparkles /></div>
         <p className="eyebrow light">Your next version starts here</p>
         <h2>Stop guessing.<br /><span>Start refining.</span></h2>
-        <p>Bring the design. DinoDesign will bring the clarity.</p>
+        <p>Bring the design. IroGuide will bring the clarity.</p>
         <Link className="button button-lime button-large" href="/review/new">Review my design <Upload size={19} /></Link>
       </section>
 
       <footer className="site-footer">
-        <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">D</span><span>DinoDesign</span></Link>
+        <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">I</span><span>IroGuide</span></Link>
         <p>Critique that makes the work—and the designer—better.</p>
-        <div><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>© 2026 DinoDesign</span></div>
+        <div><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>© 2026 IroGuide</span></div>
       </footer>
     </main>
   );

@@ -1,4 +1,4 @@
-# DinoDesign Launch Plan
+# IroGuide Launch Plan
 
 Status: Phase 13 readiness plan  
 Product state: Verified local product demo; external services not configured

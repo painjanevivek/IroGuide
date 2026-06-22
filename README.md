@@ -1,4 +1,4 @@
-# DinoDesign
+# IroGuide
 
 Professional, contextual AI critique for visual design work.
 

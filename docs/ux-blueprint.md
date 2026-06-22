@@ -1,4 +1,4 @@
-# DinoDesign UX Blueprint
+# IroGuide UX Blueprint
 
 Status: Implementation baseline  
 Phase: 2 — UX planning and user-flow design

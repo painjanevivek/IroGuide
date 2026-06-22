@@ -1,4 +1,4 @@
-# DinoDesign backend
+# IroGuide backend
 
 Standalone Fastify API for review generation and improvement planning.
 

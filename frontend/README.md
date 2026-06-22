@@ -1,4 +1,4 @@
-# DinoDesign frontend
+# IroGuide frontend
 
 Standalone Next.js website and browser-side product experience.
 

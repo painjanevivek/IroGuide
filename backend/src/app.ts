@@ -11,7 +11,7 @@ export async function buildApp(options: AppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? false, bodyLimit: 1_000_000, requestTimeout: 30_000 });
   await app.register(cors, { origin: options.frontendOrigin ?? process.env.FRONTEND_ORIGIN ?? "http://localhost:3000", methods: ["GET", "POST", "OPTIONS"] });
 
-  app.get("/health", async () => ({ status: "ok", service: "dinodesign-backend" }));
+  app.get("/health", async () => ({ status: "ok", service: "iroguide-backend" }));
   app.post("/api/reviews", async (request, reply) => {
     const parsed = reviewRequestSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(422).send({ error: "Check the design details and try again.", fields: zodFields(parsed.error) });

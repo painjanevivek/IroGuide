@@ -10,8 +10,8 @@ type StoredReview = ProgressReview & { id: string; category?: string; summary: s
 
 export function Dashboard() {
   const storedReviews = useSyncExternalStore(
-    (notify) => { window.addEventListener("storage", notify); window.addEventListener("dinodesign-storage", notify); return () => { window.removeEventListener("storage", notify); window.removeEventListener("dinodesign-storage", notify); }; },
-    () => localStorage.getItem("dinodesign-reviews") ?? "[]",
+    (notify) => { window.addEventListener("storage", notify); window.addEventListener("iroguide-storage", notify); return () => { window.removeEventListener("storage", notify); window.removeEventListener("iroguide-storage", notify); }; },
+    () => localStorage.getItem("iroguide-reviews") ?? "[]",
     () => "[]",
   );
   let reviews: StoredReview[] = [];

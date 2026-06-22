@@ -1,4 +1,4 @@
-# DinoDesign Technical Architecture
+# IroGuide Technical Architecture
 
 Status: Approved implementation baseline  
 Phase: 4 — Technical architecture planning

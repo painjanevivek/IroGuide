@@ -1,11 +1,11 @@
-# DinoDesign Visual System
+# IroGuide Visual System
 
 Status: Implementation specification  
 Phase: 3 — UI design and visual system
 
 ## Creative direction
 
-**Editorial studio meets analytical instrument.** DinoDesign should feel expressive enough to earn a designer's attention and disciplined enough to trust with professional critique.
+**Editorial studio meets analytical instrument.** IroGuide should feel expressive enough to earn a designer's attention and disciplined enough to trust with professional critique.
 
 The visual language combines:
 
@@ -17,11 +17,11 @@ The visual language combines:
 - Oversized editorial headlines balanced by compact analytical labels.
 - Grids, annotations, crop marks, and score arcs used sparingly as functional motifs.
 
-Avoid generic purple gradients, glass everywhere, cartoon dinosaurs, noisy neon, or decoration that competes with a user's uploaded design.
+Avoid generic purple gradients, glass everywhere, cartoon mascots, noisy neon, or decoration that competes with a user's uploaded design.
 
 ## Brand naming
 
-The product name is stored as a single application constant and exposed as plain text in metadata, navigation, and transactional copy. The wordmark may emphasize `Dino` and `Design` separately, but accessibility labels always read “DinoDesign.”
+The product name is stored as a single application constant and exposed as plain text in metadata, navigation, and transactional copy. The wordmark may emphasize `Iro` and `Guide` separately, but accessibility labels always read “IroGuide.”
 
 ## Color tokens
 
@@ -174,4 +174,3 @@ Calmer than the landing page. Combine one prominent next action with review card
 ## Quality bar
 
 The interface is accepted only when it remains coherent without animation, works in high zoom and reduced motion, clearly distinguishes actions from information, keeps uploaded work color-neutral, and makes the first recommended fix discoverable faster than decorative brand moments.
-

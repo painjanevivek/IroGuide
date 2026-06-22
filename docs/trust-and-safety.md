@@ -1,4 +1,4 @@
-# DinoDesign Trust, Safety, and Accessibility Baseline
+# IroGuide Trust, Safety, and Accessibility Baseline
 
 Status: Phase 12 implementation checklist
 

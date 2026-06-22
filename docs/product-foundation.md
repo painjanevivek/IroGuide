@@ -1,12 +1,12 @@
-# DinoDesign Product Foundation
+# IroGuide Product Foundation
 
 Status: Approved baseline for implementation  
-Working product name: **DinoDesign**  
+Working product name: **IroGuide**
 Last updated: 2026-06-22
 
 ## Vision
 
-DinoDesign is a professional AI design-critique and learning platform. It helps people upload visual work and receive clear, contextual, actionable feedback that feels like guidance from an experienced designer or art director.
+IroGuide is a professional AI design-critique and learning platform. It helps people upload visual work and receive clear, contextual, actionable feedback that feels like guidance from an experienced designer or art director.
 
 It is not an image generator with a score attached. Its primary job is to explain **what** is working or failing, **why** that matters for the intended audience and goal, and **how** to improve the work.
 
@@ -31,7 +31,7 @@ The product should improve both the submitted design and the user's design judgm
 
 Design feedback is often subjective, vague, delayed, or inaccessible. Comments such as “looks good,” “something feels off,” and “make it more modern” do not identify the failing principle, the audience impact, or a practical repair.
 
-This is especially costly for learners without regular mentor access, freelancers before client delivery, creators working at speed, and business owners reviewing work outside their expertise. DinoDesign turns critique into a structured, repeatable process while keeping the user's purpose and audience central.
+This is especially costly for learners without regular mentor access, freelancers before client delivery, creators working at speed, and business owners reviewing work outside their expertise. IroGuide turns critique into a structured, repeatable process while keeping the user's purpose and audience central.
 
 ## Priority users
 

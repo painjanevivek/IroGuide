@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "DinoDesign",
+  name: "IroGuide",
   description:
     "Professional, contextual AI critique that tells you what works, what does not, and what to fix next.",
   navigation: [
