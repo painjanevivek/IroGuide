@@ -34,11 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const auth = getFirebaseClientAuth();
       void import("firebase/auth")
-        .then(({ onAuthStateChanged }) => {
+        .then(({ getRedirectResult, onAuthStateChanged }) => {
           if (!active) return;
           unsubscribe = onAuthStateChanged(auth, (nextUser) => {
             setUser(nextUser);
             setLoading(false);
+          });
+          void getRedirectResult(auth).catch((redirectError) => {
+            if (!active) return;
+            setError(getAuthErrorMessage(redirectError));
           });
         })
         .catch((setupError) => {
@@ -65,10 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
-      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+      const { GoogleAuthProvider, signInWithRedirect } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(getFirebaseClientAuth(), provider);
+      await signInWithRedirect(getFirebaseClientAuth(), provider);
     } catch (signInError) {
       setError(getAuthErrorMessage(signInError));
     }
@@ -119,7 +123,7 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   if (code === "auth/internal-error" || message.includes("auth/internal-error")) {
-    return "Google sign-in could not open correctly. Make sure this domain is added in Firebase Authorized domains, then refresh and try again.";
+    return "Google sign-in failed inside Firebase. Confirm the Google provider is enabled in Firebase Authentication, refresh the page, and try again.";
   }
 
   return message || "Google sign-in failed. Please try again.";

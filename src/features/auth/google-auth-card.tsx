@@ -34,7 +34,7 @@ export function GoogleAuthCard({ intent = "sign-in", setupError = "" }: GoogleAu
       <div className="google-auth-card">
         {visibleError && <p className="form-error" role="alert">{visibleError}</p>}
         <button className="button button-dark google-button" type="button" onClick={() => void onGoogleClick()} disabled={submitting}>
-          {submitting ? <><LoaderCircle className="spin" /> Opening Google...</> : <><GoogleMark /> Continue with Google</>}
+          {submitting ? <><LoaderCircle className="spin" /> Redirecting to Google...</> : <><GoogleMark /> Continue with Google</>}
         </button>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>
       </div>
