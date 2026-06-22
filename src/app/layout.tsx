@@ -34,7 +34,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
-        {children}
+        <a className="skip-link" href="#app-content">Skip to main content</a>
+        <div id="app-content">{children}</div>
       </body>
     </html>
   );
