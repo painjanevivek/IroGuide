@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, LoaderCircle } from "lucide-react";
-import { PhoneOtpForm } from "./phone-otp-form";
+import { GoogleAuthCard } from "./google-auth-card";
 import { useAuth } from "./auth-provider";
 
 export function AuthPage() {
@@ -29,5 +29,5 @@ export function AuthPage() {
     );
   }
 
-  return <main className="auth-gate"><PhoneOtpForm intent={intent} setupError={error} /></main>;
+  return <main className="auth-gate"><GoogleAuthCard intent={intent} setupError={error} /></main>;
 }

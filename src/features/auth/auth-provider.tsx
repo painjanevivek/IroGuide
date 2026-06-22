@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithPopup,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
@@ -20,6 +22,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   error: string;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -48,6 +51,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await signInWithPopup(getFirebaseClientAuth(), provider);
+    } catch (signInError) {
+      setError(getAuthErrorMessage(signInError));
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     setError("");
     try {
@@ -58,8 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, error, signOut }),
-    [error, loading, signOut, user],
+    () => ({ user, loading, error, signInWithGoogle, signOut }),
+    [error, loading, signInWithGoogle, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -69,4 +83,22 @@ export function useAuth() {
   const value = useContext(AuthContext);
   if (!value) throw new Error("useAuth must be used inside AuthProvider.");
   return value;
+}
+
+function getAuthErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message.includes("auth/popup-closed-by-user")) {
+    return "Google sign-in was closed before it finished. Please try again.";
+  }
+
+  if (message.includes("auth/popup-blocked")) {
+    return "Your browser blocked the Google sign-in popup. Allow popups for IroGuide and try again.";
+  }
+
+  if (message.includes("auth/unauthorized-domain")) {
+    return "This domain is not authorized in Firebase. Add your site domain in Firebase Authentication > Settings > Authorized domains.";
+  }
+
+  return message || "Google sign-in failed. Please try again.";
 }
