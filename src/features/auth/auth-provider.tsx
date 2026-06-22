@@ -86,18 +86,27 @@ export function useAuth() {
 }
 
 function getAuthErrorMessage(error: unknown) {
+  const code = typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : "";
   const message = error instanceof Error ? error.message : "";
 
-  if (message.includes("auth/popup-closed-by-user")) {
+  if (code === "auth/popup-closed-by-user" || message.includes("auth/popup-closed-by-user")) {
     return "Google sign-in was closed before it finished. Please try again.";
   }
 
-  if (message.includes("auth/popup-blocked")) {
+  if (code === "auth/popup-blocked" || message.includes("auth/popup-blocked")) {
     return "Your browser blocked the Google sign-in popup. Allow popups for IroGuide and try again.";
   }
 
-  if (message.includes("auth/unauthorized-domain")) {
+  if (code === "auth/unauthorized-domain" || message.includes("auth/unauthorized-domain")) {
     return "This domain is not authorized in Firebase. Add your site domain in Firebase Authentication > Settings > Authorized domains.";
+  }
+
+  if (code === "auth/operation-not-allowed" || message.includes("auth/operation-not-allowed")) {
+    return "Google login is not enabled in Firebase. Open Firebase Authentication > Sign-in method and enable Google.";
+  }
+
+  if (code === "auth/internal-error" || message.includes("auth/internal-error")) {
+    return "Google sign-in could not open correctly. Make sure this domain is added in Firebase Authorized domains, then refresh and try again.";
   }
 
   return message || "Google sign-in failed. Please try again.";
