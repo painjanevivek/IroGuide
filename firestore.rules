@@ -10,6 +10,38 @@ service cloud.firestore {
       return signedIn() && resource.data.userId == request.auth.uid;
     }
 
+    function ownsIncomingDocument() {
+      return signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function ownsExistingAuthorDocument() {
+      return signedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    function ownsIncomingAuthorDocument() {
+      return signedIn() && request.resource.data.authorId == request.auth.uid;
+    }
+
+    function isPublicCommunityPost() {
+      return resource.data.visibility == "public";
+    }
+
+    function isIncomingPublicCommunityPost() {
+      return request.resource.data.visibility == "public";
+    }
+
+    function isCommunityStatsUpdate() {
+      return signedIn()
+        && isPublicCommunityPost()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["stats", "updatedAt"])
+        && request.resource.data.stats.comments is int
+        && request.resource.data.stats.likes is int
+        && request.resource.data.stats.saves is int
+        && request.resource.data.stats.comments >= 0
+        && request.resource.data.stats.likes >= 0
+        && request.resource.data.stats.saves >= 0;
+    }
+
     function ownsReview(reviewId) {
       return signedIn()
         && get(/databases/$(database)/documents/reviews/$(reviewId)).data.userId == request.auth.uid;
@@ -22,11 +54,43 @@ service cloud.firestore {
 
     match /reviews/{reviewId} {
       allow read: if ownsExistingDocument();
-      allow write: if false;
+      allow create: if ownsIncomingDocument();
+      allow update: if ownsExistingDocument() && ownsIncomingDocument();
+      allow delete: if ownsExistingDocument();
 
       match /messages/{messageId} {
         allow read: if ownsReview(reviewId);
         allow write: if false;
+      }
+    }
+
+    match /reviewDrafts/{draftId} {
+      allow read: if ownsExistingDocument();
+      allow create: if ownsIncomingDocument();
+      allow update: if ownsExistingDocument() && ownsIncomingDocument();
+      allow delete: if ownsExistingDocument();
+    }
+
+    match /communityPosts/{postId} {
+      allow read: if signedIn() && isPublicCommunityPost();
+      allow create: if ownsIncomingAuthorDocument() && isIncomingPublicCommunityPost();
+      allow update: if (ownsExistingAuthorDocument() && ownsIncomingAuthorDocument() && isIncomingPublicCommunityPost())
+        || isCommunityStatsUpdate();
+      allow delete: if ownsExistingAuthorDocument();
+
+      match /comments/{commentId} {
+        allow read: if signedIn()
+          && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
+        allow create: if signedIn()
+          && request.resource.data.authorId == request.auth.uid
+          && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
+        allow update, delete: if false;
+      }
+
+      match /interactions/{userId} {
+        allow read, write: if signedIn()
+          && userId == request.auth.uid
+          && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
       }
     }
 
