@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@/app/route-styles.css";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthGate } from "@/features/auth/auth-gate";

@@ -19,8 +19,8 @@ export function LandingHeaderActions() {
   if (user) {
     return (
       <div className="header-actions">
-        <Link className="text-link desktop-only" href="/community">Community</Link>
-        <Link className="text-link desktop-only" href="/dashboard">Dashboard</Link>
+        <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
+        <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
         <UserMenu />
       </div>
     );
@@ -28,10 +28,10 @@ export function LandingHeaderActions() {
 
   return (
     <div className="header-actions">
-      <Link className="text-link desktop-only" href="/community">Community</Link>
-      <Link className="text-link desktop-only" href="/dashboard">Dashboard</Link>
-      <Link className="text-link desktop-only" href="/auth?mode=sign-in">Sign in</Link>
-      <Link className="button button-small" href="/auth?mode=sign-up">Sign up <ArrowRight size={16} /></Link>
+      <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
+      <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
+      <Link className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false}>Sign in</Link>
+      <Link className="button button-small" href="/auth?mode=sign-up" prefetch={false}>Sign up <ArrowRight size={16} /></Link>
     </div>
   );
 }
@@ -44,7 +44,7 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
   if (user) {
     return (
       <>
-        {includeDashboard && <Link href="/dashboard">Dashboard</Link>}
+        {includeDashboard && <Link href="/dashboard" prefetch={false}>Dashboard</Link>}
         <UserMenu />
       </>
     );
@@ -52,9 +52,9 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
 
   return (
     <>
-      {includeDashboard && <Link href="/dashboard">Dashboard</Link>}
-      <Link href="/auth?mode=sign-in">Sign in</Link>
-      <Link className="button button-small" href="/auth?mode=sign-up">Sign up <ArrowRight /></Link>
+      {includeDashboard && <Link href="/dashboard" prefetch={false}>Dashboard</Link>}
+      <Link href="/auth?mode=sign-in" prefetch={false}>Sign in</Link>
+      <Link className="button button-small" href="/auth?mode=sign-up" prefetch={false}>Sign up <ArrowRight /></Link>
     </>
   );
 }
@@ -63,8 +63,8 @@ export function LandingHeroAuthButton() {
   const { user, loading } = useAuth();
 
   if (loading) return null;
-  if (user) return <Link className="button-secondary hero-auth-button" href="/dashboard">Open workspace <ArrowRight size={18} /></Link>;
-  return <Link className="button-secondary hero-auth-button" href="/auth?mode=sign-up">Sign up free <ArrowRight size={18} /></Link>;
+  if (user) return <Link className="button-secondary hero-auth-button" href="/dashboard" prefetch={false}>Open workspace <ArrowRight size={18} /></Link>;
+  return <Link className="button-secondary hero-auth-button" href="/auth?mode=sign-up" prefetch={false}>Sign up free <ArrowRight size={18} /></Link>;
 }
 
 export function LandingFinalAuthActions() {
@@ -75,16 +75,16 @@ export function LandingFinalAuthActions() {
   if (user) {
     return (
       <div className="final-cta-actions">
-        <Link className="button button-lime button-large" href="/review/new">New review <ArrowRight size={19} /></Link>
-        <Link className="button-quiet beta-link" href="/profile">Profile <Upload size={19} /></Link>
+        <Link className="button button-lime button-large" href="/review/new" prefetch={false}>New review <ArrowRight size={19} /></Link>
+        <Link className="button-quiet beta-link" href="/profile" prefetch={false}>Profile <Upload size={19} /></Link>
       </div>
     );
   }
 
   return (
     <div className="final-cta-actions">
-      <Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up <ArrowRight size={19} /></Link>
-      <Link className="button-quiet beta-link" href="/auth?mode=sign-in">Sign in <Upload size={19} /></Link>
+      <Link className="button button-lime button-large" href="/auth?mode=sign-up" prefetch={false}>Sign up <ArrowRight size={19} /></Link>
+      <Link className="button-quiet beta-link" href="/auth?mode=sign-in" prefetch={false}>Sign in <Upload size={19} /></Link>
     </div>
   );
 }

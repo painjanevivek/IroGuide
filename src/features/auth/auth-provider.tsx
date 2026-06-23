@@ -10,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getFirebaseClientAuth } from "@/lib/firebase/auth";
 
 type AuthState = {
   user: User | null;
@@ -41,11 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe = () => {};
     let active = true;
 
+    if (!shouldInitializeAuthSession()) {
+      queueMicrotask(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+      return () => {
+        active = false;
+      };
+    }
+
     try {
-      const auth = getFirebaseClientAuth();
-      void import("firebase/auth")
-        .then(({ getRedirectResult, onAuthStateChanged }) => {
+      void Promise.all([import("@/lib/firebase/auth"), import("firebase/auth")])
+        .then(([{ getFirebaseClientAuth }, { getRedirectResult, onAuthStateChanged }]) => {
           if (!active) return;
+          const auth = getFirebaseClientAuth();
           unsubscribe = onAuthStateChanged(auth, (nextUser) => {
             setUser(nextUser);
             setAvatarUrl(nextUser ? getStoredAvatar(nextUser) : "");
@@ -84,7 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
-      const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = await import("firebase/auth");
+      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithPopup, signInWithRedirect }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       try {
@@ -105,7 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     setError("");
     try {
-      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      const [{ getFirebaseClientAuth }, { signInWithEmailAndPassword }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       await signInWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
     } catch (signInError) {
       const message = getAuthErrorMessage(signInError);
@@ -117,7 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = useCallback(async (email: string, password: string, displayName?: string) => {
     setError("");
     try {
-      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
+      const [{ getFirebaseClientAuth }, { createUserWithEmailAndPassword, updateProfile }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       const credential = await createUserWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
       if (displayName?.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
@@ -132,7 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     setError("");
     try {
-      const { signOut: firebaseSignOut } = await import("firebase/auth");
+      const [{ getFirebaseClientAuth }, { signOut: firebaseSignOut }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       await firebaseSignOut(getFirebaseClientAuth());
     } catch (signOutError) {
       setError(signOutError instanceof Error ? signOutError.message : "Sign-out failed.");
@@ -142,9 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const changePassword = useCallback(async (currentPassword: string, nextPassword: string) => {
     setError("");
     try {
+      const [{ getFirebaseClientAuth }, { EmailAuthProvider, reauthenticateWithCredential, updatePassword }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       const currentUser = getFirebaseClientAuth().currentUser;
       if (!currentUser?.email) throw new Error("Sign in again before changing your password.");
-      const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import("firebase/auth");
       const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
       await updatePassword(currentUser, nextPassword);
@@ -158,9 +182,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const linkGoogleProvider = useCallback(async () => {
     setError("");
     try {
+      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, linkWithPopup }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
       const currentUser = getFirebaseClientAuth().currentUser;
       if (!currentUser) throw new Error("Sign in again before linking Google.");
-      const { GoogleAuthProvider, linkWithPopup } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await linkWithPopup(currentUser, provider);
@@ -291,4 +318,31 @@ function getStoredAvatar(user: User) {
 
 function getProviderIds(user: User | null) {
   return user?.providerData.map((provider) => provider.providerId) ?? [];
+}
+
+function shouldInitializeAuthSession() {
+  if (typeof window === "undefined") return false;
+  return isAuthSensitivePath(window.location.pathname) || hasStoredFirebaseAuthSession();
+}
+
+function isAuthSensitivePath(pathname: string) {
+  return (
+    pathname.startsWith("/auth")
+    || pathname.startsWith("/community")
+    || pathname.startsWith("/dashboard")
+    || pathname.startsWith("/profile")
+    || pathname.startsWith("/review")
+  );
+}
+
+function hasStoredFirebaseAuthSession() {
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith("firebase:authUser:")) return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
 }

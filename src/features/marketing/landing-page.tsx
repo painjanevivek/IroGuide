@@ -74,7 +74,7 @@ export function LandingPage() {
           <span>IroGuide</span>
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
-          {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
+          {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href} prefetch={false}>{item.label}</Link>)}
         </nav>
         <LandingHeaderActions />
       </header>
@@ -85,7 +85,7 @@ export function LandingPage() {
           <h1>IroGuide<br /><span className="display-accent">Design critique.</span></h1>
           <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
           <div className="hero-actions">
-            <Link className="button button-large" href="/review/new">Review my design <WandSparkles size={19} /></Link>
+            <Link className="button button-large" href="/review/new" prefetch={false}>Review my design <WandSparkles size={19} /></Link>
             <LandingHeroAuthButton />
             <Link className="button-quiet" href="#example">See a real critique <ArrowRight size={18} /></Link>
           </div>
@@ -151,7 +151,7 @@ export function LandingPage() {
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
         <div className="mode-grid">
-          {modes.map((mode) => <article className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new">Try {mode.title} mode <ChevronRight size={17} /></Link></article>)}
+          {modes.map((mode) => <article className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false}>Try {mode.title} mode <ChevronRight size={17} /></Link></article>)}
         </div>
       </section>
 
@@ -169,7 +169,7 @@ export function LandingPage() {
           <div className="score-bars">
             {[['Composition', 7], ['Typography', 6], ['Hierarchy', 5], ['Color', 8]].map(([label, score]) => <div key={String(label)}><span>{label}</span><i><b style={{width: `${Number(score) * 10}%`}} /></i><strong>{score}</strong></div>)}
           </div>
-          <Link className="button button-dark" href="/review/new">Get feedback on my work <ArrowRight size={18} /></Link>
+          <Link className="button button-dark" href="/review/new" prefetch={false}>Get feedback on my work <ArrowRight size={18} /></Link>
         </div>
       </section>
 
@@ -207,7 +207,7 @@ export function LandingPage() {
       <footer className="site-footer">
         <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">I</span><span>IroGuide</span></Link>
         <p>Critique that makes the work and the designer better.</p>
-        <div>{siteConfig.footerNavigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}<span>Copyright 2026 IroGuide</span></div>
+        <div>{siteConfig.footerNavigation.map((item) => <Link key={item.href} href={item.href} prefetch={false}>{item.label}</Link>)}<span>Copyright 2026 IroGuide</span></div>
       </footer>
     </main>
   );

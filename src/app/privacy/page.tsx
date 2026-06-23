@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "@/app/route-styles.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

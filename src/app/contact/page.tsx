@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@/app/route-styles.css";
 import Link from "next/link";
 import { ArrowRight, Github, Mail, MessageSquareText } from "lucide-react";
 import { siteConfig } from "@/config/site";

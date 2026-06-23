@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@/app/route-styles.css";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
