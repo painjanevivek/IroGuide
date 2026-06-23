@@ -20,10 +20,12 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   increment,
   limit,
   onSnapshot,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
   where,
@@ -62,6 +64,8 @@ type PostInteraction = {
 };
 
 type InteractionMap = Record<string, PostInteraction>;
+type CommentMap = Record<string, CommunityComment[]>;
+type PendingInteractionMap = Record<string, Partial<Record<keyof PostInteraction, boolean>>>;
 
 type CommunityNotification = {
   id: string;
@@ -71,6 +75,8 @@ type CommunityNotification = {
 };
 
 const interactionStorageKey = "iroguide-community-interactions";
+const sampleCommentStorageKey = "iroguide-community-sample-comments";
+const emptyInteraction: PostInteraction = { liked: false, saved: false, shared: false };
 
 const navigationItems: Array<{ id: CommunityView; label: string; icon: typeof Home }> = [
   { id: "home", label: "Home", icon: Home },
@@ -127,6 +133,9 @@ export function CommunityBoard() {
   const [savedReviews, setSavedReviews] = useState<SavedReview[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [interactions, setInteractions] = useState<InteractionMap>({});
+  const [pendingInteractions, setPendingInteractions] = useState<PendingInteractionMap>({});
+  const [sampleComments, setSampleComments] = useState<CommentMap>({});
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [interactionsReady, setInteractionsReady] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [title, setTitle] = useState("");
@@ -142,6 +151,7 @@ export function CommunityBoard() {
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setInteractions(readStoredInteractions());
+      setSampleComments(readStoredSampleComments());
       setInteractionsReady(true);
     });
     return () => window.cancelAnimationFrame(frame);
@@ -153,6 +163,37 @@ export function CommunityBoard() {
     }
     writeStoredInteractions(interactions);
   }, [interactions, interactionsReady]);
+
+  useEffect(() => {
+    if (!interactionsReady) {
+      return;
+    }
+    writeStoredSampleComments(sampleComments);
+  }, [sampleComments, interactionsReady]);
+
+  useEffect(() => {
+    if (!user || posts.length === 0) {
+      return;
+    }
+
+    let active = true;
+    const db = getFirebaseClientFirestore();
+
+    void Promise.all(posts.filter((post) => !isSamplePost(post)).map(async (post) => {
+      const snapshot = await getDoc(doc(db, "communityPosts", post.id, "interactions", user.uid));
+      return [post.id, toPostInteraction(snapshot.data())] as const;
+    })).then((entries) => {
+      if (!active || entries.length === 0) return;
+      setInteractions((current) => ({ ...current, ...Object.fromEntries(entries) }));
+    }).catch(() => {
+      if (!active) return;
+      setShareMessage("Community reactions are available locally until the live feed reconnects.");
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [posts, user]);
 
   useEffect(() => {
     const db = getFirebaseClientFirestore();
@@ -259,25 +300,85 @@ export function CommunityBoard() {
     }
   }
 
-  function toggleInteraction(postId: string, key: keyof PostInteraction) {
+  async function toggleInteraction(post: CommunityPost, key: keyof PostInteraction) {
+    const existing = interactions[post.id] ?? emptyInteraction;
+    const nextValue = !existing[key];
+
     setInteractions((current) => {
-      const existing = current[postId] ?? { liked: false, saved: false, shared: false };
-      return { ...current, [postId]: { ...existing, [key]: !existing[key] } };
+      const currentPostInteraction = current[post.id] ?? emptyInteraction;
+      return { ...current, [post.id]: { ...currentPostInteraction, [key]: nextValue } };
     });
+
+    if (isSamplePost(post)) {
+      setShareMessage(getLocalInteractionMessage(key));
+      return;
+    }
+
+    if (!user) {
+      setShareMessage("Sign in to keep community reactions across devices.");
+      return;
+    }
+
+    setPendingInteractions((current) => setPendingInteraction(current, post.id, key, true));
+
+    try {
+      await persistPostInteraction(post.id, user.uid, key, nextValue);
+      setShareMessage(getPersistedInteractionMessage(key, nextValue));
+    } catch (interactionError) {
+      setInteractions((current) => {
+        const currentPostInteraction = current[post.id] ?? emptyInteraction;
+        return { ...current, [post.id]: { ...currentPostInteraction, [key]: existing[key] } };
+      });
+      setShareMessage(interactionError instanceof Error ? interactionError.message : "Could not update this community action.");
+    } finally {
+      setPendingInteractions((current) => setPendingInteraction(current, post.id, key, false));
+    }
   }
 
-  async function sharePost(postId: string) {
-    const href = `${window.location.origin}${window.location.pathname}#${postId}`;
+  async function sharePost(post: CommunityPost) {
+    const href = `${window.location.origin}${window.location.pathname}#${post.id}`;
+    const shareData = {
+      title: post.title,
+      text: `${post.authorName} shared an IroGuide critique: ${post.title}`,
+      url: href,
+    };
+
     try {
-      await navigator.clipboard.writeText(href);
-      setShareMessage("Community link copied.");
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareMessage("Community post shared.");
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(href);
+        setShareMessage("Community link copied.");
+      } else {
+        setShareMessage(`Copy this community link: ${href}`);
+      }
       setInteractions((current) => {
-        const existing = current[postId] ?? { liked: false, saved: false, shared: false };
-        return { ...current, [postId]: { ...existing, shared: true } };
+        const existing = current[post.id] ?? emptyInteraction;
+        return { ...current, [post.id]: { ...existing, shared: true } };
       });
+      if (user && !isSamplePost(post)) {
+        await persistPostInteraction(post.id, user.uid, "shared", true);
+      }
     } catch {
       setShareMessage("Could not copy this link.");
     }
+  }
+
+  function openComments(postId: string) {
+    setExpandedComments((current) => ({ ...current, [postId]: true }));
+    window.requestAnimationFrame(() => {
+      const comments = document.getElementById(`comments-${postId}`);
+      comments?.scrollIntoView({ behavior: "smooth", block: "center" });
+      comments?.querySelector("textarea")?.focus();
+    });
+  }
+
+  function addSampleComment(postId: string, comment: CommunityComment) {
+    setSampleComments((current) => ({
+      ...current,
+      [postId]: [...(current[postId] ?? []), comment].slice(-12),
+    }));
   }
 
   return (
@@ -352,9 +453,15 @@ export function CommunityBoard() {
               {currentFeed.map((post) => (
                 <CommunityPostCard
                   key={post.id}
-                  interaction={interactions[post.id] ?? { liked: false, saved: false, shared: false }}
-                  onShare={() => void sharePost(post.id)}
+                  expandedComments={Boolean(expandedComments[post.id])}
+                  interaction={interactions[post.id] ?? emptyInteraction}
+                  isLocalOnly={!user || isSamplePost(post)}
+                  localComments={sampleComments[post.id] ?? []}
+                  onAddLocalComment={addSampleComment}
+                  onOpenComments={openComments}
+                  onShare={() => void sharePost(post)}
                   onToggleInteraction={toggleInteraction}
+                  pendingInteraction={pendingInteractions[post.id] ?? {}}
                   post={post}
                 />
               ))}
@@ -476,19 +583,32 @@ function ReviewSharePreview({ savedReview }: { savedReview: SavedReview }) {
 }
 
 function CommunityPostCard({
+  expandedComments,
   interaction,
+  isLocalOnly,
+  localComments,
+  onAddLocalComment,
+  onOpenComments,
   onShare,
   onToggleInteraction,
+  pendingInteraction,
   post,
 }: {
+  expandedComments: boolean;
   interaction: PostInteraction;
+  isLocalOnly: boolean;
+  localComments: CommunityComment[];
+  onAddLocalComment: (postId: string, comment: CommunityComment) => void;
+  onOpenComments: (postId: string) => void;
   onShare: () => void;
-  onToggleInteraction: (postId: string, key: keyof PostInteraction) => void;
+  onToggleInteraction: (post: CommunityPost, key: keyof PostInteraction) => void;
+  pendingInteraction: Partial<Record<keyof PostInteraction, boolean>>;
   post: CommunityPost;
 }) {
   const firstIssue = post.review.issues[0];
-  const likedCount = post.stats.likes + (interaction.liked ? 1 : 0);
-  const savedCount = post.stats.saves + (interaction.saved ? 1 : 0);
+  const likedCount = post.stats.likes + (isLocalOnly && interaction.liked ? 1 : 0);
+  const savedCount = post.stats.saves + (isLocalOnly && interaction.saved ? 1 : 0);
+  const commentCount = post.stats.comments + localComments.length;
 
   return (
     <article className="community-feed-post" id={post.id}>
@@ -516,28 +636,44 @@ function CommunityPostCard({
         </div>
       </div>
       <div className="community-post-actions" aria-label="Post actions">
-        <button type="button" aria-pressed={interaction.liked} onClick={() => onToggleInteraction(post.id, "liked")}><Heart size={17} /> {likedCount}</button>
-        <a href={`#comments-${post.id}`}><MessageSquareText size={17} /> {post.stats.comments}</a>
+        <button type="button" aria-pressed={interaction.liked} disabled={pendingInteraction.liked} onClick={() => onToggleInteraction(post, "liked")}><Heart size={17} /> {likedCount}</button>
+        <button type="button" aria-expanded={expandedComments} aria-controls={`comments-${post.id}`} onClick={() => onOpenComments(post.id)}><MessageSquareText size={17} /> {commentCount}</button>
         <button type="button" aria-pressed={interaction.shared} onClick={onShare}><Share2 size={17} /> Share</button>
-        <button type="button" aria-pressed={interaction.saved} onClick={() => onToggleInteraction(post.id, "saved")}><Bookmark size={17} /> {savedCount}</button>
+        <button type="button" aria-pressed={interaction.saved} disabled={pendingInteraction.saved} onClick={() => onToggleInteraction(post, "saved")}><Bookmark size={17} /> {savedCount}</button>
       </div>
-      <CommunityComments postId={post.id} disabled={post.authorId === "sample"} />
+      {expandedComments && (
+        <CommunityComments
+          localComments={localComments}
+          onAddLocalComment={onAddLocalComment}
+          post={post}
+        />
+      )}
     </article>
   );
 }
 
-function CommunityComments({ postId, disabled }: { postId: string; disabled: boolean }) {
+function CommunityComments({
+  localComments,
+  onAddLocalComment,
+  post,
+}: {
+  localComments: CommunityComment[];
+  onAddLocalComment: (postId: string, comment: CommunityComment) => void;
+  post: CommunityPost;
+}) {
   const { user } = useAuth();
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const isSample = isSamplePost(post);
+  const visibleComments = isSample ? localComments : comments;
 
   useEffect(() => {
-    if (disabled) return;
+    if (isSample) return;
     const db = getFirebaseClientFirestore();
 
-    return onSnapshot(collection(db, "communityPosts", postId, "comments"), (snapshot) => {
+    return onSnapshot(collection(db, "communityPosts", post.id, "comments"), (snapshot) => {
       const nextComments = snapshot.docs
         .map((commentDoc) => toCommunityComment(commentDoc.id, commentDoc.data()))
         .filter((comment): comment is CommunityComment => comment !== null)
@@ -545,11 +681,11 @@ function CommunityComments({ postId, disabled }: { postId: string; disabled: boo
         .slice(-4);
       setComments(nextComments);
     });
-  }, [disabled, postId]);
+  }, [isSample, post.id]);
 
   async function submitComment(event: FormEvent) {
     event.preventDefault();
-    if (!user || disabled || submitting) return;
+    if (!user || submitting) return;
     setError("");
     const parsed = communityCommentSchema.safeParse({
       authorId: user.uid,
@@ -563,12 +699,23 @@ function CommunityComments({ postId, disabled }: { postId: string; disabled: boo
 
     setSubmitting(true);
     try {
+      if (isSample) {
+        onAddLocalComment(post.id, {
+          id: `local-${Date.now()}`,
+          authorName: parsed.data.authorName,
+          body: parsed.data.body,
+          createdAtMs: Date.now(),
+        });
+        setBody("");
+        return;
+      }
+
       const db = getFirebaseClientFirestore();
-      await addDoc(collection(db, "communityPosts", postId, "comments"), {
+      await addDoc(collection(db, "communityPosts", post.id, "comments"), {
         ...parsed.data,
         createdAt: serverTimestamp(),
       });
-      await updateDoc(doc(db, "communityPosts", postId), {
+      await updateDoc(doc(db, "communityPosts", post.id), {
         "stats.comments": increment(1),
         updatedAt: serverTimestamp(),
       });
@@ -580,13 +727,10 @@ function CommunityComments({ postId, disabled }: { postId: string; disabled: boo
     }
   }
 
-  if (disabled) {
-    return <div id={`comments-${postId}`} className="community-comments"><p className="community-comment-empty">Live comments appear on critiques shared by signed-in users.</p></div>;
-  }
-
   return (
-    <div id={`comments-${postId}`} className="community-comments">
-      {comments.length > 0 ? comments.map((comment) => (
+    <div id={`comments-${post.id}`} className="community-comments">
+      {isSample && <p className="community-comment-empty">Example thread. Your comment stays on this device.</p>}
+      {visibleComments.length > 0 ? visibleComments.map((comment) => (
         <p key={comment.id} className="community-comment"><strong>{comment.authorName}</strong>{comment.body}</p>
       )) : <p className="community-comment-empty">Start the critique thread.</p>}
       {user ? (
@@ -672,6 +816,40 @@ function toCommunityComment(id: string, data: DocumentData): CommunityComment | 
   };
 }
 
+async function persistPostInteraction(postId: string, userId: string, key: keyof PostInteraction, nextValue: boolean) {
+  const db = getFirebaseClientFirestore();
+  const postRef = doc(db, "communityPosts", postId);
+  const interactionRef = doc(db, "communityPosts", postId, "interactions", userId);
+
+  await runTransaction(db, async (transaction) => {
+    const interactionSnapshot = await transaction.get(interactionRef);
+    const currentInteraction = toPostInteraction(interactionSnapshot.data());
+    if (currentInteraction[key] === nextValue) return;
+
+    transaction.set(interactionRef, {
+      ...currentInteraction,
+      [key]: nextValue,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    if (key === "liked") {
+      transaction.update(postRef, { "stats.likes": increment(nextValue ? 1 : -1), updatedAt: serverTimestamp() });
+    }
+
+    if (key === "saved") {
+      transaction.update(postRef, { "stats.saves": increment(nextValue ? 1 : -1), updatedAt: serverTimestamp() });
+    }
+  });
+}
+
+function toPostInteraction(data: DocumentData | undefined): PostInteraction {
+  return {
+    liked: typeof data?.liked === "boolean" ? data.liked : false,
+    saved: typeof data?.saved === "boolean" ? data.saved : false,
+    shared: typeof data?.shared === "boolean" ? data.shared : false,
+  };
+}
+
 function getNotifications(posts: CommunityPost[], interactions: InteractionMap): CommunityNotification[] {
   const savedNotifications = posts
     .filter((post) => interactions[post.id]?.saved)
@@ -700,13 +878,51 @@ function toMillis(value: unknown) {
   return null;
 }
 
+function isSamplePost(post: CommunityPost) {
+  return post.authorId === "sample";
+}
+
+function setPendingInteraction(
+  pendingInteractions: PendingInteractionMap,
+  postId: string,
+  key: keyof PostInteraction,
+  isPending: boolean,
+): PendingInteractionMap {
+  const nextPostState = { ...(pendingInteractions[postId] ?? {}), [key]: isPending };
+  if (!isPending) delete nextPostState[key];
+
+  const nextState = { ...pendingInteractions };
+  if (Object.keys(nextPostState).length === 0) {
+    delete nextState[postId];
+  } else {
+    nextState[postId] = nextPostState;
+  }
+
+  return nextState;
+}
+
+function getLocalInteractionMessage(key: keyof PostInteraction) {
+  if (key === "liked") return "Reaction saved for this sample post.";
+  if (key === "saved") return "Saved to this browser.";
+  return "Community action saved locally.";
+}
+
+function getPersistedInteractionMessage(key: keyof PostInteraction, enabled: boolean) {
+  if (key === "liked") return enabled ? "Reaction added." : "Reaction removed.";
+  if (key === "saved") return enabled ? "Saved to your community list." : "Removed from saved community posts.";
+  return "Community action updated.";
+}
+
 function readStoredInteractions(): InteractionMap {
   if (typeof window === "undefined") return {};
   try {
     const rawValue = window.localStorage.getItem(interactionStorageKey);
     if (!rawValue) return {};
-    const parsed = JSON.parse(rawValue) as InteractionMap;
-    return typeof parsed === "object" && parsed !== null ? parsed : {};
+    const parsed = JSON.parse(rawValue) as Record<string, unknown>;
+    if (typeof parsed !== "object" || parsed === null) return {};
+    return Object.fromEntries(Object.entries(parsed).map(([postId, value]) => (
+      [postId, toPostInteraction(typeof value === "object" && value !== null ? value as DocumentData : undefined)]
+    )));
   } catch {
     return {};
   }
@@ -719,6 +935,51 @@ function writeStoredInteractions(interactions: InteractionMap) {
   } catch {
     // Nonessential interaction persistence can fail silently in private browsing.
   }
+}
+
+function readStoredSampleComments(): CommentMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const rawValue = window.localStorage.getItem(sampleCommentStorageKey);
+    if (!rawValue) return {};
+    const parsed = JSON.parse(rawValue) as Record<string, unknown>;
+    if (typeof parsed !== "object" || parsed === null) return {};
+
+    return Object.fromEntries(Object.entries(parsed).map(([postId, value]) => {
+      if (!Array.isArray(value)) return [postId, []];
+      return [
+        postId,
+        value
+          .map((comment, index) => toStoredCommunityComment(comment, `${postId}-${index}`))
+          .filter((comment): comment is CommunityComment => comment !== null)
+          .slice(-12),
+      ];
+    }));
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredSampleComments(comments: CommentMap) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(sampleCommentStorageKey, JSON.stringify(comments));
+  } catch {
+    // Sample comments are nonessential and should not block the community UI.
+  }
+}
+
+function toStoredCommunityComment(value: unknown, fallbackId: string): CommunityComment | null {
+  if (typeof value !== "object" || value === null) return null;
+  const body = "body" in value && typeof value.body === "string" ? value.body.trim() : "";
+  if (body.length < 2) return null;
+
+  return {
+    id: "id" in value && typeof value.id === "string" ? value.id : fallbackId,
+    authorName: "authorName" in value && typeof value.authorName === "string" ? value.authorName : "Designer",
+    body,
+    createdAtMs: "createdAtMs" in value && typeof value.createdAtMs === "number" ? value.createdAtMs : Date.now(),
+  };
 }
 
 function getDefaultTitle(summary: string) {
