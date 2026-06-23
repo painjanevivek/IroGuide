@@ -348,7 +348,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
             {review.provider === "live" ? (
               <div className="demo-warning live-warning"><Check /><p><strong>Live vision critique:</strong> this result came from the configured vision provider.</p></div>
             ) : (
-              <div className="demo-warning"><AlertCircle /><p><strong>Local demo mode:</strong> this fallback critique is deterministic and should only be used when production vision credentials are not configured.</p></div>
+              <div className="demo-warning"><AlertCircle /><p><strong>Preview critique mode:</strong> this structured critique is deterministic until live vision analysis is enabled.</p></div>
             )}
           </Reveal>
           {saveError && <div className={`save-warning${saveState === "local" ? " save-warning-info" : ""}`} role={saveState === "local" ? "status" : "alert"}><AlertCircle /> <p>{saveError}</p></div>}

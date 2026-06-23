@@ -56,7 +56,7 @@ export default function PrivacyPage() {
           <li>Authentication uses Firebase-supported sign-in methods.</li>
           <li>Server routes verify signed-in sessions before creating or syncing reviews.</li>
           <li>Review API requests are rate limited and logged with request IDs for operational monitoring.</li>
-          <li>Secrets such as Firebase Admin and vision provider keys are server-only environment variables.</li>
+          <li>Server credentials and vision provider keys are stored only in the server environment.</li>
         </ul>
 
         <h2>Contact</h2>
