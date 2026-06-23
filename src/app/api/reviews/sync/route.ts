@@ -67,5 +67,8 @@ export async function POST(request: Request) {
 }
 
 function getAuthDiagnosticHeaders(error: FirebaseTokenVerificationError): HeadersInit {
-  return error.code ? { "x-iroguide-auth-error": error.code } : {};
+  return {
+    ...(error.code ? { "x-iroguide-auth-error": error.code } : {}),
+    ...(error.detail ? { "x-iroguide-auth-detail": error.detail } : {}),
+  };
 }
