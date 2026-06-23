@@ -1,4 +1,3 @@
-import { FieldValue } from "firebase-admin/firestore";
 import type { ReviewCategory, ReviewOutput } from "@/domain/review";
 import { createStoredReviewDocument, type StoredReviewDocument } from "@/domain/review-storage";
 import { getFirebaseAdminFirestore } from "./firebase-admin";
@@ -48,8 +47,12 @@ export async function syncReviewDocumentsForUser(userId: string, documents: Stor
 }
 
 async function writeReviewDocument(document: StoredReviewDocument) {
-  await getFirebaseAdminFirestore()
-    .collection(REVIEWS_COLLECTION)
+  const [{ FieldValue }, db] = await Promise.all([
+    import("firebase-admin/firestore"),
+    getFirebaseAdminFirestore(),
+  ]);
+
+  await db.collection(REVIEWS_COLLECTION)
     .doc(document.id)
     .set({
       ...document,

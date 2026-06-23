@@ -1,6 +1,5 @@
 import { applicationDefault, cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
 
 export class FirebaseAdminUnavailableError extends Error {
   constructor(message = "Account storage is not configured yet.") {
@@ -25,12 +24,17 @@ export async function verifyFirebaseIdToken(idToken: string) {
   }
 }
 
-export function getFirebaseAdminFirestore() {
+export async function getFirebaseAdminFirestore() {
+  const { getFirestore } = await import("firebase-admin/firestore");
   return getFirestore(getFirebaseAdminApp());
 }
 
 export function isFirebaseAdminConfigured() {
-  return Boolean(getFirebaseAdminOptions());
+  return Boolean(
+    getServiceAccountFromJson()
+    ?? getServiceAccountFromParts()
+    ?? (hasApplicationDefaultCredentials() ? { projectId: getEnv("GOOGLE_CLOUD_PROJECT") } : null),
+  );
 }
 
 function getFirebaseAdminApp(): App {
