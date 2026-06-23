@@ -3,8 +3,11 @@ import "@/app/route-styles.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms",
+  title: "IroGuide Terms of Service",
   description: "IroGuide service expectations, acceptable use, account responsibilities, and critique limitations.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 export default function TermsPage() {

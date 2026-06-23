@@ -3,8 +3,11 @@ import "@/app/route-styles.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy",
+  title: "IroGuide Privacy Policy",
   description: "How IroGuide handles design uploads, critique history, account data, and community sharing.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 export default function PrivacyPage() {

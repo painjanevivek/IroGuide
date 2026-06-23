@@ -3,7 +3,14 @@ import "@/app/route-styles.css";
 import { Suspense } from "react";
 import { AuthPage } from "@/features/auth/auth-page";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = {
+  title: "Sign in",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default function Page() {
   return (

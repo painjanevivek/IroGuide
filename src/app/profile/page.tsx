@@ -6,7 +6,14 @@ import { AuthGate } from "@/features/auth/auth-gate";
 import { UserMenu } from "@/features/auth/user-menu";
 import { ProfileSettings } from "@/features/auth/profile-settings";
 
-export const metadata: Metadata = { title: "Profile" };
+export const metadata: Metadata = {
+  title: "Profile",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default function ProfilePage() {
   return (

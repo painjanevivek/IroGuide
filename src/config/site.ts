@@ -1,13 +1,26 @@
 export const siteConfig = {
   name: "IroGuide",
   url: process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") || "https://iroguide.com",
+  title: "IroGuide - AI Design Critique and Creative Feedback",
   description:
-    "Official website of IroGuide. AI design critique, creative feedback tools, portfolio workflows, pricing, and contact information.",
+    "IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.",
   shortDescription:
     "Professional, contextual AI critique that tells you what works, what does not, and what to fix next.",
+  keywords: [
+    "IroGuide",
+    "IroGuide official",
+    "AI design critique",
+    "design feedback",
+    "creative feedback",
+    "portfolio review",
+    "design review tool",
+    "UI critique",
+    "logo critique",
+    "poster critique",
+  ],
   logoPath: "/brand/iroguide-logo.png",
   creator: "IroGuide",
-  repositoryUrl: "https://github.com/painjanevivek/IroGuide-backend",
+  repositoryUrl: "https://github.com/painjanevivek/IroGuide",
   contactUrl: "/contact",
   navigation: [
     { label: "How it works", href: "/#how-it-works" },

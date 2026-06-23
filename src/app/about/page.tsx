@@ -5,7 +5,7 @@ import { ArrowRight, Eye, ShieldCheck, Sparkles, Target } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: `About ${siteConfig.name}`,
+  title: `About ${siteConfig.name} - AI Design Critique Workspace`,
   description:
     "About IroGuide, the official AI design critique workspace for contextual creative feedback and practical design improvement.",
   alternates: {

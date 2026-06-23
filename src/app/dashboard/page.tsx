@@ -6,5 +6,12 @@ import { AuthGate } from "@/features/auth/auth-gate";
 import { UserMenu } from "@/features/auth/user-menu";
 import { Dashboard } from "@/features/dashboard/dashboard";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 export default function DashboardPage() { return <div className="simple-page"><header className="simple-header"><Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link><nav><Link href="/">Home</Link><UserMenu /><Link className="button button-small" href="/review/new">New review <ArrowRight /></Link></nav></header><AuthGate><Dashboard /></AuthGate></div>; }

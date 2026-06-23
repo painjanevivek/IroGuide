@@ -5,8 +5,20 @@ import { ArrowRight, CalendarDays, MessageSquareText, ShieldCheck, Sparkles, Tro
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
 import { CommunityBoard } from "@/features/community/community-board";
 import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
+import { siteConfig } from "@/config/site";
 
-export const metadata: Metadata = { title: "Community" };
+export const metadata: Metadata = {
+  title: "IroGuide Community - Structured Creative Feedback",
+  description: "Explore the IroGuide community concept for thoughtful design critique, weekly practice, and more useful creative feedback.",
+  alternates: {
+    canonical: "/community",
+  },
+  openGraph: {
+    title: "IroGuide Community - Structured Creative Feedback",
+    description: "Explore the IroGuide community concept for thoughtful design critique, weekly practice, and more useful creative feedback.",
+    url: `${siteConfig.url}/community`,
+  },
+};
 
 export default function CommunityPage() {
   return (
