@@ -1,5 +1,14 @@
 import { Buffer } from "node:buffer";
+import { createVerify } from "node:crypto";
 import type { App, AppOptions } from "firebase-admin/app";
+
+const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+const MAX_TOKEN_AGE_SKEW_SECONDS = 300;
+
+let firebaseCertCache: {
+  certs: Record<string, string>;
+  expiresAt: number;
+} | null = null;
 
 export class FirebaseAdminUnavailableError extends Error {
   constructor(message = "Account storage is not configured yet.") {
@@ -21,17 +30,11 @@ export class FirebaseTokenVerificationError extends Error {
 }
 
 export async function verifyFirebaseIdToken(idToken: string) {
-  let app: App;
-  try {
-    app = await getFirebaseAdminApp();
-  } catch (error) {
-    if (isFirebaseAdminUnavailableError(error)) throw error;
-    throw new FirebaseAdminUnavailableError("Account storage credentials are invalid.");
-  }
+  const projectId = getFirebaseAdminProjectId();
+  if (!projectId) throw new FirebaseAdminUnavailableError();
 
   try {
-    const { getAuth } = await import("firebase-admin/auth");
-    return await getAuth(app).verifyIdToken(idToken);
+    return await verifyFirebaseSecureToken(idToken, projectId);
   } catch (error) {
     if (isFirebaseAdminUnavailableError(error)) throw error;
     throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error), getFirebaseAuthErrorDetail(error));
@@ -87,6 +90,95 @@ function getFirebaseAuthErrorDetail(error: unknown) {
 
   return error.message.replace(/[\r\n]+/g, " ").slice(0, 180);
 }
+
+async function verifyFirebaseSecureToken(idToken: string, projectId: string) {
+  const [encodedHeader, encodedPayload, encodedSignature] = idToken.split(".");
+  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+    throw new Error("Firebase ID token must be a JWT.");
+  }
+
+  const header = parseJwtSegment<FirebaseJwtHeader>(encodedHeader);
+  if (header.alg !== "RS256" || !header.kid) {
+    throw new Error("Firebase ID token has an unsupported signature.");
+  }
+
+  const payload = parseJwtSegment<FirebaseJwtPayload>(encodedPayload);
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.aud !== projectId) {
+    throw new Error(`Firebase ID token audience mismatch for project ${projectId}.`);
+  }
+  if (payload.iss !== `https://securetoken.google.com/${projectId}`) {
+    throw new Error(`Firebase ID token issuer mismatch for project ${projectId}.`);
+  }
+  if (typeof payload.sub !== "string" || payload.sub.length === 0 || payload.sub.length > 128) {
+    throw new Error("Firebase ID token subject is invalid.");
+  }
+  if (typeof payload.exp !== "number" || payload.exp <= now) {
+    throw new Error("Firebase ID token has expired.");
+  }
+  if (typeof payload.iat !== "number" || payload.iat > now + MAX_TOKEN_AGE_SKEW_SECONDS) {
+    throw new Error("Firebase ID token issued-at time is invalid.");
+  }
+
+  const cert = (await getFirebaseSecureTokenCerts())[header.kid];
+  if (!cert) throw new Error("Firebase ID token key is not recognized.");
+
+  const verifier = createVerify("RSA-SHA256");
+  verifier.update(`${encodedHeader}.${encodedPayload}`);
+  verifier.end();
+  const valid = verifier.verify(cert, base64UrlToBuffer(encodedSignature));
+  if (!valid) throw new Error("Firebase ID token signature is invalid.");
+
+  return {
+    ...payload,
+    uid: payload.sub,
+  };
+}
+
+async function getFirebaseSecureTokenCerts() {
+  if (firebaseCertCache && firebaseCertCache.expiresAt > Date.now()) return firebaseCertCache.certs;
+
+  const response = await fetch(FIREBASE_CERTS_URL);
+  if (!response.ok) throw new Error(`Firebase certificate fetch failed with status ${response.status}.`);
+
+  const certs = await response.json() as Record<string, string>;
+  firebaseCertCache = {
+    certs,
+    expiresAt: Date.now() + getCacheMaxAgeMs(response.headers.get("cache-control")),
+  };
+  return certs;
+}
+
+function getCacheMaxAgeMs(cacheControl: string | null) {
+  const maxAge = cacheControl?.match(/max-age=(\d+)/i)?.[1];
+  return Number(maxAge ?? 3600) * 1000;
+}
+
+function parseJwtSegment<T>(segment: string) {
+  try {
+    return JSON.parse(base64UrlToBuffer(segment).toString("utf8")) as T;
+  } catch {
+    throw new Error("Firebase ID token contains invalid JSON.");
+  }
+}
+
+function base64UrlToBuffer(value: string) {
+  return Buffer.from(value, "base64url");
+}
+
+type FirebaseJwtHeader = {
+  alg?: string;
+  kid?: string;
+};
+
+type FirebaseJwtPayload = {
+  aud?: string;
+  exp?: number;
+  iat?: number;
+  iss?: string;
+  sub?: string;
+  [claim: string]: unknown;
+};
 
 async function getFirebaseAdminApp(): Promise<App> {
   const { getApps, initializeApp } = await import("firebase-admin/app");
