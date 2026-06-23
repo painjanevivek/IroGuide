@@ -207,7 +207,7 @@ export function LandingPage() {
       <footer className="site-footer">
         <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">I</span><span>IroGuide</span></Link>
         <p>Critique that makes the work and the designer better.</p>
-        <div><Link href="/about">About</Link><Link href="/projects">Projects</Link><Link href="/contact">Contact</Link><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>Copyright 2026 IroGuide</span></div>
+        <div>{siteConfig.footerNavigation.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}<span>Copyright 2026 IroGuide</span></div>
       </footer>
     </main>
   );
