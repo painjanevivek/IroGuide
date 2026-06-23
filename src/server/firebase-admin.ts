@@ -16,14 +16,19 @@ export class FirebaseTokenVerificationError extends Error {
 }
 
 export async function verifyFirebaseIdToken(idToken: string) {
+  let app: App;
   try {
-    const [{ getAuth }, app] = await Promise.all([
-      import("firebase-admin/auth"),
-      getFirebaseAdminApp(),
-    ]);
+    app = await getFirebaseAdminApp();
+  } catch (error) {
+    if (isFirebaseAdminUnavailableError(error)) throw error;
+    throw new FirebaseAdminUnavailableError("Account storage credentials are invalid.");
+  }
+
+  try {
+    const { getAuth } = await import("firebase-admin/auth");
     return await getAuth(app).verifyIdToken(idToken);
   } catch (error) {
-    if (error instanceof FirebaseAdminUnavailableError) throw error;
+    if (isFirebaseAdminUnavailableError(error)) throw error;
     throw new FirebaseTokenVerificationError();
   }
 }
@@ -51,6 +56,11 @@ export function getFirebaseAdminProjectId() {
     ?? getEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID")
     ?? getEnv("GOOGLE_CLOUD_PROJECT")
     ?? null;
+}
+
+function isFirebaseAdminUnavailableError(error: unknown): error is FirebaseAdminUnavailableError {
+  return error instanceof FirebaseAdminUnavailableError
+    || (error instanceof Error && error.name === "FirebaseAdminUnavailableError");
 }
 
 async function getFirebaseAdminApp(): Promise<App> {
