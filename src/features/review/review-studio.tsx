@@ -17,7 +17,7 @@ import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, rev
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client";
-import { getFirebaseClientFirestore } from "@/lib/firebase/client";
+import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
 import { AnnotationOverlay } from "./annotation-overlay";

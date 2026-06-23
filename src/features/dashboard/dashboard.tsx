@@ -13,7 +13,7 @@ import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
-import { getFirebaseClientFirestore } from "@/lib/firebase/client";
+import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";

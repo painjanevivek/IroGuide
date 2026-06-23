@@ -34,7 +34,7 @@ import {
 import { communityCommentSchema, communityPostSchema, type CommunityPostInput } from "@/domain/community";
 import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
-import { getFirebaseClientFirestore } from "@/lib/firebase/client";
+import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 
 type SavedReview = {
   savedDocId: string;

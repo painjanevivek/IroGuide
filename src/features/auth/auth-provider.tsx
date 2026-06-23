@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getFirebaseClientAuth } from "@/lib/firebase/client";
+import { getFirebaseClientAuth } from "@/lib/firebase/auth";
 
 type AuthState = {
   user: User | null;
