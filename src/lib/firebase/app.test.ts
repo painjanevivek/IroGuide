@@ -17,17 +17,27 @@ describe("resolveFirebaseAuthDomain", () => {
     )).toBe("iroguide-7764f.firebaseapp.com");
   });
 
-  it("uses the live IroGuide host on production domains", () => {
+  it("keeps the configured Firebase domain on production domains by default", () => {
     expect(resolveFirebaseAuthDomain(
       "iroguide-7764f.firebaseapp.com",
       "www.iroguide.com",
       "https://www.iroguide.com",
+    )).toBe("iroguide-7764f.firebaseapp.com");
+  });
+
+  it("uses the live IroGuide host on production domains when custom auth is enabled", () => {
+    expect(resolveFirebaseAuthDomain(
+      "iroguide-7764f.firebaseapp.com",
+      "www.iroguide.com",
+      "https://www.iroguide.com",
+      "true",
     )).toBe("www.iroguide.com");
 
     expect(resolveFirebaseAuthDomain(
       "iroguide-7764f.firebaseapp.com",
       "iroguide.com",
       "https://www.iroguide.com",
+      "true",
     )).toBe("iroguide.com");
   });
 
@@ -44,6 +54,7 @@ describe("resolveFirebaseAuthDomain", () => {
       "project.firebaseapp.com",
       "studio.example.com",
       "https://studio.example.com",
+      "true",
     )).toBe("studio.example.com");
   });
 });

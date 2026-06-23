@@ -28,7 +28,12 @@ export function getFirebaseClientApp(): FirebaseApp {
   assertFirebaseConfig();
   return getApps().length > 0 ? getApp() : initializeApp({
     ...firebaseConfig,
-    authDomain: resolveFirebaseAuthDomain(firebaseConfig.authDomain, getCurrentHost(), process.env.NEXT_PUBLIC_SITE_URL),
+    authDomain: resolveFirebaseAuthDomain(
+      firebaseConfig.authDomain,
+      getCurrentHost(),
+      process.env.NEXT_PUBLIC_SITE_URL,
+      process.env.NEXT_PUBLIC_FIREBASE_USE_CUSTOM_AUTH_DOMAIN,
+    ),
   });
 }
 
@@ -36,7 +41,9 @@ export function resolveFirebaseAuthDomain(
   configuredAuthDomain: string | undefined,
   currentHost: string | null,
   siteUrl: string | undefined,
+  useCustomAuthDomain = "false",
 ) {
+  if (useCustomAuthDomain !== "true") return configuredAuthDomain;
   if (!configuredAuthDomain || !currentHost) return configuredAuthDomain;
 
   const currentHostname = getHostname(currentHost);

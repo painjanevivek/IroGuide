@@ -93,13 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
-      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithRedirect }] = await Promise.all([
+      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithPopup, signInWithRedirect }] = await Promise.all([
         import("@/lib/firebase/auth"),
         import("firebase/auth"),
       ]);
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithRedirect(getFirebaseClientAuth(), provider);
+      const auth = getFirebaseClientAuth();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupError) {
+        if (!shouldFallbackToGoogleRedirect(popupError)) throw popupError;
+        await signInWithRedirect(auth, provider);
+      }
     } catch (signInError) {
       setError(getAuthErrorMessage(signInError));
     }
@@ -309,6 +315,15 @@ function getAuthErrorMessage(error: unknown) {
 
 function getAuthErrorCode(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : "";
+}
+
+function shouldFallbackToGoogleRedirect(error: unknown) {
+  const code = getAuthErrorCode(error);
+  const message = error instanceof Error ? error.message : "";
+  return code === "auth/popup-blocked"
+    || code === "auth/cancelled-popup-request"
+    || message.includes("auth/popup-blocked")
+    || message.includes("auth/cancelled-popup-request");
 }
 
 function getAvatarStorageKey(uid: string) {
