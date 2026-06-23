@@ -81,9 +81,9 @@ export function LandingPage() {
 
       <section className="hero section-pad">
         <div className="hero-copy reveal">
-          <p className="eyebrow"><span className="signal-dot" /> Your clearest creative second opinion</p>
-          <h1>Better feedback.<br /><span className="display-accent">Better design.</span></h1>
-          <p className="hero-lede">Upload your work. Get a professional critique that explains <strong>what</strong> is off, <strong>why</strong> it matters, and <strong>how</strong> to fix it.</p>
+          <p className="eyebrow"><span className="signal-dot" /> Official IroGuide website</p>
+          <h1>IroGuide<br /><span className="display-accent">Design critique.</span></h1>
+          <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
           <div className="hero-actions">
             <Link className="button button-large" href="/review/new">Review my design <WandSparkles size={19} /></Link>
             <LandingHeroAuthButton />
@@ -130,14 +130,14 @@ export function LandingPage() {
 
       <section className="problem-section section-pad" id="how-it-works">
         <div className="section-intro">
-          <p className="eyebrow">Beyond “looks good”</p>
+          <p className="eyebrow">Beyond &quot;looks good&quot;</p>
           <h2>Opinions are cheap.<br /><span className="display-outline">Direction is rare.</span></h2>
         </div>
         <div className="three-step-grid">
           {[
             [Eye, "What", "We identify the exact visual decision helping or hurting the work."],
             [Target, "Why", "We connect it to hierarchy, readability, audience, and purpose."],
-            [WandSparkles, "How", "You get concrete changes in priority order—not abstract advice."],
+            [WandSparkles, "How", "You get concrete changes in priority order, not abstract advice."],
           ].map(([Icon, title, copy], index) => {
             const StepIcon = Icon as typeof Eye;
             return <article className="step-card" key={String(title)}><span className="step-number">0{index + 1}</span><StepIcon size={28} /><h3>{String(title)}</h3><p>{String(copy)}</p></article>;
@@ -206,8 +206,8 @@ export function LandingPage() {
 
       <footer className="site-footer">
         <Link className="wordmark" href="/"><span className="wordmark-mark" aria-hidden="true">I</span><span>IroGuide</span></Link>
-        <p>Critique that makes the work—and the designer—better.</p>
-        <div><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>© 2026 IroGuide</span></div>
+        <p>Critique that makes the work and the designer better.</p>
+        <div><Link href="/about">About</Link><Link href="/projects">Projects</Link><Link href="/contact">Contact</Link><Link href="/beta">Beta</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><span>Copyright 2026 IroGuide</span></div>
       </footer>
     </main>
   );
