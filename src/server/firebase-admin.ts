@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import type { App, AppOptions } from "firebase-admin/app";
 
 export class FirebaseAdminUnavailableError extends Error {
@@ -57,7 +58,13 @@ async function getFirebaseAdminApp(): Promise<App> {
 async function getFirebaseAdminOptions(): Promise<AppOptions | null> {
   const { applicationDefault, cert } = await import("firebase-admin/app");
   const serviceAccount = getServiceAccountFromJson() ?? getServiceAccountFromParts();
-  if (serviceAccount) return { credential: cert(serviceAccount), projectId: serviceAccount.projectId };
+  if (serviceAccount) {
+    try {
+      return { credential: cert(serviceAccount), projectId: serviceAccount.projectId };
+    } catch {
+      throw new FirebaseAdminUnavailableError("Account storage credentials are invalid.");
+    }
+  }
 
   const projectId = getEnv("FIREBASE_ADMIN_PROJECT_ID") ?? getEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID") ?? getEnv("GOOGLE_CLOUD_PROJECT");
   if (hasApplicationDefaultCredentials()) return { credential: applicationDefault(), projectId };
@@ -66,7 +73,7 @@ async function getFirebaseAdminOptions(): Promise<AppOptions | null> {
 }
 
 function getServiceAccountFromJson() {
-  const rawValue = getEnv("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON");
+  const rawValue = getEnv("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON") ?? getServiceAccountJsonFromBase64();
   if (!rawValue) return null;
 
   try {
@@ -93,6 +100,17 @@ function getServiceAccountFromParts() {
 
 function normalizePrivateKey(value?: string) {
   return value?.replace(/\\n/g, "\n");
+}
+
+function getServiceAccountJsonFromBase64() {
+  const encodedValue = getEnv("FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64");
+  if (!encodedValue) return undefined;
+
+  try {
+    return Buffer.from(encodedValue, "base64").toString("utf8");
+  } catch {
+    return undefined;
+  }
 }
 
 function hasApplicationDefaultCredentials() {

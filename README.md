@@ -21,7 +21,14 @@ separate compatible API, otherwise the built-in Next.js API routes are used.
 5. Publish the rules in `firestore.rules` so signed-in users can read their own
    account data and use draft/community interactions.
 
-Use either a single JSON secret:
+Use a base64-encoded service account JSON when your host makes multiline
+secrets awkward:
+
+```powershell
+FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64=<base64 encoded service account JSON>
+```
+
+Or use a single JSON secret:
 
 ```powershell
 FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON={"project_id":"...","client_email":"...","private_key":"..."}

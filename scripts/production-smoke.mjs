@@ -140,7 +140,7 @@ async function cleanupSmokeUser({ auth, db, uid }) {
 }
 
 function getServiceAccount() {
-  const raw = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON;
+  const raw = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON ?? getServiceAccountJsonFromBase64();
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
@@ -149,6 +149,17 @@ function getServiceAccount() {
       clientEmail: parsed.client_email ?? parsed.clientEmail,
       privateKey: parsed.private_key ?? parsed.privateKey,
     };
+  } catch {
+    return null;
+  }
+}
+
+function getServiceAccountJsonFromBase64() {
+  const encodedValue = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64;
+  if (!encodedValue) return null;
+
+  try {
+    return Buffer.from(encodedValue, "base64").toString("utf8");
   } catch {
     return null;
   }
