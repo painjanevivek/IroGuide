@@ -49,6 +49,30 @@ export async function getFirebaseAdminFirestore() {
   return getFirestore(app);
 }
 
+export async function getFirebaseAdminAuth() {
+  const [{ getAuth }, app] = await Promise.all([
+    import("firebase-admin/auth"),
+    getFirebaseAdminApp(),
+  ]);
+  return getAuth(app);
+}
+
+export async function deleteFirebaseUser(uid: string) {
+  const auth = await getFirebaseAdminAuth();
+  await auth.deleteUser(uid);
+}
+
+export async function getFirebaseAdminStorageBucket() {
+  const [{ getStorage }, app] = await Promise.all([
+    import("firebase-admin/storage"),
+    getFirebaseAdminApp(),
+  ]);
+  const bucketName = getEnv("FIREBASE_ADMIN_STORAGE_BUCKET") ?? getEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
+  const storage = getStorage(app);
+
+  return bucketName ? storage.bucket(bucketName) : storage.bucket();
+}
+
 export function isFirebaseAdminConfigured() {
   return Boolean(
     getServiceAccountFromJson()
@@ -196,16 +220,20 @@ async function getFirebaseAdminOptions(): Promise<AppOptions | null> {
   const serviceAccount = getServiceAccountFromJson() ?? getServiceAccountFromParts();
   if (serviceAccount) {
     try {
-      return { credential: cert(serviceAccount), projectId: serviceAccount.projectId };
+      return { credential: cert(serviceAccount), projectId: serviceAccount.projectId, storageBucket: getFirebaseAdminStorageBucketName() };
     } catch {
       throw new FirebaseAdminUnavailableError("Account storage credentials are invalid.");
     }
   }
 
   const projectId = getEnv("FIREBASE_ADMIN_PROJECT_ID") ?? getEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID") ?? getEnv("GOOGLE_CLOUD_PROJECT");
-  if (hasApplicationDefaultCredentials()) return { credential: applicationDefault(), projectId };
+  if (hasApplicationDefaultCredentials()) return { credential: applicationDefault(), projectId, storageBucket: getFirebaseAdminStorageBucketName() };
 
   return null;
+}
+
+function getFirebaseAdminStorageBucketName() {
+  return getEnv("FIREBASE_ADMIN_STORAGE_BUCKET") ?? getEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
 }
 
 function getServiceAccountFromJson() {

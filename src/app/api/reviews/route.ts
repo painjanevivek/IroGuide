@@ -37,17 +37,18 @@ export async function POST(request: Request) {
     }
     const parsed = await parseReviewRequest(request);
     const review = await createReview(parsed);
-    const savedToAccount = await saveReviewToAccount(decodedToken.uid, review, parsed.category);
+    const persistence = await saveReviewToAccount(decodedToken.uid, review, parsed);
     logRequestEvent("info", "review.created", context, {
       category: parsed.category,
       provider: review.provider,
-      savedToAccount,
+      savedToAccount: persistence.savedToAccount,
+      imageSavedToAccount: persistence.imageSavedToAccount,
       uid: decodedToken.uid,
     });
 
     return NextResponse.json({
       review,
-      persistence: { savedToAccount },
+      persistence,
     }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) {
@@ -83,12 +84,21 @@ function getAuthDiagnosticHeaders(error: FirebaseTokenVerificationError): Header
   };
 }
 
-async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<typeof createReview>>, category: Awaited<ReturnType<typeof parseReviewRequest>>["category"]) {
+async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<typeof createReview>>, parsed: Awaited<ReturnType<typeof parseReviewRequest>>) {
   try {
-    await saveReviewForUser({ userId, review, category });
-    return true;
+    const document = await saveReviewForUser({
+      userId,
+      review,
+      category: parsed.category,
+      sourceImage: parsed.image ? { file: parsed.file, image: parsed.image } : undefined,
+    });
+    return {
+      savedToAccount: true,
+      imageSavedToAccount: Boolean(document.sourceImage),
+      ...(document.sourceImage ? { sourceImage: document.sourceImage } : {}),
+    };
   } catch {
-    return false;
+    return { savedToAccount: false, imageSavedToAccount: false };
   }
 }
 

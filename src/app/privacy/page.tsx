@@ -47,9 +47,9 @@ export default function PrivacyPage() {
 
         <h2>Deletion and access</h2>
         <p>
-          You can request deletion of account data, saved critiques, and community content through the contact page. Some
-          operational logs may remain for security, abuse prevention, or legal reasons, but they should not contain image
-          bytes or critique text.
+          Signed-in users can delete saved critiques, drafts, and account data from the <Link href="/profile">profile page</Link>.
+          Some operational logs may remain for security, abuse prevention, or legal reasons, but they should not contain
+          image bytes or critique text.
         </p>
 
         <h2>Security baseline</h2>
@@ -62,8 +62,8 @@ export default function PrivacyPage() {
 
         <h2>Contact</h2>
         <p>
-          For privacy, deletion, or account questions, use the <Link href="/contact">contact page</Link>. This privacy
-          notice should be reviewed by qualified counsel before broad commercial launch.
+          For privacy or account questions beyond the profile controls, use the <Link href="/contact">contact page</Link>.
+          This privacy notice should be reviewed by qualified counsel before broad commercial launch.
         </p>
       </main>
     </div>

@@ -3,13 +3,14 @@ import { createDemoReview } from "@/domain/demo-review";
 import type { ReviewRequest } from "@/domain/review";
 import {
   cacheReviewDocument,
+  clearCachedReviewDocuments,
   createStoredReviewDocument,
   getCachedReviewDocuments,
   getPendingLocalReviewDocuments,
   getReviewDocumentId,
 } from "./review-persistence";
 
-class MemoryStorage implements Pick<Storage, "getItem" | "setItem"> {
+class MemoryStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem"> {
   private readonly values = new Map<string, string>();
 
   getItem(key: string) {
@@ -18,6 +19,10 @@ class MemoryStorage implements Pick<Storage, "getItem" | "setItem"> {
 
   setItem(key: string, value: string) {
     this.values.set(key, value);
+  }
+
+  removeItem(key: string) {
+    this.values.delete(key);
   }
 }
 
@@ -72,6 +77,27 @@ describe("review persistence", () => {
     ]);
   });
 
+  it("keeps private source image metadata without caching image bytes", () => {
+    const storage = new MemoryStorage();
+    const review = createDemoReview(request);
+    const document = createStoredReviewDocument({
+      userId: "user-a",
+      review,
+      category: "logo",
+      sourceImage: {
+        storagePath: "users/user-a/reviews/review-id/source.png",
+        contentType: "image/png",
+        size: 1024,
+        originalName: "mark.png",
+        uploadedAt: "2026-06-23T00:00:00.000Z",
+      },
+    });
+
+    cacheReviewDocument(document, storage);
+
+    expect(getCachedReviewDocuments("user-a", storage)[0]?.sourceImage).toEqual(document.sourceImage);
+  });
+
   it("ignores corrupted cached values", () => {
     const storage = new MemoryStorage();
     storage.setItem("iroguide:dashboard-reviews:v1:user-a", "not-json");
@@ -96,5 +122,16 @@ describe("review persistence", () => {
     expect(getPendingLocalReviewDocuments("user-a", storage).map((document) => document.id)).toEqual([
       pendingDocument.id,
     ]);
+  });
+
+  it("clears cached reviews for a signed-in user", () => {
+    const storage = new MemoryStorage();
+    const review = createDemoReview(request);
+    const document = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });
+
+    cacheReviewDocument(document, storage);
+
+    expect(clearCachedReviewDocuments("user-a", storage)).toBe(true);
+    expect(getCachedReviewDocuments("user-a", storage)).toEqual([]);
   });
 });

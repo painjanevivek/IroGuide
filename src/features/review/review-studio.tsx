@@ -13,7 +13,7 @@ import { reviewDraftSchema } from "@/domain/review-draft";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
-import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
+import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client";
@@ -64,6 +64,7 @@ export function ReviewStudio() {
   const [review, setReview] = useState<ReviewOutput | null>(null);
   const [resultSaveState, setResultSaveState] = useState<ReviewSaveState>("idle");
   const [resultSaveError, setResultSaveError] = useState("");
+  const [resultSourceImage, setResultSourceImage] = useState<ReviewSourceImage | null>(null);
   const [draftStatus, setDraftStatus] = useState("Draft will save to dashboard");
 
   useEffect(() => () => {
@@ -195,7 +196,7 @@ export function ReviewStudio() {
       goToStep(2);
       return;
     }
-    setSubmitting(true); setSubmitError("");
+    setSubmitting(true); setSubmitError(""); setResultSourceImage(null);
     try {
       const currentUser = user;
       const idToken = await currentUser?.getIdToken();
@@ -221,20 +222,22 @@ export function ReviewStudio() {
       setResultSaveState("saving");
       setResultSaveError("");
       try {
-        const saveResult = cacheCompletedReviewForDashboard(currentUser.uid, parsed, category, reviewResponse.persistence.savedToAccount);
+        const saveResult = cacheCompletedReviewForDashboard(currentUser.uid, parsed, category, reviewResponse.persistence.savedToAccount, reviewResponse.persistence.sourceImage);
         void deleteActiveReviewDraft(currentUser.uid);
         setResultSaveState(saveResult.syncedToCloud ? "saved" : "local");
         setResultSaveError(saveResult.message ?? "");
+        setResultSourceImage(saveResult.sourceImage ?? null);
       } catch (saveError) {
         setResultSaveState("idle");
         setResultSaveError(saveError instanceof Error ? saveError.message : "The critique was created, but it could not be saved to your dashboard yet.");
+        setResultSourceImage(null);
       }
       setReview(parsed);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : "Review failed. Please try again."); }
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} category={category} initialSaveState={resultSaveState} initialSaveError={resultSaveError} onRestart={() => { setReview(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} sourceFile={file} category={category} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
@@ -280,12 +283,31 @@ export function ReviewStudio() {
 
 function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
 
-function ReviewResult({ review, preview, category, initialSaveState, initialSaveError, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; initialSaveState: ReviewSaveState; initialSaveError: string; onRestart: () => void }) {
+function ReviewResult({
+  review,
+  preview,
+  sourceFile,
+  category,
+  initialSaveState,
+  initialSaveError,
+  initialSourceImage,
+  onRestart,
+}: {
+  review: ReviewOutput;
+  preview: string | null;
+  sourceFile: File | null;
+  category: ReviewCategory;
+  initialSaveState: ReviewSaveState;
+  initialSaveError: string;
+  initialSourceImage: ReviewSourceImage | null;
+  onRestart: () => void;
+}) {
   const { user } = useAuth();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<ReviewSaveState>(initialSaveState);
   const [saveError, setSaveError] = useState(initialSaveError);
+  const [sourceImage, setSourceImage] = useState<ReviewSourceImage | null>(initialSourceImage);
   const fixFirst = getFixFirstAction(review);
   const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
 
@@ -300,10 +322,11 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
     setSaveState("saving");
     setSaveError("");
     try {
-      const saveResult = await syncCompletedReviewToAccount(await currentUser.getIdToken(), currentUser.uid, review, category);
+      const saveResult = await syncCompletedReviewToAccount(await currentUser.getIdToken(), currentUser.uid, review, category, sourceFile);
       void deleteActiveReviewDraft(currentUser.uid);
       setSaveState(saveResult.syncedToCloud ? "saved" : "local");
       setSaveError(saveResult.message ?? "");
+      setSourceImage(saveResult.sourceImage ?? null);
     } catch (error) {
       setSaveState("idle");
       setSaveError(error instanceof Error ? error.message : "Could not save this review. Please try again.");
@@ -317,7 +340,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
         <div className="result-header-actions">
           <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
           <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
-            {saveState === "saved" ? <><Check size={14} /> Saved to dashboard</> : saveState === "local" ? <><Save size={14} /> Retry account sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
+            {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><Save size={14} /> Retry account sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
@@ -331,7 +354,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
               <AnnotationOverlay review={review} activeIssueId={activeIssueId} onActiveIssueChange={setActiveIssueId} />
             </div>
           )}
-          <div className="preview-caption"><span className="mono-label">SOURCE DESIGN</span><p>Private · Local preview</p></div>
+          <div className="preview-caption"><span className="mono-label">SOURCE DESIGN</span><p>{sourceImage ? "Private account image" : "Private local preview"}</p></div>
         </aside>
         <section className="result-content">
           <Reveal>
@@ -413,15 +436,16 @@ function parseReviewCreatePayload(payload: unknown) {
 
   return {
     review: reviewOutputSchema.parse(payload),
-    persistence: { savedToAccount: false },
+    persistence: { savedToAccount: false, imageSavedToAccount: false, sourceImage: undefined },
   };
 }
 
-function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, category: ReviewCategory, savedToAccount: boolean) {
+function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, category: ReviewCategory, savedToAccount: boolean, sourceImage?: ReviewSourceImage) {
   const storedReview = createStoredReviewDocument({
     userId,
     review,
     category,
+    sourceImage,
     syncState: savedToAccount ? "cloud" : "local",
   });
   const cached = cacheReviewDocument(storedReview);
@@ -430,39 +454,66 @@ function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, 
   }
 
   return savedToAccount
-    ? { syncedToCloud: true }
+    ? { syncedToCloud: true, sourceImage }
     : {
         syncedToCloud: false,
+        sourceImage,
         message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
       };
 }
 
-async function syncCompletedReviewToAccount(idToken: string, userId: string, review: ReviewOutput, category: ReviewCategory) {
+async function syncCompletedReviewToAccount(idToken: string, userId: string, review: ReviewOutput, category: ReviewCategory, sourceFile: File | null) {
   const storedReview = createStoredReviewDocument({ userId, review, category, syncState: "local" });
   cacheReviewDocument(storedReview);
-  const payload = await postJsonWithFallback({
+  const payload = sourceFile
+    ? await postReviewSyncForm(idToken, storedReview, sourceFile)
+    : await postJsonWithFallback({
+        path: "/api/reviews/sync",
+        unavailableMessage: "Review sync is not available right now.",
+        failureMessage: "Review sync failed.",
+        init: {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ documents: [storedReview] }),
+        },
+      });
+  const syncResult = reviewSyncResponseSchema.parse(payload);
+  const syncedToCloud = syncResult.savedIds.includes(storedReview.id);
+  const syncedSourceImage = syncResult.sourceImages.find((item) => item.id === storedReview.id)?.sourceImage;
+  cacheReviewDocument({
+    ...storedReview,
+    ...(syncedSourceImage ? { sourceImage: syncedSourceImage } : {}),
+    syncState: syncedToCloud ? "cloud" : "local",
+    updatedAt: new Date().toISOString(),
+  });
+
+  return syncedToCloud
+    ? { syncedToCloud: true, sourceImage: syncedSourceImage }
+    : {
+        syncedToCloud: false,
+        sourceImage: syncedSourceImage,
+        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
+      };
+}
+
+async function postReviewSyncForm(idToken: string, storedReview: ReturnType<typeof createStoredReviewDocument>, sourceFile: File) {
+  const body = new FormData();
+  body.append("document", JSON.stringify(storedReview));
+  body.append("image", sourceFile);
+
+  return postFormDataWithFallback({
     path: "/api/reviews/sync",
     unavailableMessage: "Review sync is not available right now.",
     failureMessage: "Review sync failed.",
     init: {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${idToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ documents: [storedReview] }),
+      headers: { Authorization: `Bearer ${idToken}` },
+      body,
     },
   });
-  const syncResult = reviewSyncResponseSchema.parse(payload);
-  const syncedToCloud = syncResult.savedIds.includes(storedReview.id);
-  cacheReviewDocument({ ...storedReview, syncState: syncedToCloud ? "cloud" : "local", updatedAt: new Date().toISOString() });
-
-  return syncedToCloud
-    ? { syncedToCloud: true }
-    : {
-        syncedToCloud: false,
-        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
-      };
 }
 
 async function deleteActiveReviewDraft(userId: string) {

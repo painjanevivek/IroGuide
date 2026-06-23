@@ -17,6 +17,10 @@ export async function postFormDataWithFallback({ path, init, unavailableMessage,
   return postWithFallback({ path, init, unavailableMessage, failureMessage, primaryBase });
 }
 
+export async function requestJsonWithFallback({ path, init, unavailableMessage, failureMessage, primaryBase = apiBaseUrl }: JsonRequestOptions) {
+  return postWithFallback({ path, init, unavailableMessage, failureMessage, primaryBase });
+}
+
 async function postWithFallback({ path, init, unavailableMessage, failureMessage, primaryBase = apiBaseUrl }: JsonRequestOptions) {
   const urls = getApiRequestUrls(path, primaryBase);
   let unavailableError: Error | null = null;

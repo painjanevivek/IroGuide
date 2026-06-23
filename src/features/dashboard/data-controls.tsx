@@ -1,6 +1,7 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 
 export function DataControls({ hasLocalFallback = false, reviewCount }: { hasLocalFallback?: boolean; reviewCount: number }) {
   return (
@@ -13,12 +14,12 @@ export function DataControls({ hasLocalFallback = false, reviewCount }: { hasLoc
           {reviewCount === 0
             ? "Once you create a review, it will save into this signed-in workspace."
             : hasLocalFallback
-              ? `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} available here, including recent saves waiting for account sync.`
+              ? `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} available here, including recent saves waiting for account image sync.`
               : `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} loaded for this signed-in account.`}{" "}
-          Image bytes are not persisted by this build yet.
+          Uploaded source images are stored privately with their saved critique.
         </p>
       </div>
-      <span className="auth-status">Deletion tools arrive with account settings.</span>
+      <Link className="button-secondary" href="/profile">Manage data <ArrowRight size={15} /></Link>
     </section>
   );
 }

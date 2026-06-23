@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { categoryLabels, reviewCategories, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "./review";
+import { categoryLabels, reviewCategories, reviewOutputSchema, reviewSourceImageSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "./review";
 
 export const reviewSyncStateSchema = z.enum(["local", "cloud"]);
 
@@ -14,11 +14,16 @@ export const storedReviewDocumentSchema = z.object({
   savedAt: z.string().min(1),
   updatedAt: z.string().min(1),
   syncState: reviewSyncStateSchema,
+  sourceImage: reviewSourceImageSchema.optional(),
 });
 
 export const reviewSyncResponseSchema = z.object({
   savedIds: z.array(z.string()),
   failedIds: z.array(z.string()),
+  sourceImages: z.array(z.object({
+    id: z.string().min(1),
+    sourceImage: reviewSourceImageSchema,
+  })).default([]),
 });
 
 export type StoredReviewDocument = z.infer<typeof storedReviewDocumentSchema>;
@@ -32,12 +37,14 @@ export function createStoredReviewDocument({
   category,
   review,
   savedAt = new Date().toISOString(),
+  sourceImage,
   syncState = "local",
   userId,
 }: {
   category: ReviewCategory;
   review: ReviewOutput;
   savedAt?: string;
+  sourceImage?: ReviewSourceImage;
   syncState?: StoredReviewDocument["syncState"];
   userId: string;
 }): StoredReviewDocument {
@@ -52,6 +59,7 @@ export function createStoredReviewDocument({
     savedAt,
     updatedAt: savedAt,
     syncState,
+    ...(sourceImage ? { sourceImage } : {}),
   };
 }
 

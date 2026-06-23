@@ -10,10 +10,12 @@ export type DashboardReviewSummary = {
   strongestArea: string;
   fixFirst: string;
   firstAction: string;
+  sourceImageSaved: boolean;
 };
 
 type SummarizableReview = Pick<ReviewOutput, "id" | "createdAt" | "overallScore" | "summary" | "scores" | "issues"> & {
   category?: string;
+  sourceImage?: unknown;
 };
 
 export function getRecentReviewSummary(reviews: SummarizableReview[]): DashboardReviewSummary | null {
@@ -33,6 +35,7 @@ export function getRecentReviewSummary(reviews: SummarizableReview[]): Dashboard
     strongestArea,
     fixFirst: fixFirst?.issueCategory ?? "Next improvement",
     firstAction,
+    sourceImageSaved: Boolean(latestReview.sourceImage),
   };
 }
 

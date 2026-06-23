@@ -13,7 +13,7 @@ export {
 const REVIEW_CACHE_KEY_PREFIX = "iroguide:dashboard-reviews:v1:";
 const MAX_CACHED_REVIEWS = 30;
 
-type StorageLike = Pick<Storage, "getItem" | "setItem">;
+type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 export function cacheReviewDocument(document: StoredReviewDocument, storage: StorageLike | null = getBrowserStorage()) {
   if (!storage) return false;
@@ -52,6 +52,17 @@ export function getCachedReviewDocuments(userId: string, storage: StorageLike | 
 
 export function getPendingLocalReviewDocuments(userId: string, storage: StorageLike | null = getBrowserStorage()) {
   return getCachedReviewDocuments(userId, storage).filter((document) => document.syncState === "local");
+}
+
+export function clearCachedReviewDocuments(userId: string, storage: StorageLike | null = getBrowserStorage()) {
+  if (!storage) return false;
+
+  try {
+    storage.removeItem(getReviewCacheKey(userId));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function parseStoredReviewDocument(value: unknown): StoredReviewDocument | null {

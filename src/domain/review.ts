@@ -29,6 +29,14 @@ export const reviewImageSchema = z.object({
   dataBase64: z.string().min(16).max(maxImageBase64Length),
 });
 
+export const reviewSourceImageSchema = z.object({
+  storagePath: z.string().min(1),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  size: z.number().int().positive().max(10 * 1024 * 1024),
+  originalName: z.string().min(1).max(180),
+  uploadedAt: z.string().min(1),
+});
+
 export const reviewRequestSchema = z.object({
   category: z.enum(reviewCategories),
   mode: z.enum(feedbackModes),
@@ -79,12 +87,15 @@ export const reviewCreateResponseSchema = z.object({
   review: reviewOutputSchema,
   persistence: z.object({
     savedToAccount: z.boolean(),
+    imageSavedToAccount: z.boolean().default(false),
+    sourceImage: reviewSourceImageSchema.optional(),
   }),
 });
 
 export type ReviewRequest = z.infer<typeof reviewRequestSchema>;
 export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
 export type ReviewCreateResponse = z.infer<typeof reviewCreateResponseSchema>;
+export type ReviewSourceImage = z.infer<typeof reviewSourceImageSchema>;
 
 export const categoryLabels: Record<ReviewCategory, string> = {
   logo: "Logo",

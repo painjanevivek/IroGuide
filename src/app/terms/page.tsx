@@ -55,7 +55,7 @@ export default function TermsPage() {
         <h2>Accounts, deletion, and availability</h2>
         <p>
           IroGuide may limit, suspend, or remove accounts or content that violates these terms or threatens service
-          integrity. You can request deletion of account data and saved reviews through the <Link href="/contact">contact page</Link>.
+          integrity. Signed-in users can delete account data and saved reviews from the <Link href="/profile">profile page</Link>.
           Features may change as the product evolves.
         </p>
 

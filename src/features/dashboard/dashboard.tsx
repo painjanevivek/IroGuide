@@ -1,24 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
+import { getDownloadURL, ref } from "firebase/storage";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
 import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
-import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
+import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
+import { getFirebaseClientStorage } from "@/lib/firebase/storage";
 import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
-type StoredReview = ReviewOutput & ProgressReview & { category?: string; syncState?: StoredReviewDocument["syncState"] };
+type StoredReview = ReviewOutput & ProgressReview & { category?: string; sourceImage?: ReviewSourceImage; syncState?: StoredReviewDocument["syncState"] };
 type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
@@ -26,6 +29,7 @@ export function Dashboard() {
   const [cloudReviews, setCloudReviews] = useState<StoredReview[]>([]);
   const [cachedReviews, setCachedReviews] = useState<StoredReview[]>([]);
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
+  const [reviewImageUrls, setReviewImageUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -68,6 +72,37 @@ export function Dashboard() {
       window.removeEventListener("online", syncPendingReviews);
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      queueMicrotask(() => setReviewImageUrls({}));
+      return;
+    }
+
+    const reviewsWithImages = mergeStoredReviews(cloudReviews, cachedReviews).filter((review) => review.sourceImage);
+    if (reviewsWithImages.length === 0) {
+      queueMicrotask(() => setReviewImageUrls({}));
+      return;
+    }
+
+    let active = true;
+    void Promise.all(reviewsWithImages.map(async (review) => {
+      if (!review.sourceImage) return null;
+      try {
+        const url = await getDownloadURL(ref(getFirebaseClientStorage(), review.sourceImage.storagePath));
+        return [review.id, url] as const;
+      } catch {
+        return null;
+      }
+    })).then((entries) => {
+      if (!active) return;
+      setReviewImageUrls(Object.fromEntries(entries.filter((entry): entry is readonly [string, string] => entry !== null)));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [cachedReviews, cloudReviews, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -118,6 +153,7 @@ export function Dashboard() {
   const progress = calculateProgress(reviews);
   const recentReview = getRecentReviewSummary(reviews);
   const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => cachedReview.syncState === "local" && !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
+  const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
 
   return (
     <main className="dashboard-main">
@@ -135,7 +171,7 @@ export function Dashboard() {
           <ShieldCheck />
           <div>
             <strong>Private signed-in workspace</strong>
-            <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected.</span>
+            <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected. {hasPrivateSourceImages ? "Saved source images are loaded from private account storage." : "New saved critiques will keep their source image in account storage."}</span>
           </div>
         </div>
       </Reveal>
@@ -206,7 +242,14 @@ export function Dashboard() {
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>
           </Reveal>
-          <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.id}><article className="history-card" id={`review-${review.id}`}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article></StaggerItem>)}</Stagger>
+          <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.id}><article className="history-card" id={`review-${review.id}`}>
+            {review.sourceImage && (
+              <div className="history-card-image">
+                {reviewImageUrls[review.id] ? <Image src={reviewImageUrls[review.id]} alt={`${review.category ?? "Design"} source image`} fill unoptimized /> : <FileImage />}
+              </div>
+            )}
+            <span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time>
+          </article></StaggerItem>)}</Stagger>
         </>
       )}
 
@@ -222,8 +265,14 @@ function toStoredReview(id: string, data: DocumentData): StoredReview | null {
   const category = typeof data.category === "string" && data.category in categoryLabels
     ? categoryLabels[data.category as keyof typeof categoryLabels]
     : undefined;
+  const parsedSourceImage = reviewSourceImageSchema.safeParse(data.sourceImage);
   const syncState = data.syncState === "local" || data.syncState === "cloud" ? data.syncState : undefined;
-  return { ...parsed.data, category, syncState };
+  return {
+    ...parsed.data,
+    category,
+    ...(parsedSourceImage.success ? { sourceImage: parsedSourceImage.data } : {}),
+    syncState,
+  };
 }
 
 function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
@@ -262,10 +311,17 @@ async function syncLocalReviewDocuments(idToken: string, documents: StoredReview
   });
   const syncResult = reviewSyncResponseSchema.parse(payload);
   const syncedIds = new Set(syncResult.savedIds);
+  const sourceImagesById = new Map(syncResult.sourceImages.map((item) => [item.id, item.sourceImage]));
 
   for (const reviewDocument of documents) {
     if (syncedIds.has(reviewDocument.id)) {
-      cacheReviewDocument({ ...reviewDocument, syncState: "cloud", updatedAt: new Date().toISOString() });
+      const sourceImage = sourceImagesById.get(reviewDocument.id) ?? reviewDocument.sourceImage;
+      cacheReviewDocument({
+        ...reviewDocument,
+        ...(sourceImage ? { sourceImage } : {}),
+        syncState: "cloud",
+        updatedAt: new Date().toISOString(),
+      });
     }
   }
 }

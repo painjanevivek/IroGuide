@@ -2,16 +2,18 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CheckCircle2, ImagePlus, KeyRound, Link2, LoaderCircle, RotateCcw, ShieldCheck, UploadCloud } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, ImagePlus, KeyRound, Link2, LoaderCircle, RotateCcw, ShieldCheck, Trash2, UploadCloud, UserX } from "lucide-react";
 import { useAuth } from "./auth-provider";
 import { UserAvatar } from "./user-menu";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const MAX_AVATAR_BYTES = 1024 * 1024;
+const REVIEW_PURGE_CONFIRMATION = "DELETE REVIEWS";
+const ACCOUNT_DELETE_CONFIRMATION = "DELETE ACCOUNT";
 
 export function ProfileSettings() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { user, avatarUrl, providerIds, updateAvatar, resetAvatar, changePassword, linkGoogleProvider } = useAuth();
+  const { user, avatarUrl, providerIds, updateAvatar, resetAvatar, changePassword, linkGoogleProvider, purgeReviewData, deleteAccount } = useAuth();
   const [dragging, setDragging] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -22,6 +24,12 @@ export function ProfileSettings() {
   const [accountError, setAccountError] = useState("");
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [reviewConfirm, setReviewConfirm] = useState("");
+  const [accountConfirm, setAccountConfirm] = useState("");
+  const [dangerMessage, setDangerMessage] = useState("");
+  const [dangerError, setDangerError] = useState("");
+  const [reviewDeleting, setReviewDeleting] = useState(false);
+  const [accountDeleting, setAccountDeleting] = useState(false);
 
   if (!user) return null;
 
@@ -117,13 +125,54 @@ export function ProfileSettings() {
     }
   }
 
+  async function onPurgeReviews(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDangerMessage("");
+    setDangerError("");
+
+    if (reviewConfirm !== REVIEW_PURGE_CONFIRMATION) {
+      setDangerError(`Type ${REVIEW_PURGE_CONFIRMATION} before deleting saved reviews.`);
+      return;
+    }
+
+    setReviewDeleting(true);
+    try {
+      const result = await purgeReviewData();
+      setReviewConfirm("");
+      setDangerMessage(`Deleted ${formatDeletionCount(result.reviewsDeleted, "review")}, ${formatDeletionCount(result.draftsDeleted, "draft")}, and ${formatDeletionCount(result.sourceImagesDeleted, "source image")}.`);
+    } catch (deleteError) {
+      setDangerError(deleteError instanceof Error ? deleteError.message : "Review history deletion failed.");
+    } finally {
+      setReviewDeleting(false);
+    }
+  }
+
+  async function onDeleteAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDangerMessage("");
+    setDangerError("");
+
+    if (accountConfirm !== ACCOUNT_DELETE_CONFIRMATION) {
+      setDangerError(`Type ${ACCOUNT_DELETE_CONFIRMATION} before deleting this account.`);
+      return;
+    }
+
+    setAccountDeleting(true);
+    try {
+      await deleteAccount();
+    } catch (deleteError) {
+      setDangerError(deleteError instanceof Error ? deleteError.message : "Account deletion failed.");
+      setAccountDeleting(false);
+    }
+  }
+
   return (
     <main className="profile-main">
       <section className="profile-hero">
         <div>
           <p className="eyebrow">Account profile</p>
           <h1>Your authorised workspace identity.</h1>
-          <p>Choose the avatar that appears in the top navigation while you are signed in.</p>
+          <p>Manage the avatar, sign-in methods, and permanent data controls for this signed-in workspace.</p>
         </div>
         <div className="profile-card">
           <UserAvatar label={label} src={avatarUrl} size="lg" />
@@ -203,10 +252,43 @@ export function ProfileSettings() {
         </div>
       </section>
 
+      <section className="account-danger">
+        <div>
+          <p className="eyebrow">Deletion</p>
+          <h2>Permanent data controls.</h2>
+          <p>Delete saved critique history on its own, or remove this Firebase account after clearing its stored reviews and drafts.</p>
+        </div>
+        <div className="danger-panels">
+          <form className="danger-panel" onSubmit={onPurgeReviews}>
+            <header><Trash2 /><div><h3>Delete review history</h3><p>Removes saved reviews, review drafts, and local dashboard cache for this signed-in account.</p></div></header>
+            <label><span>Type {REVIEW_PURGE_CONFIRMATION}</span><input value={reviewConfirm} onChange={(event) => setReviewConfirm(event.target.value)} autoComplete="off" /></label>
+            <button className="danger-button" type="submit" disabled={reviewDeleting || reviewConfirm !== REVIEW_PURGE_CONFIRMATION}>
+              {reviewDeleting ? <><LoaderCircle className="spin" /> Deleting...</> : <>Delete reviews <Trash2 size={16} /></>}
+            </button>
+          </form>
+
+          <form className="danger-panel danger-panel-critical" onSubmit={onDeleteAccount}>
+            <header><UserX /><div><h3>Delete account</h3><p>Permanently removes this account after deleting its saved reviews, drafts, avatar cache, and sign-in record.</p></div></header>
+            <label><span>Type {ACCOUNT_DELETE_CONFIRMATION}</span><input value={accountConfirm} onChange={(event) => setAccountConfirm(event.target.value)} autoComplete="off" /></label>
+            <button className="danger-button" type="submit" disabled={accountDeleting || accountConfirm !== ACCOUNT_DELETE_CONFIRMATION}>
+              {accountDeleting ? <><LoaderCircle className="spin" /> Deleting...</> : <>Delete account <UserX size={16} /></>}
+            </button>
+          </form>
+
+          {(dangerError || dangerMessage) && (
+            dangerError ? <p className="form-error security-message" role="alert"><AlertCircle /> {dangerError}</p> : <p className="form-success security-message" role="status">{dangerMessage}</p>
+          )}
+        </div>
+      </section>
+
       <div className="profile-footer-actions">
         <Link className="button-secondary" href="/dashboard">Dashboard</Link>
         <Link className="button" href="/review/new">New review <ArrowRight size={17} /></Link>
       </div>
     </main>
   );
+}
+
+function formatDeletionCount(count: number, singular: string) {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
 }

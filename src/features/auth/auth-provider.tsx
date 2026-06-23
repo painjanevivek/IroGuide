@@ -17,6 +17,8 @@ type AuthState = {
   providerIds: string[];
   loading: boolean;
   error: string;
+  deleteAccount: () => Promise<ReviewDataDeletionResult>;
+  purgeReviewData: () => Promise<ReviewDataDeletionResult>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
@@ -25,6 +27,13 @@ type AuthState = {
   linkGoogleProvider: () => Promise<void>;
   updateAvatar: (dataUrl: string) => void;
   resetAvatar: () => void;
+};
+
+type ReviewDataDeletionResult = {
+  deleted: boolean;
+  draftsDeleted: number;
+  reviewsDeleted: number;
+  sourceImagesDeleted: number;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -203,6 +212,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const purgeReviewData = useCallback(async () => {
+    setError("");
+    try {
+      const currentUser = user;
+      if (!currentUser) throw new Error("Sign in again before deleting review history.");
+      const result = await requestAuthenticatedDeletion({
+        failureMessage: "Review history deletion failed.",
+        path: "/api/account/reviews",
+        token: await currentUser.getIdToken(true),
+        unavailableMessage: "Review history deletion is not available right now.",
+      });
+      await clearLocalReviewData(currentUser.uid);
+      return result;
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "Review history deletion failed.";
+      setError(message);
+      throw new Error(message);
+    }
+  }, [user]);
+
+  const deleteAccount = useCallback(async () => {
+    setError("");
+    try {
+      const [{ getFirebaseClientAuth }, { signOut: firebaseSignOut }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
+      const currentUser = getFirebaseClientAuth().currentUser;
+      if (!currentUser) throw new Error("Sign in again before deleting your account.");
+      const result = await requestAuthenticatedDeletion({
+        failureMessage: "Account deletion failed.",
+        path: "/api/account",
+        token: await currentUser.getIdToken(true),
+        unavailableMessage: "Account deletion is not available right now.",
+      });
+      await clearLocalAccountData(currentUser.uid);
+      await firebaseSignOut(getFirebaseClientAuth());
+      setUser(null);
+      setAvatarUrl("");
+      setProviderIds([]);
+      return result;
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : "Account deletion failed.";
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
   const updateAvatar = useCallback((dataUrl: string) => {
     if (!user) return;
     try {
@@ -225,8 +282,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const value = useMemo<AuthState>(
-    () => ({ user, avatarUrl, providerIds, loading, error, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, changePassword, linkGoogleProvider, updateAvatar, resetAvatar }),
-    [avatarUrl, changePassword, error, linkGoogleProvider, loading, providerIds, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
+    () => ({ user, avatarUrl, providerIds, loading, error, deleteAccount, purgeReviewData, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, changePassword, linkGoogleProvider, updateAvatar, resetAvatar }),
+    [avatarUrl, changePassword, deleteAccount, error, linkGoogleProvider, loading, providerIds, purgeReviewData, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -236,6 +293,69 @@ export function useAuth() {
   const value = useContext(AuthContext);
   if (!value) throw new Error("useAuth must be used inside AuthProvider.");
   return value;
+}
+
+async function requestAuthenticatedDeletion({
+  failureMessage,
+  path,
+  token,
+  unavailableMessage,
+}: {
+  failureMessage: string;
+  path: "/api/account" | "/api/account/reviews";
+  token: string;
+  unavailableMessage: string;
+}) {
+  const { requestJsonWithFallback } = await import("@/lib/api-client");
+  const payload = await requestJsonWithFallback({
+    path,
+    unavailableMessage,
+    failureMessage,
+    init: {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  });
+
+  return parseReviewDataDeletionResult(payload, failureMessage);
+}
+
+function parseReviewDataDeletionResult(payload: unknown, fallbackMessage: string): ReviewDataDeletionResult {
+  if (
+    typeof payload === "object"
+    && payload !== null
+    && "deleted" in payload
+    && "draftsDeleted" in payload
+    && "reviewsDeleted" in payload
+    && "sourceImagesDeleted" in payload
+    && typeof payload.deleted === "boolean"
+    && typeof payload.draftsDeleted === "number"
+    && typeof payload.reviewsDeleted === "number"
+    && typeof payload.sourceImagesDeleted === "number"
+  ) {
+    return {
+      deleted: payload.deleted,
+      draftsDeleted: payload.draftsDeleted,
+      reviewsDeleted: payload.reviewsDeleted,
+      sourceImagesDeleted: payload.sourceImagesDeleted,
+    };
+  }
+
+  throw new Error(fallbackMessage);
+}
+
+async function clearLocalReviewData(userId: string) {
+  const { clearCachedReviewDocuments } = await import("@/lib/review-persistence");
+  clearCachedReviewDocuments(userId);
+}
+
+async function clearLocalAccountData(userId: string) {
+  await clearLocalReviewData(userId);
+  try {
+    localStorage.removeItem(getAvatarStorageKey(userId));
+  } catch {
+    // The server-side deletion has already completed; local cleanup is best effort.
+  }
 }
 
 function getAuthErrorMessage(error: unknown) {
