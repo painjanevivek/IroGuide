@@ -135,4 +135,56 @@ describe("review provider routing", () => {
     expect(body.model).toBe("test/vision-model");
     expect(imagePart?.image_url?.url).toBe(`data:image/png;base64,${requestWithImage.image?.dataBase64}`);
   });
+
+  it("normalizes salvageable live provider JSON before validating the review", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            overallScore: "8.5",
+            summary: "Strong visual direction with a few craft issues.",
+            strengths: [],
+            scores: [{ label: "Craft", score: "7.5" }],
+            issues: [{
+              category: "Hierarchy",
+              score: "7",
+              priority: "HIGH",
+              observation: "The focal point is visible.",
+              impact: "The mark reads quickly.",
+              recommendation: "Tighten spacing around the central shape.",
+              actions: [],
+            }],
+            annotations: [{
+              issueId: "missing-issue-id",
+              label: "Invalid reference",
+              description: "This annotation should be dropped.",
+              x: 2,
+              y: -1,
+              width: 0,
+              height: 0,
+              confidence: 4,
+            }],
+            checklist: [{}],
+            followUps: [],
+          }),
+        },
+      }],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "live");
+    vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+    vi.stubGlobal("fetch", fetchMock);
+
+    const review = await createReview(requestWithImage);
+
+    expect(review.provider).toBe("live");
+    expect(review.overallScore).toBe(8.5);
+    expect(review.strengths).toEqual(["Strong visual direction with a few craft issues."]);
+    expect(review.issues[0]).toEqual(expect.objectContaining({
+      id: "issue-1",
+      priority: "high",
+      actions: ["Tighten spacing around the central shape."],
+    }));
+    expect(review.annotations).toEqual([]);
+    expect(review.followUps).toEqual(["What should I improve first?"]);
+  });
 });
