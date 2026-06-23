@@ -259,6 +259,5 @@ export function getReviewProvider() {
   if (configuredMode === "endpoint") return endpointReviewProvider;
   if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return liveVisionReviewProvider;
   if (process.env.OPENROUTER_API_KEY?.trim()) return liveVisionReviewProvider;
-  if (process.env.NODE_ENV === "production") return liveVisionReviewProvider;
   return demoReviewProvider;
 }

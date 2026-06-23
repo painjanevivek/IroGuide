@@ -74,6 +74,17 @@ describe("review provider routing", () => {
     expect(review.provider).toBe("demo");
   });
 
+  it("uses the deterministic review provider in production when live credentials are not configured", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "");
+    vi.stubEnv("OPENROUTER_API_KEY", "");
+
+    const review = await createReview(requestWithImage);
+
+    expect(getReviewProvider().name).toBe("demo");
+    expect(review.provider).toBe("demo");
+  });
+
   it("fails clearly when live vision mode is enabled without OpenRouter credentials", async () => {
     vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "live");
     vi.stubEnv("OPENROUTER_API_KEY", "");
