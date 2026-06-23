@@ -1,5 +1,4 @@
-import { applicationDefault, cert, getApps, initializeApp, type App } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import type { App, AppOptions } from "firebase-admin/app";
 
 export class FirebaseAdminUnavailableError extends Error {
   constructor(message = "Account storage is not configured yet.") {
@@ -17,7 +16,11 @@ export class FirebaseTokenVerificationError extends Error {
 
 export async function verifyFirebaseIdToken(idToken: string) {
   try {
-    return await getAuth(getFirebaseAdminApp()).verifyIdToken(idToken);
+    const [{ getAuth }, app] = await Promise.all([
+      import("firebase-admin/auth"),
+      getFirebaseAdminApp(),
+    ]);
+    return await getAuth(app).verifyIdToken(idToken);
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) throw error;
     throw new FirebaseTokenVerificationError();
@@ -25,8 +28,11 @@ export async function verifyFirebaseIdToken(idToken: string) {
 }
 
 export async function getFirebaseAdminFirestore() {
-  const { getFirestore } = await import("firebase-admin/firestore");
-  return getFirestore(getFirebaseAdminApp());
+  const [{ getFirestore }, app] = await Promise.all([
+    import("firebase-admin/firestore"),
+    getFirebaseAdminApp(),
+  ]);
+  return getFirestore(app);
 }
 
 export function isFirebaseAdminConfigured() {
@@ -37,17 +43,19 @@ export function isFirebaseAdminConfigured() {
   );
 }
 
-function getFirebaseAdminApp(): App {
+async function getFirebaseAdminApp(): Promise<App> {
+  const { getApps, initializeApp } = await import("firebase-admin/app");
   const existingApp = getApps()[0];
   if (existingApp) return existingApp;
 
-  const options = getFirebaseAdminOptions();
+  const options = await getFirebaseAdminOptions();
   if (!options) throw new FirebaseAdminUnavailableError();
 
   return initializeApp(options);
 }
 
-function getFirebaseAdminOptions() {
+async function getFirebaseAdminOptions(): Promise<AppOptions | null> {
+  const { applicationDefault, cert } = await import("firebase-admin/app");
   const serviceAccount = getServiceAccountFromJson() ?? getServiceAccountFromParts();
   if (serviceAccount) return { credential: cert(serviceAccount), projectId: serviceAccount.projectId };
 
