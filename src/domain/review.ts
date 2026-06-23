@@ -60,7 +60,7 @@ export const reviewOutputSchema = z.object({
   annotations: z.array(reviewAnnotationSchema).default([]),
   checklist: z.array(z.object({ label: z.string(), priority: z.enum(["high", "medium", "low"]) })),
   followUps: z.array(z.string()),
-  provider: z.literal("demo"),
+  provider: z.enum(["demo", "live"]),
 });
 
 export type ReviewRequest = z.infer<typeof reviewRequestSchema>;

@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Save, Sparkles, Upload, X } from "lucide-react";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -11,9 +12,10 @@ import { StepTransition } from "@/components/motion/step-transition";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
-import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
+import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
+import { getFirebaseClientFirestore } from "@/lib/firebase/client";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
 import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
@@ -136,7 +138,7 @@ export function ReviewStudio() {
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} onRestart={() => { setReview(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} category={category} onRestart={() => { setReview(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
@@ -172,7 +174,7 @@ export function ReviewStudio() {
 
           {step === 3 && <div className="form-panel"><div className="panel-heading"><span>03</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>How should we talk?</h2><p>The standards stay consistent. You choose the voice.</p></div></div><div className="mode-selector">{feedbackModes.map((item, index) => <label key={item} className={`select-mode mode-${item}`}><input type="radio" name="mode" checked={mode === item} onChange={() => setMode(item)} /><span className="mode-index">0{index + 1}</span><MessageIcon mode={item} /><div><h3>{modeCopy[item][0]}</h3><p>{modeCopy[item][1]}</p><blockquote>“{item === 'friendly' ? 'Let’s make the main message easier to notice.' : item === 'mentor' ? 'The hierarchy needs a more deliberate first reading point.' : 'The hierarchy is unresolved. Fix it before adding anything else.'}”</blockquote></div><span className="radio-mark"><Check /></span></label>)}</div><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(2)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" onClick={() => goToStep(4)}>Review details <ArrowRight size={17} /></button></div></div>}
 
-          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured demo critique is returned. Durable Firestore saving arrives with the live backend.</p></div></div>{submitting && <AnalysisStageDisplay />}{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <>Critique in progress <Sparkles size={17} /></> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
+          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured critique is returned. The finished review can be saved to your dashboard.</p></div></div>{submitting && <AnalysisStageDisplay />}{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <>Critique in progress <Sparkles size={17} /></> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
           </StepTransition>
         </section>
       </form>
@@ -182,16 +184,54 @@ export function ReviewStudio() {
 
 function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
 
-function ReviewResult({ review, preview, onRestart }: { review: ReviewOutput; preview: string | null; onRestart: () => void }) {
+function ReviewResult({ review, preview, category, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; onRestart: () => void }) {
+  const { user } = useAuth();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveError, setSaveError] = useState("");
   const fixFirst = getFixFirstAction(review);
+  const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
+
+  async function saveReview() {
+    if (saveState === "saving") return;
+    if (!user) {
+      setSaveError("Sign in again before saving this review.");
+      return;
+    }
+
+    setSaveState("saving");
+    setSaveError("");
+    try {
+      const db = getFirebaseClientFirestore();
+      const safeReviewId = review.id.replaceAll("/", "_");
+      await setDoc(doc(db, "reviews", `${user.uid}_${safeReviewId}`), {
+        userId: user.uid,
+        review,
+        category,
+        categoryLabel: categoryLabels[category],
+        provider: review.provider,
+        savedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      setSaveState("saved");
+    } catch (error) {
+      setSaveState("idle");
+      setSaveError(error instanceof Error ? error.message : "Could not save this review. Please try again.");
+    }
+  }
 
   return (
     <main className="result-shell">
       <header className="studio-header dark">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
-        <div><span className="demo-badge">Demo critique</span><Link href="/dashboard">Dashboard</Link></div>
+        <div className="result-header-actions">
+          <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
+          <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
+            {saveState === "saved" ? <><Check size={14} /> Saved</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Save review</>}
+          </button>
+          <Link href="/dashboard">Dashboard</Link>
+        </div>
       </header>
       <div className="result-layout">
         <aside className="result-preview">
@@ -212,12 +252,17 @@ function ReviewResult({ review, preview, onRestart }: { review: ReviewOutput; pr
                 <h1>{review.summary.split(".")[0]}.</h1>
                 <p>{review.summary}</p>
               </div>
-              <div className="result-score"><span className="mono-label">OVERALL</span><strong>{review.overallScore}<small> / 10</small></strong><span>A useful baseline</span></div>
+              <div className="result-score"><span className="mono-label">OVERALL</span><strong>{review.overallScore}<small>/ 10</small></strong><span>A useful baseline</span></div>
             </div>
           </Reveal>
           <Reveal delay={0.05}>
-            <div className="demo-warning"><AlertCircle /><p><strong>Transparent demo:</strong> this structured sample validates the IroGuide experience but does not analyze pixels. Configure a live vision adapter for real critique.</p></div>
+            {review.provider === "live" ? (
+              <div className="demo-warning live-warning"><Check /><p><strong>Live vision critique:</strong> this result came from the configured vision provider.</p></div>
+            ) : (
+              <div className="demo-warning"><AlertCircle /><p><strong>Transparent sample:</strong> this structured critique uses the deterministic provider and does not analyze pixels yet. The API now supports a live vision adapter when production credentials are configured.</p></div>
+            )}
           </Reveal>
+          {saveError && <div className="save-warning" role="alert"><AlertCircle /> <p>{saveError}</p></div>}
           {fixFirst && <Reveal delay={0.08}><FixThisFirstCard action={fixFirst} /></Reveal>}
           <Reveal delay={0.1}>
             <section className="result-section">
