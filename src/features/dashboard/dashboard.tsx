@@ -12,6 +12,7 @@ import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
+import { getCachedReviewDocuments } from "@/lib/review-persistence";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
@@ -20,10 +21,20 @@ type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
   const { user } = useAuth();
-  const [reviews, setReviews] = useState<StoredReview[]>([]);
+  const [cloudReviews, setCloudReviews] = useState<StoredReview[]>([]);
+  const [cachedReviews, setCachedReviews] = useState<StoredReview[]>([]);
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    const refreshTimer = window.setTimeout(() => {
+      setCachedReviews(getCachedReviewDocuments(user.uid).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null));
+    }, 0);
+
+    return () => window.clearTimeout(refreshTimer);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -39,12 +50,12 @@ export function Dashboard() {
           .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
           .slice(0, 12);
         setLoadError("");
-        setReviews(nextReviews);
+        setCloudReviews(nextReviews);
         setLoading(false);
       },
       (error) => {
         setLoadError(error.message);
-        setReviews([]);
+        setCloudReviews([]);
         setLoading(false);
       },
     );
@@ -70,8 +81,10 @@ export function Dashboard() {
 
   if (!user) return null;
 
+  const reviews = mergeStoredReviews(cloudReviews, cachedReviews);
   const progress = calculateProgress(reviews);
   const recentReview = getRecentReviewSummary(reviews);
+  const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
 
   return (
     <main className="dashboard-main">
@@ -120,7 +133,7 @@ export function Dashboard() {
             <div><LoaderCircle className="spin" size={38} /><h2>Loading reviews</h2><p>Fetching your Firestore review history.</p></div>
           </div>
         </Reveal>
-      ) : loadError ? (
+      ) : loadError && reviews.length === 0 ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-error">
             <div><LayoutDashboard size={38} /><h2>Could not load reviews</h2><p>{loadError}</p></div>
@@ -135,6 +148,17 @@ export function Dashboard() {
       ) : (
         <>
           {recentReview && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} /></Reveal>}
+          {hasCachedOnlyReviews && (
+            <Reveal delay={0.09}>
+              <div className="workspace-badge workspace-badge-muted">
+                <ShieldCheck />
+                <div>
+                  <strong>Saved locally, waiting for cloud sync</strong>
+                  <span>Your latest critique is available here. Publish Firebase review-write permissions to sync it across devices.</span>
+                </div>
+              </div>
+            </Reveal>
+          )}
           <section aria-label="Design progress summary">
             <Stagger className="progress-grid">
               <StaggerItem><article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to Firestore</p></article></StaggerItem>
@@ -153,7 +177,7 @@ export function Dashboard() {
         </>
       )}
 
-      <DataControls reviewCount={reviews.length} />
+      <DataControls reviewCount={reviews.length} hasLocalFallback={hasCachedOnlyReviews} />
     </main>
   );
 }
@@ -177,6 +201,20 @@ function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
     id,
     updatedAtMs: toMillis(data.updatedAt),
   };
+}
+
+function toStoredCachedReview(data: ReturnType<typeof getCachedReviewDocuments>[number]): StoredReview | null {
+  return toStoredReview(data.id, data);
+}
+
+function mergeStoredReviews(cloudReviews: StoredReview[], cachedReviews: StoredReview[]) {
+  const byId = new Map<string, StoredReview>();
+  for (const review of cachedReviews) byId.set(review.id, review);
+  for (const review of cloudReviews) byId.set(review.id, review);
+
+  return [...byId.values()]
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+    .slice(0, 12);
 }
 
 function toMillis(value: unknown) {

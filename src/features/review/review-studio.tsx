@@ -17,6 +17,7 @@ import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, rev
 import { useAuth } from "@/features/auth/auth-provider";
 import { postFormDataWithFallback } from "@/lib/api-client";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
+import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
 import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
@@ -27,6 +28,7 @@ const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 type Step = 1 | 2 | 3 | 4;
 type DragState = "idle" | "accept" | "reject";
+type ReviewSaveState = "idle" | "saving" | "saved" | "local";
 
 const stepLabels = ["Upload", "Design brief", "Feedback mode", "Confirm"] as const;
 const stepSummaries = ["Choose one design image", "Tell us what success means", "Choose your critic", "Review the details"] as const;
@@ -59,7 +61,7 @@ export function ReviewStudio() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [review, setReview] = useState<ReviewOutput | null>(null);
-  const [resultSaveState, setResultSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [resultSaveState, setResultSaveState] = useState<ReviewSaveState>("idle");
   const [resultSaveError, setResultSaveError] = useState("");
   const [draftStatus, setDraftStatus] = useState("Draft will save to dashboard");
 
@@ -217,9 +219,10 @@ export function ReviewStudio() {
       setResultSaveState("saving");
       setResultSaveError("");
       try {
-        await saveCompletedReviewToDashboard(currentUser.uid, parsed, category);
+        const saveResult = await saveCompletedReviewToDashboard(currentUser.uid, parsed, category);
         void deleteActiveReviewDraft(currentUser.uid);
-        setResultSaveState("saved");
+        setResultSaveState(saveResult.syncedToCloud ? "saved" : "local");
+        setResultSaveError(saveResult.message ?? "");
       } catch (saveError) {
         setResultSaveState("idle");
         setResultSaveError(saveError instanceof Error ? saveError.message : "The critique was created, but it could not be saved to your dashboard yet.");
@@ -275,11 +278,11 @@ export function ReviewStudio() {
 
 function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
 
-function ReviewResult({ review, preview, category, initialSaveState, initialSaveError, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; initialSaveState: "idle" | "saving" | "saved"; initialSaveError: string; onRestart: () => void }) {
+function ReviewResult({ review, preview, category, initialSaveState, initialSaveError, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; initialSaveState: ReviewSaveState; initialSaveError: string; onRestart: () => void }) {
   const { user } = useAuth();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">(initialSaveState);
+  const [saveState, setSaveState] = useState<ReviewSaveState>(initialSaveState);
   const [saveError, setSaveError] = useState(initialSaveError);
   const fixFirst = getFixFirstAction(review);
   const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
@@ -295,9 +298,10 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
     setSaveState("saving");
     setSaveError("");
     try {
-      await saveCompletedReviewToDashboard(currentUser.uid, review, category);
+      const saveResult = await saveCompletedReviewToDashboard(currentUser.uid, review, category);
       void deleteActiveReviewDraft(currentUser.uid);
-      setSaveState("saved");
+      setSaveState(saveResult.syncedToCloud ? "saved" : "local");
+      setSaveError(saveResult.message ?? "");
     } catch (error) {
       setSaveState("idle");
       setSaveError(error instanceof Error ? error.message : "Could not save this review. Please try again.");
@@ -311,7 +315,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
         <div className="result-header-actions">
           <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
           <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
-            {saveState === "saved" ? <><Check size={14} /> Saved to dashboard</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
+            {saveState === "saved" ? <><Check size={14} /> Synced to dashboard</> : saveState === "local" ? <><Save size={14} /> Retry cloud sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
@@ -345,7 +349,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
               <div className="demo-warning"><AlertCircle /><p><strong>Local demo mode:</strong> this fallback critique is deterministic and should only be used when production vision credentials are not configured.</p></div>
             )}
           </Reveal>
-          {saveError && <div className="save-warning" role="alert"><AlertCircle /> <p>{saveError}</p></div>}
+          {saveError && <div className={`save-warning${saveState === "local" ? " save-warning-info" : ""}`} role={saveState === "local" ? "status" : "alert"}><AlertCircle /> <p>{saveError}</p></div>}
           {fixFirst && <Reveal delay={0.08}><FixThisFirstCard action={fixFirst} /></Reveal>}
           <Reveal delay={0.1}>
             <section className="result-section">
@@ -402,17 +406,27 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
 }
 
 async function saveCompletedReviewToDashboard(userId: string, review: ReviewOutput, category: ReviewCategory) {
-  const safeReviewId = review.id.replaceAll("/", "_");
-  await setDoc(doc(getFirebaseClientFirestore(), "reviews", `${userId}_${safeReviewId}`), {
-    userId,
-    review,
-    category,
-    categoryLabel: categoryLabels[category],
-    provider: review.provider,
-    status: "complete",
-    savedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  const storedReview = createStoredReviewDocument({ userId, review, category });
+  const cached = cacheReviewDocument(storedReview);
+  if (!cached) {
+    throw new Error("The critique was created, but this browser could not store it for your dashboard.");
+  }
+
+  try {
+    await setDoc(doc(getFirebaseClientFirestore(), "reviews", storedReview.id), {
+      ...storedReview,
+      syncState: "cloud",
+      savedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    cacheReviewDocument({ ...storedReview, syncState: "cloud", updatedAt: new Date().toISOString() });
+    return { syncedToCloud: true };
+  } catch {
+    return {
+      syncedToCloud: false,
+      message: "Saved to your dashboard on this device. Cloud sync will work after Firebase review-write permissions are published.",
+    };
+  }
 }
 
 async function deleteActiveReviewDraft(userId: string) {
