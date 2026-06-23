@@ -93,22 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     setError("");
     try {
-      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithPopup, signInWithRedirect }] = await Promise.all([
+      const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithRedirect }] = await Promise.all([
         import("@/lib/firebase/auth"),
         import("firebase/auth"),
       ]);
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      try {
-        await signInWithPopup(getFirebaseClientAuth(), provider);
-      } catch (popupError) {
-        const code = getAuthErrorCode(popupError);
-        if (code === "auth/popup-blocked") {
-          await signInWithRedirect(getFirebaseClientAuth(), provider);
-          return;
-        }
-        throw popupError;
-      }
+      await signInWithRedirect(getFirebaseClientAuth(), provider);
     } catch (signInError) {
       setError(getAuthErrorMessage(signInError));
     }
@@ -246,7 +237,23 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   if (code === "auth/popup-blocked" || message.includes("auth/popup-blocked")) {
-    return "Your browser blocked the Google sign-in popup. Allow popups for IroGuide and try again.";
+    return "Your browser blocked the Google sign-in popup. Use the Google redirect flow or allow popups for IroGuide and try again.";
+  }
+
+  if (code === "auth/network-request-failed" || message.includes("auth/network-request-failed")) {
+    return "Google sign-in could not reach Firebase. Check your connection and try again.";
+  }
+
+  if (code === "auth/web-storage-unsupported" || message.includes("auth/web-storage-unsupported")) {
+    return "This browser is blocking the storage Google sign-in needs. Enable cookies and site data for IroGuide.";
+  }
+
+  if (code === "auth/auth-domain-config-required" || message.includes("auth/auth-domain-config-required")) {
+    return "Firebase Google sign-in is missing its auth domain configuration.";
+  }
+
+  if (code === "auth/invalid-api-key" || message.includes("auth/invalid-api-key")) {
+    return "Firebase Google sign-in is using an invalid web API key.";
   }
 
   if (code === "auth/requires-recent-login" || message.includes("auth/requires-recent-login")) {
