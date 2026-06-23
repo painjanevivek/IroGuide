@@ -8,11 +8,12 @@ Status: Phase 12 implementation checklist
 - Direct mode may remove cushioning, but it retains evidence, reasoning, and respectful language.
 - Do not infer sensitive traits, intent, culture, authorship, or professional status from an image.
 - State uncertainty when the export, brief, or medium is insufficient.
-- Never present a demo response as pixel-level analysis.
+- Never present a local demo response as pixel-level analysis.
 
 ## Privacy
 
-- Images are previewed locally in the current demo and image bytes are not sent to the demo endpoint.
+- Live reviews send validated image bytes to the configured vision provider for pixel analysis.
+- Local demo mode remains a clearly labeled fallback when production credentials are not configured.
 - Local review history can be deleted from the dashboard.
 - Production uploads require private storage, short-lived signed access, ownership checks, retention jobs, and deletion verification.
 - Public community and portfolio publishing remain disabled until separate explicit consent and moderation exist.

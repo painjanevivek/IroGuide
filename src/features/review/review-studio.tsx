@@ -4,17 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Save, Sparkles, Upload, X } from "lucide-react";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { StepTransition } from "@/components/motion/step-transition";
+import { reviewDraftSchema } from "@/domain/review-draft";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
 import { categoryLabels, feedbackModes, reviewCategories, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
-import { postJsonWithFallback } from "@/lib/api-client";
+import { postFormDataWithFallback } from "@/lib/api-client";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
 import { AnnotationOverlay } from "./annotation-overlay";
@@ -30,6 +31,7 @@ type DragState = "idle" | "accept" | "reject";
 const stepLabels = ["Upload", "Design brief", "Feedback mode", "Confirm"] as const;
 const stepSummaries = ["Choose one design image", "Tell us what success means", "Choose your critic", "Review the details"] as const;
 const STEP_FOCUS_DELAY_MS = 340;
+const DRAFT_SAVE_DELAY_MS = 800;
 
 const modeCopy = {
   friendly: ["Friendly", "Simple, encouraging, and educational."],
@@ -42,6 +44,7 @@ export function ReviewStudio() {
   const inputRef = useRef<HTMLInputElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasNavigatedRef = useRef(false);
+  const hasLoadedDraftRef = useRef(false);
   const previewRef = useRef<string | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [stepDirection, setStepDirection] = useState<1 | -1>(1);
@@ -56,6 +59,9 @@ export function ReviewStudio() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [review, setReview] = useState<ReviewOutput | null>(null);
+  const [resultSaveState, setResultSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [resultSaveError, setResultSaveError] = useState("");
+  const [draftStatus, setDraftStatus] = useState("Draft will save to dashboard");
 
   useEffect(() => () => {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -67,6 +73,62 @@ export function ReviewStudio() {
 
     return () => window.clearTimeout(focusTimer);
   }, [step]);
+
+  useEffect(() => {
+    if (!user || hasLoadedDraftRef.current) return;
+    let active = true;
+    hasLoadedDraftRef.current = true;
+
+    void getDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)))
+      .then((snapshot) => {
+        if (!active || !snapshot.exists()) return;
+        const parsed = reviewDraftSchema.safeParse(snapshot.data());
+        if (!parsed.success) return;
+        const restoredDraft = parsed.data;
+        if (file || hasBriefContent(brief)) return;
+        hasNavigatedRef.current = true;
+        setCategory(restoredDraft.category);
+        setMode(restoredDraft.mode);
+        setBrief(restoredDraft.brief);
+        setStep(restoredDraft.step);
+        setUploadStatus(restoredDraft.file ? `${restoredDraft.file.name} was restored as draft context. Reselect the image before starting critique.` : "Draft details restored.");
+        setDraftStatus("Draft restored from dashboard");
+      })
+      .catch(() => {
+        if (active) setDraftStatus("Draft saving will retry as you edit");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [brief, file, user]);
+
+  useEffect(() => {
+    if (!user || review || !hasDraftContent({ brief, category, file, mode, step })) return;
+    const timeout = window.setTimeout(() => {
+      const parsed = reviewDraftSchema.safeParse({
+        userId: user.uid,
+        status: "draft",
+        step,
+        category,
+        mode,
+        file: file ? { name: file.name, type: file.type, size: file.size } : undefined,
+        brief,
+      });
+      if (!parsed.success) return;
+
+      setDraftStatus("Saving draft...");
+      void setDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)), {
+        ...parsed.data,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true })
+        .then(() => setDraftStatus("Draft saved to dashboard"))
+        .catch(() => setDraftStatus("Draft save will retry"));
+    }, DRAFT_SAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [brief, category, file, mode, review, step, user]);
 
   function goToStep(nextStep: Step) {
     if (nextStep === step) return;
@@ -120,29 +182,46 @@ export function ReviewStudio() {
     if (!file || !briefValid || submitting) return;
     setSubmitting(true); setSubmitError("");
     try {
-      const idToken = await user?.getIdToken();
-      if (!idToken) throw new Error("Sign in again before starting a critique.");
-      const payload = await postJsonWithFallback({
+      const currentUser = user;
+      const idToken = await currentUser?.getIdToken();
+      if (!currentUser || !idToken) throw new Error("Sign in again before starting a critique.");
+      const body = new FormData();
+      body.append("category", category);
+      body.append("mode", mode);
+      body.append("brief", JSON.stringify(brief));
+      body.append("image", file);
+
+      const payload = await postFormDataWithFallback({
         path: "/api/reviews",
         unavailableMessage: "The review service is not available right now.",
         failureMessage: "Review failed.",
         init: {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({ category, mode, file: { name: file.name, type: file.type, size: file.size }, brief }),
+          headers: { Authorization: `Bearer ${idToken}` },
+          body,
         },
       });
       const parsed = reviewOutputSchema.parse(payload);
+      setResultSaveState("saving");
+      setResultSaveError("");
+      try {
+        await saveCompletedReviewToDashboard(currentUser.uid, parsed, category);
+        void deleteActiveReviewDraft(currentUser.uid);
+        setResultSaveState("saved");
+      } catch (saveError) {
+        setResultSaveState("idle");
+        setResultSaveError(saveError instanceof Error ? saveError.message : "The critique was created, but it could not be saved to your dashboard yet.");
+      }
       setReview(parsed);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : "Review failed. Please try again."); }
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} category={category} onRestart={() => { setReview(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} category={category} initialSaveState={resultSaveState} initialSaveError={resultSaveError} onRestart={() => { setReview(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
-      <header className="studio-header"><Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link><div><span className="draft-status"><Check size={13} /> Draft kept locally</span><Link href="/dashboard">Dashboard</Link></div></header>
+      <header className="studio-header"><Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link><div><span className="draft-status"><Check size={13} /> {draftStatus}</span><Link href="/dashboard">Dashboard</Link></div></header>
       <form className="studio-layout" onSubmit={submit}>
         <aside className="studio-sidebar">
           <Link href="/" className="back-link"><ArrowLeft size={16} /> Back home</Link>
@@ -174,7 +253,7 @@ export function ReviewStudio() {
 
           {step === 3 && <div className="form-panel"><div className="panel-heading"><span>03</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>How should we talk?</h2><p>The standards stay consistent. You choose the voice.</p></div></div><div className="mode-selector">{feedbackModes.map((item, index) => <label key={item} className={`select-mode mode-${item}`}><input type="radio" name="mode" checked={mode === item} onChange={() => setMode(item)} /><span className="mode-index">0{index + 1}</span><MessageIcon mode={item} /><div><h3>{modeCopy[item][0]}</h3><p>{modeCopy[item][1]}</p><blockquote>“{item === 'friendly' ? 'Let’s make the main message easier to notice.' : item === 'mentor' ? 'The hierarchy needs a more deliberate first reading point.' : 'The hierarchy is unresolved. Fix it before adding anything else.'}”</blockquote></div><span className="radio-mark"><Check /></span></label>)}</div><div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(2)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" onClick={() => goToStep(4)}>Review details <ArrowRight size={17} /></button></div></div>}
 
-          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated review</strong><p>Your signed-in session is checked before the structured critique is returned. The finished review can be saved to your dashboard.</p></div></div>{submitting && <AnalysisStageDisplay />}{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <>Critique in progress <Sparkles size={17} /></> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
+          {step === 4 && <div className="form-panel"><div className="panel-heading"><span>04</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Ready for critique</h2><p>Confirm the context. You can still go back and change anything.</p></div></div><div className="confirmation">{preview && <div className="confirm-image"><Image src={preview} alt="Design ready for review" fill unoptimized /></div>}<div className="confirm-details"><div><span>Category</span><strong>{categoryLabels[category]}</strong></div><div><span>Feedback</span><strong>{modeCopy[mode][0]}</strong></div><div><span>Audience</span><strong>{brief.audience}</strong></div><div><span>Goal</span><strong>{brief.goal}</strong></div></div></div><div className="demo-disclosure"><Sparkles /><div><strong>Authenticated vision review</strong><p>Your signed-in session is checked before the uploaded image pixels and brief are sent for structured critique. The finished review can be saved to your dashboard.</p></div></div>{submitting && <AnalysisStageDisplay />}{submitError && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(3)} disabled={submitting}><ArrowLeft size={16} /> Back</button><button type="submit" className="button button-review" disabled={submitting}>{submitting ? <>Critique in progress <Sparkles size={17} /></> : <>Start critique <Sparkles size={17} /></>}</button></div></div>}
           </StepTransition>
         </section>
       </form>
@@ -184,18 +263,19 @@ export function ReviewStudio() {
 
 function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
 
-function ReviewResult({ review, preview, category, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; onRestart: () => void }) {
+function ReviewResult({ review, preview, category, initialSaveState, initialSaveError, onRestart }: { review: ReviewOutput; preview: string | null; category: ReviewCategory; initialSaveState: "idle" | "saving" | "saved"; initialSaveError: string; onRestart: () => void }) {
   const { user } = useAuth();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const [saveError, setSaveError] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">(initialSaveState);
+  const [saveError, setSaveError] = useState(initialSaveError);
   const fixFirst = getFixFirstAction(review);
   const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
 
   async function saveReview() {
     if (saveState === "saving") return;
-    if (!user) {
+    const currentUser = user;
+    if (!currentUser) {
       setSaveError("Sign in again before saving this review.");
       return;
     }
@@ -203,17 +283,8 @@ function ReviewResult({ review, preview, category, onRestart }: { review: Review
     setSaveState("saving");
     setSaveError("");
     try {
-      const db = getFirebaseClientFirestore();
-      const safeReviewId = review.id.replaceAll("/", "_");
-      await setDoc(doc(db, "reviews", `${user.uid}_${safeReviewId}`), {
-        userId: user.uid,
-        review,
-        category,
-        categoryLabel: categoryLabels[category],
-        provider: review.provider,
-        savedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+      await saveCompletedReviewToDashboard(currentUser.uid, review, category);
+      void deleteActiveReviewDraft(currentUser.uid);
       setSaveState("saved");
     } catch (error) {
       setSaveState("idle");
@@ -228,7 +299,7 @@ function ReviewResult({ review, preview, category, onRestart }: { review: Review
         <div className="result-header-actions">
           <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
           <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
-            {saveState === "saved" ? <><Check size={14} /> Saved</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Save review</>}
+            {saveState === "saved" ? <><Check size={14} /> Saved to dashboard</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
@@ -259,7 +330,7 @@ function ReviewResult({ review, preview, category, onRestart }: { review: Review
             {review.provider === "live" ? (
               <div className="demo-warning live-warning"><Check /><p><strong>Live vision critique:</strong> this result came from the configured vision provider.</p></div>
             ) : (
-              <div className="demo-warning"><AlertCircle /><p><strong>Transparent sample:</strong> this structured critique uses the deterministic provider and does not analyze pixels yet. The API now supports a live vision adapter when production credentials are configured.</p></div>
+              <div className="demo-warning"><AlertCircle /><p><strong>Local demo mode:</strong> this fallback critique is deterministic and should only be used when production vision credentials are not configured.</p></div>
             )}
           </Reveal>
           {saveError && <div className="save-warning" role="alert"><AlertCircle /> <p>{saveError}</p></div>}
@@ -316,6 +387,36 @@ function ReviewResult({ review, preview, category, onRestart }: { review: Review
       </div>
     </main>
   );
+}
+
+async function saveCompletedReviewToDashboard(userId: string, review: ReviewOutput, category: ReviewCategory) {
+  const safeReviewId = review.id.replaceAll("/", "_");
+  await setDoc(doc(getFirebaseClientFirestore(), "reviews", `${userId}_${safeReviewId}`), {
+    userId,
+    review,
+    category,
+    categoryLabel: categoryLabels[category],
+    provider: review.provider,
+    status: "complete",
+    savedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+async function deleteActiveReviewDraft(userId: string) {
+  await deleteDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(userId)));
+}
+
+function getActiveReviewDraftId(userId: string) {
+  return `${userId}_active`;
+}
+
+function hasBriefContent(brief: { audience: string; purpose: string; style: string; goal: string; concern: string }) {
+  return Object.values(brief).some((value) => value.trim().length > 0);
+}
+
+function hasDraftContent({ brief, category, file, mode, step }: { brief: { audience: string; purpose: string; style: string; goal: string; concern: string }; category: ReviewCategory; file: File | null; mode: (typeof feedbackModes)[number]; step: Step }) {
+  return Boolean(file || hasBriefContent(brief) || category !== "website" || mode !== "mentor" || step > 1);
 }
 
 function FixThisFirstCard({ action }: { action: FixFirstAction }) {

@@ -8,6 +8,8 @@ export type ReviewCategory = (typeof reviewCategories)[number];
 
 export const feedbackModes = ["friendly", "mentor", "direct"] as const;
 
+const maxImageBase64Length = Math.ceil((10 * 1024 * 1024 * 4) / 3) + 16;
+
 export const reviewRequestSchema = z.object({
   category: z.enum(reviewCategories),
   mode: z.enum(feedbackModes),
@@ -23,6 +25,10 @@ export const reviewRequestSchema = z.object({
     goal: z.string().trim().min(3).max(500),
     concern: z.string().trim().max(500).optional(),
   }),
+  image: z.object({
+    mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+    dataBase64: z.string().min(16).max(maxImageBase64Length),
+  }).optional(),
 });
 
 export const reviewIssueSchema = z.object({

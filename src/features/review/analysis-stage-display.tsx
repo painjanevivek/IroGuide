@@ -5,7 +5,7 @@ import { Check, CircleDashed, Sparkles } from "lucide-react";
 
 const ANALYSIS_STAGES = [
   { title: "Securing upload", detail: "Checking your signed-in session and preparing the private request." },
-  { title: "Reading composition", detail: "Reviewing the submitted context and demo-safe image metadata." },
+  { title: "Reading composition", detail: "Analyzing the uploaded image pixels, layout, hierarchy, and visual detail." },
   { title: "Comparing brief and audience", detail: "Matching the critique tone to your category, goal, and audience." },
   { title: "Building recommendations", detail: "Ordering observations into practical next steps." },
   { title: "Checking review consistency", detail: "Validating the structured critique before it appears." },
@@ -38,7 +38,7 @@ export function AnalysisStageDisplay() {
         <Sparkles size={19} />
       </div>
       <div className="analysis-copy">
-        <span className="mono-label">Demo review in progress</span>
+        <span className="mono-label">Vision critique in progress</span>
         <h3 id="analysis-stage-title">{activeStage.title}</h3>
         <p aria-live="polite">{activeStage.detail}</p>
         {isLongRunning && <p className="analysis-long-note" role="status">Still working. Your upload, brief, and form entries are kept in place if the request needs a retry.</p>}

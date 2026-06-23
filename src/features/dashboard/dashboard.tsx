@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
+import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
@@ -15,10 +16,12 @@ import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
 type StoredReview = ReviewOutput & ProgressReview & { category?: string };
+type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
   const { user } = useAuth();
   const [reviews, setReviews] = useState<StoredReview[]>([]);
+  const [drafts, setDrafts] = useState<StoredDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -47,6 +50,24 @@ export function Dashboard() {
     );
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const db = getFirebaseClientFirestore();
+    const draftsQuery = query(collection(db, "reviewDrafts"), where("userId", "==", user.uid), where("status", "==", "draft"), limit(12));
+
+    return onSnapshot(
+      draftsQuery,
+      (snapshot) => {
+        const nextDrafts = snapshot.docs
+          .map((draftDoc) => toStoredDraft(draftDoc.id, draftDoc.data()))
+          .filter((draft): draft is StoredDraft => draft !== null)
+          .sort((left, right) => (right.updatedAtMs ?? 0) - (left.updatedAtMs ?? 0));
+        setDrafts(nextDrafts);
+      },
+      () => setDrafts([]),
+    );
+  }, [user]);
+
   if (!user) return null;
 
   const progress = calculateProgress(reviews);
@@ -72,6 +93,26 @@ export function Dashboard() {
           </div>
         </div>
       </Reveal>
+
+      {drafts.length > 0 && (
+        <Reveal delay={0.07}>
+          <section className="draft-dashboard-section" aria-labelledby="draft-dashboard-title">
+            <div className="dashboard-section-title"><div><p className="eyebrow">Saved drafts</p><h2 id="draft-dashboard-title">Pick up where you left.</h2></div><span>{drafts.length} draft{drafts.length === 1 ? "" : "s"} saved</span></div>
+            <div className="draft-grid">
+              {drafts.map((draft) => (
+                <article className="draft-card" key={draft.id}>
+                  <FileText />
+                  <span>{categoryLabels[draft.category]}</span>
+                  <h3>{getDraftTitle(draft)}</h3>
+                  <p>{draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique."}</p>
+                  <div><small>Step {draft.step} / 4</small>{draft.updatedAtMs && <time>{new Date(draft.updatedAtMs).toLocaleDateString()}</time>}</div>
+                  <Link className="button button-dark button-small" href="/review/new">Continue draft <ArrowRight /></Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
 
       {loading ? (
         <Reveal delay={0.08}>
@@ -125,4 +166,27 @@ function toStoredReview(id: string, data: DocumentData): StoredReview | null {
     ? categoryLabels[data.category as keyof typeof categoryLabels]
     : undefined;
   return { ...parsed.data, category };
+}
+
+function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
+  const parsed = reviewDraftSchema.safeParse(data);
+  if (!parsed.success) return null;
+
+  return {
+    ...parsed.data,
+    id,
+    updatedAtMs: toMillis(data.updatedAt),
+  };
+}
+
+function toMillis(value: unknown) {
+  if (typeof value === "object" && value !== null && "toMillis" in value && typeof value.toMillis === "function") {
+    return value.toMillis() as number;
+  }
+  if (typeof value === "string") return Date.parse(value);
+  return null;
+}
+
+function getDraftTitle(draft: ReviewDraft) {
+  return draft.brief.goal.trim() || draft.brief.purpose.trim() || `${categoryLabels[draft.category]} critique draft`;
 }
