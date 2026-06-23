@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, CalendarDays, Heart, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
+import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
 
 export const metadata: Metadata = { title: "Community" };
 
@@ -24,7 +25,7 @@ export default function CommunityPage() {
             <p className="eyebrow light"><Users /> Community</p>
             <h1>Critique with<br /><span>more signal.</span></h1>
             <p>A live practice space for thoughtful feedback, visible improvement, and creative momentum - designed to make &quot;looks good&quot; the beginning, not the end.</p>
-            <div className="preview-notice live-notice"><ShieldCheck /><span><strong>Ready to start</strong> Create an account, run a private critique, and build a stronger improvement story before sharing work outward.</span><Link className="button button-lime" href="/auth?mode=sign-up">Get started <ArrowRight size={17} /></Link></div>
+            <div className="preview-notice live-notice"><ShieldCheck /><span><strong>Ready to start</strong> Start a private critique and build a stronger improvement story before sharing work outward.</span><CommunityPrivateCritiqueLink /></div>
           </div>
           <div className="community-orbit" aria-hidden="true">
             <span>WHAT WORKS</span><span>WHY IT MATTERS</span><span>WHAT TO TRY</span><div><MessageSquareText /></div>
@@ -81,7 +82,7 @@ export default function CommunityPage() {
           <Sparkles />
           <h2>Build in public.<br /><span>Improve with purpose.</span></h2>
           <p>Start with a private critique, shape the next version, and turn the feedback into a story worth sharing.</p>
-          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Get started <ArrowRight /></Link>
+          <CommunityPrivateCritiqueLink className="button button-lime button-large" />
         </section>
       </main>
     </div>
