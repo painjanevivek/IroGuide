@@ -5,8 +5,8 @@ describe("plan entitlements", () => {
   it("enforces bounded free usage", () => {
     const free = getPlan("free");
 
-    expect(canUse(free, { reviews: 2, followUps: 0 }, "review")).toBe(true);
-    expect(canUse(free, { reviews: 3, followUps: 0 }, "review")).toBe(false);
+    expect(canUse(free, { reviews: 9, followUps: 0 }, "review")).toBe(true);
+    expect(canUse(free, { reviews: 10, followUps: 0 }, "review")).toBe(false);
     expect(canUse(free, { reviews: 0, followUps: 0 }, "follow-up")).toBe(false);
   });
 
