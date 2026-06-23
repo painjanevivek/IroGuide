@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { reviewOutputSchema } from "./review";
 
+export const communityPostStatsSchema = z.object({
+  comments: z.number().int().min(0).default(0),
+  likes: z.number().int().min(0).default(0),
+  saves: z.number().int().min(0).default(0),
+}).default({ comments: 0, likes: 0, saves: 0 });
+
 export const communityPostSchema = z.object({
   authorId: z.string().min(1),
   authorName: z.string().min(1).max(80),
@@ -11,7 +17,7 @@ export const communityPostSchema = z.object({
   category: z.string().min(1).max(80),
   visibility: z.literal("public"),
   review: reviewOutputSchema,
-  stats: z.object({ comments: z.number().int().min(0).default(0) }).default({ comments: 0 }),
+  stats: communityPostStatsSchema,
 });
 
 export const communityCommentSchema = z.object({

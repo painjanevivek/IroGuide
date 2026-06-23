@@ -2,7 +2,20 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Check, Heart, LoaderCircle, MessageSquareText, Send, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Bell,
+  Bookmark,
+  Check,
+  Heart,
+  Home,
+  LoaderCircle,
+  MessageSquareText,
+  Send,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import {
   addDoc,
   collection,
@@ -40,6 +53,32 @@ type CommunityComment = {
   createdAtMs: number;
 };
 
+type CommunityView = "home" | "profile" | "notifications" | "saved";
+
+type PostInteraction = {
+  liked: boolean;
+  saved: boolean;
+  shared: boolean;
+};
+
+type InteractionMap = Record<string, PostInteraction>;
+
+type CommunityNotification = {
+  id: string;
+  title: string;
+  body: string;
+  createdAtMs: number;
+};
+
+const interactionStorageKey = "iroguide-community-interactions";
+
+const navigationItems: Array<{ id: CommunityView; label: string; icon: typeof Home }> = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "profile", label: "Profile", icon: UserRound },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "saved", label: "Saved", icon: Bookmark },
+];
+
 const fallbackPosts: CommunityPost[] = [
   {
     id: "sample-identity",
@@ -50,7 +89,7 @@ const fallbackPosts: CommunityPost[] = [
     note: "The tighter symbol-to-wordmark relationship made the system feel intentional at every size.",
     category: "Brand identity",
     visibility: "public",
-    stats: { comments: 2 },
+    stats: { comments: 2, likes: 18, saves: 7 },
     createdAtMs: Date.now() - 1000 * 60 * 60 * 24,
     review: makeSampleReview("sample-identity", 8.2, "The brand identity has a stronger foundation after simplifying the first read."),
   },
@@ -63,7 +102,7 @@ const fallbackPosts: CommunityPost[] = [
     note: "Strong energy. The date and venue still need a calmer secondary reading zone.",
     category: "Editorial",
     visibility: "public",
-    stats: { comments: 1 },
+    stats: { comments: 1, likes: 12, saves: 4 },
     createdAtMs: Date.now() - 1000 * 60 * 60 * 48,
     review: makeSampleReview("sample-editorial", 7.6, "The editorial poster has strong motion, but the supporting details need calmer hierarchy."),
   },
@@ -76,7 +115,7 @@ const fallbackPosts: CommunityPost[] = [
     note: "Progressive disclosure keeps the interface capable without making the first session feel dense.",
     category: "Product UI",
     visibility: "public",
-    stats: { comments: 3 },
+    stats: { comments: 3, likes: 24, saves: 11 },
     createdAtMs: Date.now() - 1000 * 60 * 60 * 72,
     review: makeSampleReview("sample-product", 8.7, "The product UI feels more approachable when advanced controls arrive later."),
   },
@@ -84,8 +123,11 @@ const fallbackPosts: CommunityPost[] = [
 
 export function CommunityBoard() {
   const { user, avatarUrl } = useAuth();
+  const [activeView, setActiveView] = useState<CommunityView>("home");
   const [savedReviews, setSavedReviews] = useState<SavedReview[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [interactions, setInteractions] = useState<InteractionMap>({});
+  const [interactionsReady, setInteractionsReady] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
@@ -95,6 +137,22 @@ export function CommunityBoard() {
   const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setInteractions(readStoredInteractions());
+      setInteractionsReady(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!interactionsReady) {
+      return;
+    }
+    writeStoredInteractions(interactions);
+  }, [interactions, interactionsReady]);
 
   useEffect(() => {
     const db = getFirebaseClientFirestore();
@@ -147,6 +205,11 @@ export function CommunityBoard() {
     () => savedReviews.find((review) => review.savedDocId === selectedReviewId) ?? null,
     [savedReviews, selectedReviewId],
   );
+  const visiblePosts = posts.length > 0 ? posts : fallbackPosts;
+  const myPosts = user ? visiblePosts.filter((post) => post.authorId === user.uid) : [];
+  const savedPosts = visiblePosts.filter((post) => interactions[post.id]?.saved);
+  const notifications = useMemo(() => getNotifications(visiblePosts, interactions), [interactions, visiblePosts]);
+  const currentFeed = activeView === "profile" ? myPosts : activeView === "saved" ? savedPosts : visiblePosts;
 
   async function publishPost(event: FormEvent) {
     event.preventDefault();
@@ -164,7 +227,7 @@ export function CommunityBoard() {
       category: selectedReview.categoryLabel,
       visibility: "public",
       review: selectedReview.review,
-      stats: { comments: 0 },
+      stats: { comments: 0, likes: 0, saves: 0 },
     });
 
     if (!parsed.success) {
@@ -186,7 +249,9 @@ export function CommunityBoard() {
       });
       setMessage("Posted to Community.");
       setNote("");
+      setTitle("");
       setConsent(false);
+      setActiveView("profile");
     } catch (publishError) {
       setError(publishError instanceof Error ? publishError.message : "Could not publish this critique.");
     } finally {
@@ -194,74 +259,206 @@ export function CommunityBoard() {
     }
   }
 
-  const visiblePosts = posts.length > 0 ? posts : fallbackPosts;
+  function toggleInteraction(postId: string, key: keyof PostInteraction) {
+    setInteractions((current) => {
+      const existing = current[postId] ?? { liked: false, saved: false, shared: false };
+      return { ...current, [postId]: { ...existing, [key]: !existing[key] } };
+    });
+  }
+
+  async function sharePost(postId: string) {
+    const href = `${window.location.origin}${window.location.pathname}#${postId}`;
+    try {
+      await navigator.clipboard.writeText(href);
+      setShareMessage("Community link copied.");
+      setInteractions((current) => {
+        const existing = current[postId] ?? { liked: false, saved: false, shared: false };
+        return { ...current, [postId]: { ...existing, shared: true } };
+      });
+    } catch {
+      setShareMessage("Could not copy this link.");
+    }
+  }
 
   return (
     <section className="community-board section-pad" aria-labelledby="community-board-title">
       <div className="community-section-title">
-        <div><p className="eyebrow">Live critique board</p><h2 id="community-board-title">Share selectively.<br />Discuss openly.</h2></div>
-        <p>Publish only the saved critiques you choose. Designers can read the review context, compare notes, and leave structured comments.</p>
+        <div><p className="eyebrow">Social critique workspace</p><h2 id="community-board-title">Share selectively.<br />Discuss openly.</h2></div>
+        <p>Publish only the saved critiques you choose. Designers can read review context, save useful examples, and leave structured comments.</p>
       </div>
 
-      <div className="community-publish-panel">
-        <div>
-          <p className="eyebrow"><ShieldCheck /> Private by default</p>
-          <h3>Post one saved critique.</h3>
-          <p>Your private dashboard remains private. This form only publishes the critique you select here.</p>
-        </div>
-        {!user ? (
-          <div className="community-signed-out">
-            <strong>Sign in to publish and comment.</strong>
-            <Link className="button button-lime" href="/auth?mode=sign-up">Join Community <Sparkles /></Link>
+      <div className="community-social-shell">
+        <aside className="community-social-rail" aria-label="Community sections">
+          <div>
+            <span className="mono-label">Community</span>
+            <strong>{user?.displayName || user?.email?.split("@")[0] || "Design feed"}</strong>
           </div>
-        ) : loadingSaved ? (
-          <div className="community-signed-out"><LoaderCircle className="spin" /><strong>Loading saved critiques</strong></div>
-        ) : savedReviews.length === 0 ? (
-          <div className="community-signed-out">
-            <strong>No saved critiques yet.</strong>
-            <p>Run a private critique, save it, then choose whether it belongs in Community.</p>
-            <Link className="button button-lime" href="/review/new">Create private critique <Sparkles /></Link>
+          <nav>
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button key={item.id} type="button" className={activeView === item.id ? "active" : ""} onClick={() => setActiveView(item.id)}>
+                  <Icon size={17} />
+                  {item.label}
+                  {item.id === "notifications" && notifications.length > 0 && <span>{notifications.length}</span>}
+                  {item.id === "saved" && savedPosts.length > 0 && <span>{savedPosts.length}</span>}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="community-rail-card">
+            <ShieldCheck />
+            <strong>Private first</strong>
+            <p>Only selected saved critiques can become public posts.</p>
+            <Link href="/review/new">Start a critique</Link>
           </div>
-        ) : (
-          <form className="community-publish-form" onSubmit={publishPost}>
-            <label>
-              <span>Saved critique</span>
-              <select value={selectedReviewId} onChange={(event) => { setSelectedReviewId(event.target.value); setTitle(""); }}>
-                {savedReviews.map((savedReview) => (
-                  <option key={savedReview.savedDocId} value={savedReview.savedDocId}>
-                    {savedReview.categoryLabel} - {savedReview.review.overallScore}/10 - {new Date(savedReview.review.createdAt).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Post title</span>
-              <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder={selectedReview ? getDefaultTitle(selectedReview.review.summary) : "What changed after this critique?"} />
-            </label>
-            <label>
-              <span>Context note</span>
-              <textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={420} rows={3} placeholder="What should other designers notice or respond to?" />
-            </label>
-            {selectedReview && <ReviewSharePreview savedReview={selectedReview} />}
-            <label className="community-consent">
-              <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
-              <span><Check /> I understand this publishes the selected critique summary, score, issues, and my note to Community.</span>
-            </label>
-            <button className="button button-lime" type="submit" disabled={publishing}>{publishing ? "Posting..." : <>Post to Community <Send size={16} /></>}</button>
-            {message && <p className="form-success" role="status">{message}</p>}
-            {error && <p className="form-error" role="alert">{error}</p>}
-          </form>
-        )}
-      </div>
+        </aside>
 
-      {loadingPosts ? (
-        <div className="community-feed-state"><LoaderCircle className="spin" /><strong>Loading public critiques</strong></div>
-      ) : (
-        <div className="critique-grid community-live-grid">
-          {visiblePosts.map((post, index) => <CommunityPostCard key={post.id} post={post} index={index} />)}
+        <div className="community-social-main">
+          {activeView !== "notifications" && (
+            <CommunityComposer
+              consent={consent}
+              error={error}
+              loadingSaved={loadingSaved}
+              message={message}
+              note={note}
+              onConsentChange={setConsent}
+              onNoteChange={setNote}
+              onPublish={publishPost}
+              onReviewChange={(value) => {
+                setSelectedReviewId(value);
+                setTitle("");
+              }}
+              onTitleChange={setTitle}
+              publishing={publishing}
+              savedReviews={savedReviews}
+              selectedReview={selectedReview}
+              selectedReviewId={selectedReviewId}
+              title={title}
+              userSignedIn={Boolean(user)}
+            />
+          )}
+
+          {shareMessage && <p className="community-share-state" role="status">{shareMessage}</p>}
+
+          {activeView === "notifications" ? (
+            <NotificationPanel notifications={notifications} />
+          ) : loadingPosts ? (
+            <div className="community-feed-state"><LoaderCircle className="spin" /><strong>Loading public critiques</strong></div>
+          ) : currentFeed.length === 0 ? (
+            <EmptyCommunityState activeView={activeView} />
+          ) : (
+            <div className="community-feed-list">
+              {currentFeed.map((post) => (
+                <CommunityPostCard
+                  key={post.id}
+                  interaction={interactions[post.id] ?? { liked: false, saved: false, shared: false }}
+                  onShare={() => void sharePost(post.id)}
+                  onToggleInteraction={toggleInteraction}
+                  post={post}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </section>
+  );
+}
+
+function CommunityComposer({
+  consent,
+  error,
+  loadingSaved,
+  message,
+  note,
+  onConsentChange,
+  onNoteChange,
+  onPublish,
+  onReviewChange,
+  onTitleChange,
+  publishing,
+  savedReviews,
+  selectedReview,
+  selectedReviewId,
+  title,
+  userSignedIn,
+}: {
+  consent: boolean;
+  error: string;
+  loadingSaved: boolean;
+  message: string;
+  note: string;
+  onConsentChange: (value: boolean) => void;
+  onNoteChange: (value: string) => void;
+  onPublish: (event: FormEvent) => void;
+  onReviewChange: (value: string) => void;
+  onTitleChange: (value: string) => void;
+  publishing: boolean;
+  savedReviews: SavedReview[];
+  selectedReview: SavedReview | null;
+  selectedReviewId: string;
+  title: string;
+  userSignedIn: boolean;
+}) {
+  if (!userSignedIn) {
+    return (
+      <div className="community-composer signed-out">
+        <strong>Sign in to publish and comment.</strong>
+        <p>Your private critiques stay private until you choose one to share.</p>
+        <Link className="button button-lime" href="/auth?mode=sign-up">Join Community <Sparkles /></Link>
+      </div>
+    );
+  }
+
+  if (loadingSaved) {
+    return <div className="community-composer signed-out"><LoaderCircle className="spin" /><strong>Loading saved critiques</strong></div>;
+  }
+
+  if (savedReviews.length === 0) {
+    return (
+      <div className="community-composer signed-out">
+        <strong>No saved critiques yet.</strong>
+        <p>Run a private critique, save it, then choose whether it belongs in Community.</p>
+        <Link className="button button-lime" href="/review/new">Create private critique <Sparkles /></Link>
+      </div>
+    );
+  }
+
+  return (
+    <form className="community-composer" onSubmit={onPublish}>
+      <header>
+        <div><p className="eyebrow"><ShieldCheck /> Private by default</p><h3>Post one saved critique.</h3></div>
+        <button className="button button-lime" type="submit" disabled={publishing}>{publishing ? "Posting..." : <>Post <Send size={16} /></>}</button>
+      </header>
+      <div className="community-composer-grid">
+        <label>
+          <span>Saved critique</span>
+          <select value={selectedReviewId} onChange={(event) => onReviewChange(event.target.value)}>
+            {savedReviews.map((savedReview) => (
+              <option key={savedReview.savedDocId} value={savedReview.savedDocId}>
+                {savedReview.categoryLabel} - {savedReview.review.overallScore}/10 - {new Date(savedReview.review.createdAt).toLocaleDateString()}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Post title</span>
+          <input value={title} onChange={(event) => onTitleChange(event.target.value)} maxLength={120} placeholder={selectedReview ? getDefaultTitle(selectedReview.review.summary) : "What changed after this critique?"} />
+        </label>
+      </div>
+      <label>
+        <span>Context note</span>
+        <textarea value={note} onChange={(event) => onNoteChange(event.target.value)} maxLength={420} rows={3} placeholder="What should other designers notice or respond to?" />
+      </label>
+      {selectedReview && <ReviewSharePreview savedReview={selectedReview} />}
+      <label className="community-consent">
+        <input type="checkbox" checked={consent} onChange={(event) => onConsentChange(event.target.checked)} />
+        <span><Check /> I understand this publishes the selected critique summary, score, issues, and my note to Community.</span>
+      </label>
+      {message && <p className="form-success" role="status">{message}</p>}
+      {error && <p className="form-error" role="alert">{error}</p>}
+    </form>
   );
 }
 
@@ -278,30 +475,53 @@ function ReviewSharePreview({ savedReview }: { savedReview: SavedReview }) {
   );
 }
 
-function CommunityPostCard({ post, index }: { post: CommunityPost; index: number }) {
-  const color = index % 3 === 0 ? "violet" : index % 3 === 1 ? "lime" : "coral";
+function CommunityPostCard({
+  interaction,
+  onShare,
+  onToggleInteraction,
+  post,
+}: {
+  interaction: PostInteraction;
+  onShare: () => void;
+  onToggleInteraction: (postId: string, key: keyof PostInteraction) => void;
+  post: CommunityPost;
+}) {
   const firstIssue = post.review.issues[0];
+  const likedCount = post.stats.likes + (interaction.liked ? 1 : 0);
+  const savedCount = post.stats.saves + (interaction.saved ? 1 : 0);
 
   return (
-    <article className={`critique-tile tile-${color} community-post-card`}>
-      <div className="critique-canvas">
-        <span>{String(index + 1).padStart(2, "0")}</span>
-        <strong>{formatCanvasTitle(post.title)}</strong>
-        <div />
-      </div>
-      <div className="critique-info">
-        <span className="mono-label">{post.category}</span>
-        <h3>{post.title}</h3>
-        <div className="maker">
-          <span>{getInitial(post.authorName)}</span>
-          <p>{post.authorName}<small><BadgeCheck /> Published critique</small></p>
-          <strong>{post.review.overallScore}<small>/ 10</small></strong>
+    <article className="community-feed-post" id={post.id}>
+      <header>
+        <div className="community-avatar">{getInitial(post.authorName)}</div>
+        <div>
+          <strong>{post.authorName}</strong>
+          <span>@{slugify(post.authorName)} · {formatRelativeTime(post.createdAtMs)}</span>
         </div>
-        <blockquote>{post.note || post.review.summary}</blockquote>
-        {firstIssue && <p className="community-priority"><strong>{firstIssue.priority} priority</strong>{firstIssue.recommendation}</p>}
-        <footer><span><Heart /> Improvement story</span><span><MessageSquareText /> {post.stats.comments} comments</span></footer>
-        <CommunityComments postId={post.id} disabled={post.authorId === "sample"} />
+      </header>
+      <h3>{post.title}</h3>
+      {post.note && <p className="community-post-note">{post.note}</p>}
+      <div className="community-review-embed">
+        <div className="community-review-toolbar">
+          <span><MessageSquareText size={15} /> Critique</span>
+          <strong>{post.category}</strong>
+          <em>{post.review.provider === "live" ? "Live vision" : "Local fallback"}</em>
+        </div>
+        <div className="community-review-body">
+          <div className="community-score-orb"><strong>{post.review.overallScore}</strong><small>/10</small></div>
+          <div>
+            <p>{post.review.summary}</p>
+            {firstIssue && <div className="community-issue-strip"><span>{firstIssue.priority} priority</span>{firstIssue.recommendation}</div>}
+          </div>
+        </div>
       </div>
+      <div className="community-post-actions" aria-label="Post actions">
+        <button type="button" aria-pressed={interaction.liked} onClick={() => onToggleInteraction(post.id, "liked")}><Heart size={17} /> {likedCount}</button>
+        <a href={`#comments-${post.id}`}><MessageSquareText size={17} /> {post.stats.comments}</a>
+        <button type="button" aria-pressed={interaction.shared} onClick={onShare}><Share2 size={17} /> Share</button>
+        <button type="button" aria-pressed={interaction.saved} onClick={() => onToggleInteraction(post.id, "saved")}><Bookmark size={17} /> {savedCount}</button>
+      </div>
+      <CommunityComments postId={post.id} disabled={post.authorId === "sample"} />
     </article>
   );
 }
@@ -361,11 +581,11 @@ function CommunityComments({ postId, disabled }: { postId: string; disabled: boo
   }
 
   if (disabled) {
-    return <div className="community-comments"><p className="community-comment-empty">Live comments appear on critiques shared by signed-in users.</p></div>;
+    return <div id={`comments-${postId}`} className="community-comments"><p className="community-comment-empty">Live comments appear on critiques shared by signed-in users.</p></div>;
   }
 
   return (
-    <div className="community-comments">
+    <div id={`comments-${postId}`} className="community-comments">
       {comments.length > 0 ? comments.map((comment) => (
         <p key={comment.id} className="community-comment"><strong>{comment.authorName}</strong>{comment.body}</p>
       )) : <p className="community-comment-empty">Start the critique thread.</p>}
@@ -382,16 +602,48 @@ function CommunityComments({ postId, disabled }: { postId: string; disabled: boo
   );
 }
 
+function NotificationPanel({ notifications }: { notifications: CommunityNotification[] }) {
+  return (
+    <div className="community-notification-panel">
+      <header><Bell /><div><span className="mono-label">Notifications</span><h3>Recent community signals.</h3></div></header>
+      {notifications.length > 0 ? notifications.map((notification) => (
+        <article key={notification.id}>
+          <strong>{notification.title}</strong>
+          <p>{notification.body}</p>
+          <time>{formatRelativeTime(notification.createdAtMs)}</time>
+        </article>
+      )) : <p className="community-comment-empty">Save, share, or publish critiques to build a signal stream.</p>}
+    </div>
+  );
+}
+
+function EmptyCommunityState({ activeView }: { activeView: CommunityView }) {
+  const copy = activeView === "saved"
+    ? ["No saved posts yet.", "Save useful critique threads from the feed and they will appear here."]
+    : activeView === "profile"
+      ? ["No public posts yet.", "Publish a saved critique to start your public improvement trail."]
+      : ["No public critiques yet.", "Once designers publish saved critiques, the feed will appear here."];
+
+  return (
+    <div className="community-feed-state">
+      <Sparkles />
+      <strong>{copy[0]}</strong>
+      <p>{copy[1]}</p>
+    </div>
+  );
+}
+
 function toSavedReview(id: string, data: DocumentData): SavedReview | null {
   const candidate = data.review ?? data;
   const parsed = reviewOutputSchema.safeParse({ ...candidate, id: candidate.id ?? id });
   if (!parsed.success) return null;
   const category = typeof data.category === "string" && data.category in categoryLabels ? data.category as ReviewCategory : "other";
+  const categoryLabel = typeof data.categoryLabel === "string" ? data.categoryLabel : categoryLabels[category];
 
   return {
     savedDocId: id,
     category,
-    categoryLabel: categoryLabels[category],
+    categoryLabel,
     review: parsed.data,
   };
 }
@@ -420,6 +672,26 @@ function toCommunityComment(id: string, data: DocumentData): CommunityComment | 
   };
 }
 
+function getNotifications(posts: CommunityPost[], interactions: InteractionMap): CommunityNotification[] {
+  const savedNotifications = posts
+    .filter((post) => interactions[post.id]?.saved)
+    .map((post) => ({
+      id: `saved-${post.id}`,
+      title: "Saved critique",
+      body: `${post.title} is now in your saved community list.`,
+      createdAtMs: Date.now(),
+    }));
+
+  const feedNotifications = posts.slice(0, 4).map((post) => ({
+    id: `post-${post.id}`,
+    title: `${post.authorName} shared a critique`,
+    body: `${post.category} · ${post.review.overallScore}/10 · ${post.stats.comments} comments`,
+    createdAtMs: post.createdAtMs,
+  }));
+
+  return [...savedNotifications, ...feedNotifications].slice(0, 8);
+}
+
 function toMillis(value: unknown) {
   if (typeof value === "object" && value !== null && "toMillis" in value && typeof value.toMillis === "function") {
     return value.toMillis() as number;
@@ -428,20 +700,47 @@ function toMillis(value: unknown) {
   return null;
 }
 
+function readStoredInteractions(): InteractionMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const rawValue = window.localStorage.getItem(interactionStorageKey);
+    if (!rawValue) return {};
+    const parsed = JSON.parse(rawValue) as InteractionMap;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredInteractions(interactions: InteractionMap) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(interactionStorageKey, JSON.stringify(interactions));
+  } catch {
+    // Nonessential interaction persistence can fail silently in private browsing.
+  }
+}
+
 function getDefaultTitle(summary: string) {
   return summary.split(".")[0].slice(0, 120);
 }
 
-function formatCanvasTitle(title: string) {
-  const words = title.split(" ");
-  const firstLine = words.slice(0, Math.ceil(words.length / 2)).join(" ");
-  const secondLine = words.slice(Math.ceil(words.length / 2)).join(" ");
-
-  return <>{firstLine}<br /><em>{secondLine}</em></>;
+function formatRelativeTime(value: number) {
+  const differenceMs = Date.now() - value;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (differenceMs < hour) return `${Math.max(1, Math.round(differenceMs / minute))}m`;
+  if (differenceMs < day) return `${Math.round(differenceMs / hour)}h`;
+  return `${Math.round(differenceMs / day)}d`;
 }
 
 function getInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "I";
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 18) || "designer";
 }
 
 function makeSampleReview(id: string, score: number, summary: string): ReviewOutput {
