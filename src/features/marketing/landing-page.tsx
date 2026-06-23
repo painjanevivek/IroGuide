@@ -69,7 +69,7 @@ export function LandingPage() {
   return (
     <main className="site-shell">
       <header className="site-header">
-        <Link className="wordmark" href="/" aria-label={`${siteConfig.name} home`}>
+        <Link className="wordmark" href="/">
           <span className="wordmark-mark" aria-hidden="true">I</span>
           <span>IroGuide</span>
         </Link>
