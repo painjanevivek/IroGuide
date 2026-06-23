@@ -36,12 +36,19 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
+    images: [{ url: siteConfig.logoPath, width: 512, height: 512, alt: `${siteConfig.name} logo` }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} | Official Website`,
     description: siteConfig.description,
+    images: [siteConfig.logoPath],
+  },
+  icons: {
+    icon: [{ url: siteConfig.logoPath, type: "image/png" }],
+    shortcut: [siteConfig.logoPath],
+    apple: [{ url: siteConfig.logoPath, type: "image/png" }],
   },
   robots: {
     index: true,

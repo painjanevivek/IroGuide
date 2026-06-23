@@ -5,6 +5,7 @@ export const siteConfig = {
     "Official website of IroGuide. AI design critique, creative feedback tools, portfolio workflows, pricing, and contact information.",
   shortDescription:
     "Professional, contextual AI critique that tells you what works, what does not, and what to fix next.",
+  logoPath: "/brand/iroguide-logo.png",
   creator: "IroGuide",
   repositoryUrl: "https://github.com/painjanevivek/IroGuide-backend",
   contactUrl: "/contact",
