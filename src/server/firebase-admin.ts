@@ -29,6 +29,10 @@ export function getFirebaseAdminFirestore() {
   return getFirestore(getFirebaseAdminApp());
 }
 
+export function isFirebaseAdminConfigured() {
+  return Boolean(getFirebaseAdminOptions());
+}
+
 function getFirebaseAdminApp(): App {
   const existingApp = getApps()[0];
   if (existingApp) return existingApp;

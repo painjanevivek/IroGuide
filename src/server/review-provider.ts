@@ -261,3 +261,20 @@ export function getReviewProvider() {
   if (process.env.OPENROUTER_API_KEY?.trim()) return liveVisionReviewProvider;
   return demoReviewProvider;
 }
+
+export function getReviewProviderStatus() {
+  const configuredMode = process.env.IROGUIDE_REVIEW_PROVIDER?.trim().toLowerCase() || "auto";
+  const openRouterConfigured = Boolean(process.env.OPENROUTER_API_KEY?.trim());
+  const endpointConfigured = Boolean(process.env.IROGUIDE_VISION_REVIEW_ENDPOINT?.trim());
+  const activeProvider = getReviewProvider().name;
+  const liveReady = activeProvider === "live" && (openRouterConfigured || endpointConfigured);
+
+  return {
+    activeProvider,
+    configuredMode,
+    endpointConfigured,
+    liveReady,
+    openRouterConfigured,
+    openRouterModel: process.env.OPENROUTER_MODEL?.trim() || defaultOpenRouterModel,
+  };
+}

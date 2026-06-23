@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createReview, getReviewProvider, ReviewProviderUnavailableError } from "./review-provider";
+import { createReview, getReviewProvider, getReviewProviderStatus, ReviewProviderUnavailableError } from "./review-provider";
 import type { ReviewRequest } from "@/domain/review";
 
 const request: ReviewRequest = {
@@ -90,6 +90,20 @@ describe("review provider routing", () => {
     vi.stubEnv("OPENROUTER_API_KEY", "");
 
     await expect(createReview(requestWithImage)).rejects.toBeInstanceOf(ReviewProviderUnavailableError);
+  });
+
+  it("reports live readiness without exposing credentials", () => {
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "live");
+    vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+    vi.stubEnv("OPENROUTER_MODEL", "test/vision-model");
+
+    expect(getReviewProviderStatus()).toEqual(expect.objectContaining({
+      activeProvider: "live",
+      configuredMode: "live",
+      liveReady: true,
+      openRouterConfigured: true,
+      openRouterModel: "test/vision-model",
+    }));
   });
 
   it("requires image bytes for live vision critique", async () => {

@@ -3,50 +3,76 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
+import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent } from "@/server/observability";
+import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const REVIEW_RATE_LIMIT = { limit: 12, windowMs: 10 * 60 * 1000 };
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const context = createRequestContext(request, "api.reviews.create");
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Sign in again before starting a critique." }, { status: 401 });
+    logRequestEvent("warn", "review.auth_missing", context);
+    return NextResponse.json({ error: "Sign in again before starting a critique." }, { status: 401, headers: jsonHeaders(context) });
   }
 
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+    const rateLimit = checkRateLimit({
+      key: `review:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+      ...REVIEW_RATE_LIMIT,
+    });
+    if (!rateLimit.allowed) {
+      logRequestEvent("warn", "review.rate_limited", context, { uid: decodedToken.uid });
+      return NextResponse.json(
+        { error: "Too many review requests. Please try again shortly." },
+        { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
+      );
+    }
     const parsed = await parseReviewRequest(request);
     const review = await createReview(parsed);
     const savedToAccount = await saveReviewToAccount(decodedToken.uid, review, parsed.category);
+    logRequestEvent("info", "review.created", context, {
+      category: parsed.category,
+      provider: review.provider,
+      savedToAccount,
+      uid: decodedToken.uid,
+    });
 
     return NextResponse.json({
       review,
       persistence: { savedToAccount },
-    });
+    }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) {
-      return NextResponse.json({ error: error.message }, { status: 503 });
+      logRequestEvent("error", "review.admin_unavailable", context);
+      return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });
     }
     if (error instanceof FirebaseTokenVerificationError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      logRequestEvent("warn", "review.auth_invalid", context);
+      return NextResponse.json({ error: error.message }, { status: 401, headers: jsonHeaders(context) });
     }
     if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+      return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof ReviewRequestValidationError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ error: error.message }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: getReviewValidationMessage(error), details: error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: getReviewValidationMessage(error), details: error.flatten() }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof ReviewProviderUnavailableError) {
-      return NextResponse.json({ error: error.message }, { status: 503 });
+      logRequestEvent("error", "review.provider_unavailable", context);
+      return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });
     }
-    return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500 });
+    logRequestEvent("error", "review.failed", context);
+    return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500, headers: jsonHeaders(context) });
   }
 }
 
