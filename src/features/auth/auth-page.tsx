@@ -1,15 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
+import { useEffect } from "react";
 import { GoogleAuthCard } from "./google-auth-card";
 import { useAuth } from "./auth-provider";
 
 export function AuthPage() {
+  const router = useRouter();
   const params = useSearchParams();
   const intent = params.get("mode") === "sign-up" ? "sign-up" : "sign-in";
   const { user, loading, error } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) router.replace("/dashboard");
+  }, [loading, router, user]);
 
   if (loading) {
     return <main className="auth-gate"><LoaderCircle className="spin" /><p>Checking your IroGuide session...</p></main>;
@@ -19,15 +24,11 @@ export function AuthPage() {
     return (
       <main className="auth-gate">
         <p className="eyebrow">You are signed in</p>
-        <h1>Your IroGuide workspace is ready.</h1>
-        <p>Continue to your dashboard or start a new critique.</p>
-        <div className="auth-actions">
-          <Link className="button button-dark" href="/dashboard">Go to dashboard <ArrowRight size={17} /></Link>
-          <Link className="button-secondary" href="/review/new">Start a review</Link>
-        </div>
+        <h1>Taking you to your dashboard.</h1>
+        <p>Your IroGuide workspace is ready.</p>
       </main>
     );
   }
 
-  return <main className="auth-gate"><GoogleAuthCard intent={intent} setupError={error} /></main>;
+  return <main className="auth-gate"><GoogleAuthCard intent={intent} nextPath="/dashboard" setupError={error} /></main>;
 }

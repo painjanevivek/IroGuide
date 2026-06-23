@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./auth-provider";
 
 type GoogleAuthCardProps = {
   intent?: "sign-in" | "sign-up";
+  nextPath?: Route;
   setupError?: string;
 };
 
-export function GoogleAuthCard({ intent = "sign-in", setupError = "" }: GoogleAuthCardProps) {
+export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", setupError = "" }: GoogleAuthCardProps) {
+  const router = useRouter();
   const { signInWithGoogle, error } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const isSignUp = intent === "sign-up";
@@ -19,7 +23,10 @@ export function GoogleAuthCard({ intent = "sign-in", setupError = "" }: GoogleAu
   async function onGoogleClick() {
     setSubmitting(true);
     try {
-      await signInWithGoogle();
+      const signedIn = await signInWithGoogle();
+      if (signedIn) router.replace(nextPath);
+    } catch {
+      // The auth provider owns the visible error copy.
     } finally {
       setSubmitting(false);
     }

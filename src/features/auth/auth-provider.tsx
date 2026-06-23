@@ -19,7 +19,7 @@ type AuthState = {
   error: string;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   linkGoogleProvider: () => Promise<void>;
@@ -101,13 +101,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider.setCustomParameters({ prompt: "select_account" });
       const auth = getFirebaseClientAuth();
       try {
-        await signInWithPopup(auth, provider);
+        const credential = await signInWithPopup(auth, provider);
+        return Boolean(credential.user);
       } catch (popupError) {
         if (!shouldFallbackToGoogleRedirect(popupError)) throw popupError;
         await signInWithRedirect(auth, provider);
+        return false;
       }
     } catch (signInError) {
-      setError(getAuthErrorMessage(signInError));
+      const message = getAuthErrorMessage(signInError);
+      setError(message);
+      throw new Error(message);
     }
   }, []);
 
