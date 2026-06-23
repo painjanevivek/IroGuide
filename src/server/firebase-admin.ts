@@ -9,9 +9,12 @@ export class FirebaseAdminUnavailableError extends Error {
 }
 
 export class FirebaseTokenVerificationError extends Error {
-  constructor() {
+  readonly code?: string;
+
+  constructor(code?: string) {
     super("Sign in again before starting a critique.");
     this.name = "FirebaseTokenVerificationError";
+    this.code = code;
   }
 }
 
@@ -29,7 +32,7 @@ export async function verifyFirebaseIdToken(idToken: string) {
     return await getAuth(app).verifyIdToken(idToken);
   } catch (error) {
     if (isFirebaseAdminUnavailableError(error)) throw error;
-    throw new FirebaseTokenVerificationError();
+    throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error));
   }
 }
 
@@ -61,6 +64,14 @@ export function getFirebaseAdminProjectId() {
 function isFirebaseAdminUnavailableError(error: unknown): error is FirebaseAdminUnavailableError {
   return error instanceof FirebaseAdminUnavailableError
     || (error instanceof Error && error.name === "FirebaseAdminUnavailableError");
+}
+
+function getFirebaseAuthErrorCode(error: unknown) {
+  if (typeof error === "object" && error && "code" in error && typeof error.code === "string") {
+    return error.code;
+  }
+
+  return undefined;
 }
 
 async function getFirebaseAdminApp(): Promise<App> {

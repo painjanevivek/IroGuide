@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     }
     if (error instanceof FirebaseTokenVerificationError) {
       logRequestEvent("warn", "review.auth_invalid", context);
-      return NextResponse.json({ error: error.message }, { status: 401, headers: jsonHeaders(context) });
+      return NextResponse.json({ error: error.message }, { status: 401, headers: jsonHeaders(context, getAuthDiagnosticHeaders(error)) });
     }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
@@ -74,6 +74,10 @@ export async function POST(request: Request) {
     logRequestEvent("error", "review.failed", context);
     return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500, headers: jsonHeaders(context) });
   }
+}
+
+function getAuthDiagnosticHeaders(error: FirebaseTokenVerificationError): HeadersInit {
+  return error.code ? { "x-iroguide-auth-error": error.code } : {};
 }
 
 async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<typeof createReview>>, category: Awaited<ReturnType<typeof parseReviewRequest>>["category"]) {
