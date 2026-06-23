@@ -44,6 +44,15 @@ export function isFirebaseAdminConfigured() {
   );
 }
 
+export function getFirebaseAdminProjectId() {
+  return getServiceAccountFromJson()?.projectId
+    ?? getServiceAccountFromParts()?.projectId
+    ?? getEnv("FIREBASE_ADMIN_PROJECT_ID")
+    ?? getEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID")
+    ?? getEnv("GOOGLE_CLOUD_PROJECT")
+    ?? null;
+}
+
 async function getFirebaseAdminApp(): Promise<App> {
   const { getApps, initializeApp } = await import("firebase-admin/app");
   const existingApp = getApps()[0];
