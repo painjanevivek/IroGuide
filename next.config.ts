@@ -49,11 +49,39 @@ const formAction = [
   "https://*.web.app",
 ].join(" ");
 
+const firebaseAuthHandlerDomain = (
+  process.env.FIREBASE_AUTH_HANDLER_DOMAIN
+  || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  || ""
+).trim().toLowerCase();
+
+const customFirebaseAuthDomains = new Set([
+  "iroguide.com",
+  "www.iroguide.com",
+  process.env.NEXT_PUBLIC_SITE_URL ? safeHostname(process.env.NEXT_PUBLIC_SITE_URL) : null,
+].filter((host): host is string => Boolean(host)));
+
+function safeHostname(url: string) {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: true,
   reactStrictMode: true,
   typedRoutes: true,
+  async rewrites() {
+    if (!firebaseAuthHandlerDomain || customFirebaseAuthDomains.has(firebaseAuthHandlerDomain)) return [];
+
+    return [{
+      source: "/__/auth/:path*",
+      destination: `https://${firebaseAuthHandlerDomain}/__/auth/:path*`,
+    }];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: [
       { key: "Content-Security-Policy", value: `default-src 'self'; img-src 'self' blob: data: https://lh3.googleusercontent.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src ${scriptSrc}; connect-src ${connectSrc}; frame-src ${frameSrc}; object-src 'none'; base-uri 'self'; form-action ${formAction}; frame-ancestors 'none'; upgrade-insecure-requests` },
