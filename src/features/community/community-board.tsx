@@ -184,7 +184,7 @@ export function CommunityBoard() {
       return [post.id, toPostInteraction(snapshot.data())] as const;
     })).then((entries) => {
       if (!active || entries.length === 0) return;
-      setInteractions((current) => ({ ...current, ...Object.fromEntries(entries) }));
+      setInteractions((current) => ({ ...current, ...toInteractionMap(entries) }));
     }).catch(() => {
       if (!active) return;
       setShareMessage("Community reactions are available locally until the live feed reconnects.");
@@ -920,9 +920,13 @@ function readStoredInteractions(): InteractionMap {
     if (!rawValue) return {};
     const parsed = JSON.parse(rawValue) as Record<string, unknown>;
     if (typeof parsed !== "object" || parsed === null) return {};
-    return Object.fromEntries(Object.entries(parsed).map(([postId, value]) => (
-      [postId, toPostInteraction(typeof value === "object" && value !== null ? value as DocumentData : undefined)]
-    )));
+
+    return Object.entries(parsed).reduce<InteractionMap>((storedInteractions, [postId, value]) => {
+      storedInteractions[postId] = toPostInteraction(
+        typeof value === "object" && value !== null ? value as DocumentData : undefined,
+      );
+      return storedInteractions;
+    }, {});
   } catch {
     return {};
   }
@@ -945,19 +949,28 @@ function readStoredSampleComments(): CommentMap {
     const parsed = JSON.parse(rawValue) as Record<string, unknown>;
     if (typeof parsed !== "object" || parsed === null) return {};
 
-    return Object.fromEntries(Object.entries(parsed).map(([postId, value]) => {
-      if (!Array.isArray(value)) return [postId, []];
-      return [
-        postId,
-        value
-          .map((comment, index) => toStoredCommunityComment(comment, `${postId}-${index}`))
-          .filter((comment): comment is CommunityComment => comment !== null)
-          .slice(-12),
-      ];
-    }));
+    return Object.entries(parsed).reduce<CommentMap>((storedComments, [postId, value]) => {
+      if (!Array.isArray(value)) {
+        storedComments[postId] = [];
+        return storedComments;
+      }
+
+      storedComments[postId] = value
+        .map((comment, index) => toStoredCommunityComment(comment, `${postId}-${index}`))
+        .filter((comment): comment is CommunityComment => comment !== null)
+        .slice(-12);
+      return storedComments;
+    }, {});
   } catch {
     return {};
   }
+}
+
+function toInteractionMap(entries: ReadonlyArray<readonly [string, PostInteraction]>): InteractionMap {
+  return entries.reduce<InteractionMap>((nextInteractions, [postId, interaction]) => {
+    nextInteractions[postId] = interaction;
+    return nextInteractions;
+  }, {});
 }
 
 function writeStoredSampleComments(comments: CommentMap) {

@@ -27,22 +27,23 @@ export function getSafeReviewAnnotations(
     ]),
   );
 
-  return review.annotations.flatMap((annotation) => {
+  return review.annotations.reduce<SafeReviewAnnotation[]>((safeAnnotations, annotation) => {
     const issue = issueLookup.get(annotation.issueId);
     const box = normalizeBox(annotation);
 
     if (!issue || !box) {
-      return [];
+      return safeAnnotations;
     }
 
-    return [{
+    safeAnnotations.push({
       ...annotation,
       ...box,
       issueCategory: issue.category,
       issueDomId: issue.domId,
       issueIndex: issue.index,
-    }];
-  });
+    });
+    return safeAnnotations;
+  }, []);
 }
 
 function normalizeBox(annotation: ReviewAnnotation): Pick<ReviewAnnotation, "x" | "y" | "width" | "height"> | null {

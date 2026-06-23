@@ -36,7 +36,7 @@ export function calculateProgress(reviews: ProgressReview[]): ProgressSummary {
 
   const chronologicalReviews = [...reviews].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
   const dimensionAverages = getDimensionAverages(reviews);
-  const weakest = dimensionAverages.at(-1) ?? null;
+  const weakest = dimensionAverages.length > 0 ? dimensionAverages[dimensionAverages.length - 1] : null;
   const strongest = dimensionAverages[0] ?? null;
   const scoreChange = getScoreChange(chronologicalReviews);
 
@@ -69,7 +69,9 @@ function getDimensionAverages(reviews: ProgressReview[]): ProgressDimensionScore
 
 function getScoreChange(chronologicalReviews: ProgressReview[]): number | null {
   const firstReview = chronologicalReviews[0];
-  const latestReview = chronologicalReviews.at(-1);
+  const latestReview = chronologicalReviews.length > 0
+    ? chronologicalReviews[chronologicalReviews.length - 1]
+    : undefined;
 
   if (!firstReview || !latestReview || chronologicalReviews.length < 2) {
     return null;
