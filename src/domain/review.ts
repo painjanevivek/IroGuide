@@ -75,8 +75,16 @@ export const reviewOutputSchema = z.object({
   provider: z.enum(["demo", "live"]),
 });
 
+export const reviewCreateResponseSchema = z.object({
+  review: reviewOutputSchema,
+  persistence: z.object({
+    savedToAccount: z.boolean(),
+  }),
+});
+
 export type ReviewRequest = z.infer<typeof reviewRequestSchema>;
 export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
+export type ReviewCreateResponse = z.infer<typeof reviewCreateResponseSchema>;
 
 export const categoryLabels: Record<ReviewCategory, string> = {
   logo: "Logo",

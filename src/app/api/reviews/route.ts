@@ -2,10 +2,14 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
+import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
+import { saveReviewForUser } from "@/server/review-storage";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const authorization = request.headers.get("authorization");
@@ -14,9 +18,22 @@ export async function POST(request: Request) {
   }
 
   try {
+    const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     const parsed = await parseReviewRequest(request);
-    return NextResponse.json(await createReview(parsed));
+    const review = await createReview(parsed);
+    const savedToAccount = await saveReviewToAccount(decodedToken.uid, review, parsed.category);
+
+    return NextResponse.json({
+      review,
+      persistence: { savedToAccount },
+    });
   } catch (error) {
+    if (error instanceof FirebaseAdminUnavailableError) {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
+    if (error instanceof FirebaseTokenVerificationError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
     }
@@ -30,6 +47,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 503 });
     }
     return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500 });
+  }
+}
+
+async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<typeof createReview>>, category: Awaited<ReturnType<typeof parseReviewRequest>>["category"]) {
+  try {
+    await saveReviewForUser({ userId, review, category });
+    return true;
+  } catch {
+    return false;
   }
 }
 

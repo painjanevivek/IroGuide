@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
-import { collection, doc, limit, onSnapshot, query, serverTimestamp, setDoc, where, type DocumentData } from "firebase/firestore";
+import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
 import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
+import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
+import { postJsonWithFallback } from "@/lib/api-client";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
 import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
 import { DataControls } from "./data-controls";
@@ -44,8 +46,14 @@ export function Dashboard() {
         return;
       }
 
-      await syncLocalReviewDocuments(pendingDocuments);
-      refreshCachedReviews();
+      try {
+        const idToken = await user.getIdToken();
+        await syncLocalReviewDocuments(idToken, pendingDocuments);
+      } catch {
+        // Keep pending reviews cached locally; the next dashboard visit or online event retries.
+      } finally {
+        refreshCachedReviews();
+      }
     }
 
     const refreshTimer = window.setTimeout(() => {
@@ -237,19 +245,29 @@ function readCachedStoredReviews(userId: string) {
   return getCachedReviewDocuments(userId).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null);
 }
 
-async function syncLocalReviewDocuments(documents: StoredReviewDocument[]) {
+async function syncLocalReviewDocuments(idToken: string, documents: StoredReviewDocument[]) {
   if (documents.length === 0) return;
-  const db = getFirebaseClientFirestore();
+  const payload = await postJsonWithFallback({
+    path: "/api/reviews/sync",
+    unavailableMessage: "Review sync is not available right now.",
+    failureMessage: "Review sync failed.",
+    init: {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ documents }),
+    },
+  });
+  const syncResult = reviewSyncResponseSchema.parse(payload);
+  const syncedIds = new Set(syncResult.savedIds);
 
-  await Promise.allSettled(documents.map(async (reviewDocument) => {
-    await setDoc(doc(db, "reviews", reviewDocument.id), {
-      ...reviewDocument,
-      syncState: "cloud",
-      savedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    cacheReviewDocument({ ...reviewDocument, syncState: "cloud", updatedAt: new Date().toISOString() });
-  }));
+  for (const reviewDocument of documents) {
+    if (syncedIds.has(reviewDocument.id)) {
+      cacheReviewDocument({ ...reviewDocument, syncState: "cloud", updatedAt: new Date().toISOString() });
+    }
+  }
 }
 
 function mergeStoredReviews(cloudReviews: StoredReview[], cachedReviews: StoredReview[]) {

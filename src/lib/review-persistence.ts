@@ -1,53 +1,19 @@
-import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
+import { categoryLabels } from "@/domain/review";
+import {
+  storedReviewDocumentSchema,
+  type StoredReviewDocument,
+} from "@/domain/review-storage";
+
+export {
+  createStoredReviewDocument,
+  getReviewDocumentId,
+  type StoredReviewDocument,
+} from "@/domain/review-storage";
 
 const REVIEW_CACHE_KEY_PREFIX = "iroguide:dashboard-reviews:v1:";
 const MAX_CACHED_REVIEWS = 30;
 
 type StorageLike = Pick<Storage, "getItem" | "setItem">;
-
-export type StoredReviewDocument = {
-  id: string;
-  userId: string;
-  review: ReviewOutput;
-  category: ReviewCategory;
-  categoryLabel: string;
-  provider: ReviewOutput["provider"];
-  status: "complete";
-  savedAt: string;
-  updatedAt: string;
-  syncState: "local" | "cloud";
-};
-
-export function getReviewDocumentId(userId: string, reviewId: string) {
-  return `${sanitizeDocumentId(userId)}_${sanitizeDocumentId(reviewId)}`;
-}
-
-export function createStoredReviewDocument({
-  category,
-  review,
-  savedAt = new Date().toISOString(),
-  syncState = "local",
-  userId,
-}: {
-  category: ReviewCategory;
-  review: ReviewOutput;
-  savedAt?: string;
-  syncState?: StoredReviewDocument["syncState"];
-  userId: string;
-}): StoredReviewDocument {
-  return {
-    id: getReviewDocumentId(userId, review.id),
-    userId,
-    review,
-    category,
-    categoryLabel: categoryLabels[category],
-    provider: review.provider,
-    status: "complete",
-    savedAt,
-    updatedAt: savedAt,
-    syncState,
-  };
-}
 
 export function cacheReviewDocument(document: StoredReviewDocument, storage: StorageLike | null = getBrowserStorage()) {
   if (!storage) return false;
@@ -75,7 +41,7 @@ export function getCachedReviewDocuments(userId: string, storage: StorageLike | 
     if (!Array.isArray(parsed)) return [];
 
     return parsed
-      .map((item) => storedReviewDocumentSchema(item))
+      .map((item) => parseStoredReviewDocument(item))
       .filter((item): item is StoredReviewDocument => item !== null)
       .filter((item) => item.userId === userId)
       .slice(0, MAX_CACHED_REVIEWS);
@@ -88,29 +54,17 @@ export function getPendingLocalReviewDocuments(userId: string, storage: StorageL
   return getCachedReviewDocuments(userId, storage).filter((document) => document.syncState === "local");
 }
 
-function storedReviewDocumentSchema(value: unknown): StoredReviewDocument | null {
-  if (typeof value !== "object" || value === null) return null;
-  const candidate = value as Partial<StoredReviewDocument>;
-  if (typeof candidate.id !== "string" || typeof candidate.userId !== "string") return null;
-  if (candidate.status !== "complete") return null;
-  if (candidate.syncState !== "local" && candidate.syncState !== "cloud") return null;
-  if (typeof candidate.savedAt !== "string" || typeof candidate.updatedAt !== "string") return null;
-  if (typeof candidate.category !== "string" || !(candidate.category in categoryLabels)) return null;
-
-  const parsedReview = reviewOutputSchema.safeParse(candidate.review);
+function parseStoredReviewDocument(value: unknown): StoredReviewDocument | null {
+  const parsedReview = storedReviewDocumentSchema.safeParse(value);
   if (!parsedReview.success) return null;
+  const document = parsedReview.data;
+  if (!(document.category in categoryLabels)) return null;
 
   return {
-    id: candidate.id,
-    userId: candidate.userId,
-    review: parsedReview.data,
-    category: candidate.category as ReviewCategory,
-    categoryLabel: categoryLabels[candidate.category as ReviewCategory],
-    provider: parsedReview.data.provider,
+    ...document,
+    categoryLabel: categoryLabels[document.category],
+    provider: document.review.provider,
     status: "complete",
-    savedAt: candidate.savedAt,
-    updatedAt: candidate.updatedAt,
-    syncState: candidate.syncState,
   };
 }
 
@@ -121,8 +75,4 @@ function getReviewCacheKey(userId: string) {
 function getBrowserStorage(): StorageLike | null {
   if (typeof window === "undefined") return null;
   return window.localStorage;
-}
-
-function sanitizeDocumentId(value: string) {
-  return value.trim().replaceAll("/", "_").replace(/[^\w.-]/g, "_").slice(0, 320) || "review";
 }

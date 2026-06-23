@@ -13,9 +13,10 @@ import { reviewDraftSchema } from "@/domain/review-draft";
 import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
-import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
+import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
+import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
-import { postFormDataWithFallback } from "@/lib/api-client";
+import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
@@ -215,11 +216,12 @@ export function ReviewStudio() {
           body,
         },
       });
-      const parsed = reviewOutputSchema.parse(payload);
+      const reviewResponse = parseReviewCreatePayload(payload);
+      const parsed = reviewResponse.review;
       setResultSaveState("saving");
       setResultSaveError("");
       try {
-        const saveResult = await saveCompletedReviewToDashboard(currentUser.uid, parsed, category);
+        const saveResult = cacheCompletedReviewForDashboard(currentUser.uid, parsed, category, reviewResponse.persistence.savedToAccount);
         void deleteActiveReviewDraft(currentUser.uid);
         setResultSaveState(saveResult.syncedToCloud ? "saved" : "local");
         setResultSaveError(saveResult.message ?? "");
@@ -298,7 +300,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
     setSaveState("saving");
     setSaveError("");
     try {
-      const saveResult = await saveCompletedReviewToDashboard(currentUser.uid, review, category);
+      const saveResult = await syncCompletedReviewToAccount(await currentUser.getIdToken(), currentUser.uid, review, category);
       void deleteActiveReviewDraft(currentUser.uid);
       setSaveState(saveResult.syncedToCloud ? "saved" : "local");
       setSaveError(saveResult.message ?? "");
@@ -405,28 +407,62 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
   );
 }
 
-async function saveCompletedReviewToDashboard(userId: string, review: ReviewOutput, category: ReviewCategory) {
-  const storedReview = createStoredReviewDocument({ userId, review, category });
+function parseReviewCreatePayload(payload: unknown) {
+  const response = reviewCreateResponseSchema.safeParse(payload);
+  if (response.success) return response.data;
+
+  return {
+    review: reviewOutputSchema.parse(payload),
+    persistence: { savedToAccount: false },
+  };
+}
+
+function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, category: ReviewCategory, savedToAccount: boolean) {
+  const storedReview = createStoredReviewDocument({
+    userId,
+    review,
+    category,
+    syncState: savedToAccount ? "cloud" : "local",
+  });
   const cached = cacheReviewDocument(storedReview);
   if (!cached) {
-    throw new Error("The critique was created, but this browser could not store it for your dashboard.");
+    throw new Error("The critique was created, but this browser could not prepare it for your dashboard.");
   }
 
-  try {
-    await setDoc(doc(getFirebaseClientFirestore(), "reviews", storedReview.id), {
-      ...storedReview,
-      syncState: "cloud",
-      savedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    cacheReviewDocument({ ...storedReview, syncState: "cloud", updatedAt: new Date().toISOString() });
-    return { syncedToCloud: true };
-  } catch {
-    return {
-      syncedToCloud: false,
-      message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
-    };
-  }
+  return savedToAccount
+    ? { syncedToCloud: true }
+    : {
+        syncedToCloud: false,
+        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
+      };
+}
+
+async function syncCompletedReviewToAccount(idToken: string, userId: string, review: ReviewOutput, category: ReviewCategory) {
+  const storedReview = createStoredReviewDocument({ userId, review, category, syncState: "local" });
+  cacheReviewDocument(storedReview);
+  const payload = await postJsonWithFallback({
+    path: "/api/reviews/sync",
+    unavailableMessage: "Review sync is not available right now.",
+    failureMessage: "Review sync failed.",
+    init: {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ documents: [storedReview] }),
+    },
+  });
+  const syncResult = reviewSyncResponseSchema.parse(payload);
+  const syncedToCloud = syncResult.savedIds.includes(storedReview.id);
+  cacheReviewDocument({ ...storedReview, syncState: syncedToCloud ? "cloud" : "local", updatedAt: new Date().toISOString() });
+
+  return syncedToCloud
+    ? { syncedToCloud: true }
+    : {
+        syncedToCloud: false,
+        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
+      };
 }
 
 async function deleteActiveReviewDraft(userId: string) {
