@@ -51,6 +51,7 @@ const formAction = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  productionBrowserSourceMaps: true,
   reactStrictMode: true,
   typedRoutes: true,
   async headers() {
