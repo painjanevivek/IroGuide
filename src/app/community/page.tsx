@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, CalendarDays, Heart, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
 
-export const metadata: Metadata = { title: "Community preview" };
+export const metadata: Metadata = { title: "Community" };
 
 const critiques = [
   { category: "Brand identity", title: "A quieter identity for a noisy category", maker: "Anika Rao", score: "8.2", color: "violet", note: "The tighter symbol-to-wordmark relationship made the system feel intentional at every size." },
@@ -21,10 +21,10 @@ export default function CommunityPage() {
       <main>
         <section className="community-hero">
           <div>
-            <p className="eyebrow light"><Users /> Community preview</p>
+            <p className="eyebrow light"><Users /> Community</p>
             <h1>Critique with<br /><span>more signal.</span></h1>
-            <p>A future space for thoughtful feedback, visible improvement, and weekly creative practice - designed to make &quot;looks good&quot; the beginning, not the end.</p>
-            <div className="preview-notice"><ShieldCheck /><span><strong>Preview only</strong> Public posting stays disabled until identity, moderation, reporting, and consent controls are live.</span></div>
+            <p>A live practice space for thoughtful feedback, visible improvement, and creative momentum - designed to make &quot;looks good&quot; the beginning, not the end.</p>
+            <div className="preview-notice live-notice"><ShieldCheck /><span><strong>Ready to start</strong> Create an account, run a private critique, and build a stronger improvement story before sharing work outward.</span><Link className="button button-lime" href="/auth?mode=sign-up">Get started <ArrowRight size={17} /></Link></div>
           </div>
           <div className="community-orbit" aria-hidden="true">
             <span>WHAT WORKS</span><span>WHY IT MATTERS</span><span>WHAT TO TRY</span><div><MessageSquareText /></div>
@@ -34,7 +34,7 @@ export default function CommunityPage() {
         <section className="community-feed section-pad">
           <div className="community-section-title">
             <div><p className="eyebrow">Featured improvement stories</p><h2>Work worth<br />talking about.</h2></div>
-            <p>Each future post pairs the design with AI context and a structured human critique template.</p>
+            <p>Each story pairs the design context with a structured critique pattern, so feedback stays specific, practical, and respectful.</p>
           </div>
           <div className="critique-grid">
             {critiques.map((item, index) => (
@@ -49,7 +49,7 @@ export default function CommunityPage() {
                   <h3>{item.title}</h3>
                   <div className="maker"><span>{item.maker.charAt(0)}</span><p>{item.maker}<small><BadgeCheck /> Structured critic</small></p><strong>{item.score}<small>/10</small></strong></div>
                   <blockquote>{item.note}</blockquote>
-                  <footer><span><Heart /> Preview</span><span><MessageSquareText /> Critique template</span></footer>
+                  <footer><span><Heart /> Improvement story</span><span><MessageSquareText /> Critique template</span></footer>
                 </div>
               </article>
             ))}
@@ -58,11 +58,11 @@ export default function CommunityPage() {
 
         <section className="challenge-section section-pad">
           <div className="challenge-copy">
-            <p className="eyebrow light"><Trophy /> Weekly challenge preview</p>
+            <p className="eyebrow light"><Trophy /> Weekly practice</p>
             <h2>One brief.<br />Many answers.</h2>
             <p>Practice with a bounded prompt, receive the same rubric, and compare improvement - not popularity alone.</p>
             <div><span><CalendarDays /> Week 01</span><span>Poster design</span><span>72-hour sprint</span></div>
-            <button className="button button-lime" disabled>Challenges coming later</button>
+            <Link className="button button-lime" href="/review/new">Start this brief <ArrowRight size={17} /></Link>
           </div>
           <div className="challenge-card"><span className="mono-label">THE BRIEF</span><p>Design a poster that makes five quiet minutes feel culturally urgent.</p><strong>PAUSE<br /><em>IS A</em><br />PRACTICE.</strong><div className="challenge-shape" /></div>
         </section>
@@ -80,8 +80,8 @@ export default function CommunityPage() {
         <section className="community-cta">
           <Sparkles />
           <h2>Build in public.<br /><span>Improve with purpose.</span></h2>
-          <p>For now, start with a private critique. Community publishing will remain opt-in when it arrives.</p>
-          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Sign up for private critique <ArrowRight /></Link>
+          <p>Start with a private critique, shape the next version, and turn the feedback into a story worth sharing.</p>
+          <Link className="button button-lime button-large" href="/auth?mode=sign-up">Get started <ArrowRight /></Link>
         </section>
       </main>
     </div>
