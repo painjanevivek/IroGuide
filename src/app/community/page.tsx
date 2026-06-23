@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarDays, Heart, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
+import { CommunityBoard } from "@/features/community/community-board";
 import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
 
 export const metadata: Metadata = { title: "Community" };
-
-const critiques = [
-  { category: "Brand identity", title: "A quieter identity for a noisy category", maker: "Anika Rao", score: "8.2", color: "violet", note: "The tighter symbol-to-wordmark relationship made the system feel intentional at every size." },
-  { category: "Editorial", title: "Independent culture, set in motion", maker: "Milo Chen", score: "7.6", color: "lime", note: "Strong energy. The date and venue still need a calmer secondary reading zone." },
-  { category: "Product UI", title: "Rethinking the first-run workspace", maker: "Nora Studio", score: "8.7", color: "coral", note: "Progressive disclosure keeps the interface capable without making the first session feel dense." },
-] as const;
 
 export default function CommunityPage() {
   return (
@@ -32,30 +27,7 @@ export default function CommunityPage() {
           </div>
         </section>
 
-        <section className="community-feed section-pad">
-          <div className="community-section-title">
-            <div><p className="eyebrow">Featured improvement stories</p><h2>Work worth<br />talking about.</h2></div>
-            <p>Each story pairs the design context with a structured critique pattern, so feedback stays specific, practical, and respectful.</p>
-          </div>
-          <div className="critique-grid">
-            {critiques.map((item, index) => (
-              <article key={item.title} className={`critique-tile tile-${item.color}`}>
-                <div className="critique-canvas">
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <strong>{item.title.split(" ").slice(0, 3).join(" ")}<br /><em>{item.title.split(" ").slice(3).join(" ")}</em></strong>
-                  <div />
-                </div>
-                <div className="critique-info">
-                  <span className="mono-label">{item.category}</span>
-                  <h3>{item.title}</h3>
-                  <div className="maker"><span>{item.maker.charAt(0)}</span><p>{item.maker}<small><BadgeCheck /> Structured critic</small></p><strong>{item.score}<small>/10</small></strong></div>
-                  <blockquote>{item.note}</blockquote>
-                  <footer><span><Heart /> Improvement story</span><span><MessageSquareText /> Critique template</span></footer>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        <CommunityBoard />
 
         <section className="challenge-section section-pad">
           <div className="challenge-copy">
