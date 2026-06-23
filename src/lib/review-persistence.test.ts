@@ -5,6 +5,7 @@ import {
   cacheReviewDocument,
   createStoredReviewDocument,
   getCachedReviewDocuments,
+  getPendingLocalReviewDocuments,
   getReviewDocumentId,
 } from "./review-persistence";
 
@@ -76,5 +77,24 @@ describe("review persistence", () => {
     storage.setItem("iroguide:dashboard-reviews:v1:user-a", "not-json");
 
     expect(getCachedReviewDocuments("user-a", storage)).toEqual([]);
+  });
+
+  it("returns only locally pending documents for account sync", () => {
+    const storage = new MemoryStorage();
+    const review = createDemoReview(request);
+    const pendingDocument = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });
+    const syncedDocument = createStoredReviewDocument({
+      userId: "user-a",
+      review: { ...review, id: "synced" },
+      category: "logo",
+      syncState: "cloud",
+    });
+
+    cacheReviewDocument(pendingDocument, storage);
+    cacheReviewDocument(syncedDocument, storage);
+
+    expect(getPendingLocalReviewDocuments("user-a", storage).map((document) => document.id)).toEqual([
+      pendingDocument.id,
+    ]);
   });
 });

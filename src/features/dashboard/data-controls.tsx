@@ -13,7 +13,7 @@ export function DataControls({ hasLocalFallback = false, reviewCount }: { hasLoc
           {reviewCount === 0
             ? "Once you create a review, it will save into this signed-in workspace."
             : hasLocalFallback
-              ? `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} available here, including local saves waiting for Firestore sync.`
+              ? `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} available here, including recent saves waiting for account sync.`
               : `${reviewCount} ${reviewCount === 1 ? "review is" : "reviews are"} loaded for this signed-in account.`}{" "}
           Image bytes are not persisted by this build yet.
         </p>

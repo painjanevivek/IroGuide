@@ -315,7 +315,7 @@ function ReviewResult({ review, preview, category, initialSaveState, initialSave
         <div className="result-header-actions">
           <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
           <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
-            {saveState === "saved" ? <><Check size={14} /> Synced to dashboard</> : saveState === "local" ? <><Save size={14} /> Retry cloud sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
+            {saveState === "saved" ? <><Check size={14} /> Saved to dashboard</> : saveState === "local" ? <><Save size={14} /> Retry account sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
@@ -424,7 +424,7 @@ async function saveCompletedReviewToDashboard(userId: string, review: ReviewOutp
   } catch {
     return {
       syncedToCloud: false,
-      message: "Saved to your dashboard on this device. Cloud sync will work after Firebase review-write permissions are published.",
+      message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
     };
   }
 }

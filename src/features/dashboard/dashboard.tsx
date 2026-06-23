@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
-import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
+import { collection, doc, limit, onSnapshot, query, serverTimestamp, setDoc, where, type DocumentData } from "firebase/firestore";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
@@ -12,11 +12,11 @@ import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels, reviewOutputSchema, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { getFirebaseClientFirestore } from "@/lib/firebase/client";
-import { getCachedReviewDocuments } from "@/lib/review-persistence";
+import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
-type StoredReview = ReviewOutput & ProgressReview & { category?: string };
+type StoredReview = ReviewOutput & ProgressReview & { category?: string; syncState?: StoredReviewDocument["syncState"] };
 type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
@@ -29,11 +29,36 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
-    const refreshTimer = window.setTimeout(() => {
-      setCachedReviews(getCachedReviewDocuments(user.uid).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null));
-    }, 0);
+    let active = true;
 
-    return () => window.clearTimeout(refreshTimer);
+    function refreshCachedReviews() {
+      if (!active || !user) return;
+      setCachedReviews(readCachedStoredReviews(user.uid));
+    }
+
+    async function syncPendingReviews() {
+      if (!user) return;
+      const pendingDocuments = getPendingLocalReviewDocuments(user.uid);
+      if (pendingDocuments.length === 0) {
+        refreshCachedReviews();
+        return;
+      }
+
+      await syncLocalReviewDocuments(pendingDocuments);
+      refreshCachedReviews();
+    }
+
+    const refreshTimer = window.setTimeout(() => {
+      refreshCachedReviews();
+      void syncPendingReviews();
+    }, 0);
+    window.addEventListener("online", syncPendingReviews);
+
+    return () => {
+      active = false;
+      window.clearTimeout(refreshTimer);
+      window.removeEventListener("online", syncPendingReviews);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -84,7 +109,7 @@ export function Dashboard() {
   const reviews = mergeStoredReviews(cloudReviews, cachedReviews);
   const progress = calculateProgress(reviews);
   const recentReview = getRecentReviewSummary(reviews);
-  const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
+  const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => cachedReview.syncState === "local" && !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
 
   return (
     <main className="dashboard-main">
@@ -130,7 +155,7 @@ export function Dashboard() {
       {loading ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-loading">
-            <div><LoaderCircle className="spin" size={38} /><h2>Loading reviews</h2><p>Fetching your Firestore review history.</p></div>
+            <div><LoaderCircle className="spin" size={38} /><h2>Loading reviews</h2><p>Fetching your private review history.</p></div>
           </div>
         </Reveal>
       ) : loadError && reviews.length === 0 ? (
@@ -153,15 +178,15 @@ export function Dashboard() {
               <div className="workspace-badge workspace-badge-muted">
                 <ShieldCheck />
                 <div>
-                  <strong>Saved locally, waiting for cloud sync</strong>
-                  <span>Your latest critique is available here. Publish Firebase review-write permissions to sync it across devices.</span>
+                  <strong>Saved locally, waiting for account sync</strong>
+                  <span>Your latest critique is available here. IroGuide will keep syncing it to your account automatically.</span>
                 </div>
               </div>
             </Reveal>
           )}
           <section aria-label="Design progress summary">
             <Stagger className="progress-grid">
-              <StaggerItem><article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to Firestore</p></article></StaggerItem>
+              <StaggerItem><article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to your workspace</p></article></StaggerItem>
               <StaggerItem><article className="metric-violet"><span>Average score</span><strong>{progress.averageScore}<small>/10</small></strong><p>{progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article></StaggerItem>
               <StaggerItem><article><span>Strongest area</span><strong className="metric-word">{progress.strongest?.label}</strong><p>{progress.strongest?.score}/10 average</p></article></StaggerItem>
               <StaggerItem><article className="metric-coral"><span>Practice next</span><strong className="metric-word">{progress.weakest?.label}</strong><p>{progress.weakest?.score}/10 average</p></article></StaggerItem>
@@ -171,7 +196,7 @@ export function Dashboard() {
             <section className="learning-card"><Sparkles /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
           </Reveal>
           <Reveal delay={0.14}>
-            <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved in Firestore</span></div>
+            <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>
           </Reveal>
           <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.id}><article className="history-card" id={`review-${review.id}`}><span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time></article></StaggerItem>)}</Stagger>
         </>
@@ -189,7 +214,8 @@ function toStoredReview(id: string, data: DocumentData): StoredReview | null {
   const category = typeof data.category === "string" && data.category in categoryLabels
     ? categoryLabels[data.category as keyof typeof categoryLabels]
     : undefined;
-  return { ...parsed.data, category };
+  const syncState = data.syncState === "local" || data.syncState === "cloud" ? data.syncState : undefined;
+  return { ...parsed.data, category, syncState };
 }
 
 function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
@@ -205,6 +231,25 @@ function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
 
 function toStoredCachedReview(data: ReturnType<typeof getCachedReviewDocuments>[number]): StoredReview | null {
   return toStoredReview(data.id, data);
+}
+
+function readCachedStoredReviews(userId: string) {
+  return getCachedReviewDocuments(userId).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null);
+}
+
+async function syncLocalReviewDocuments(documents: StoredReviewDocument[]) {
+  if (documents.length === 0) return;
+  const db = getFirebaseClientFirestore();
+
+  await Promise.allSettled(documents.map(async (reviewDocument) => {
+    await setDoc(doc(db, "reviews", reviewDocument.id), {
+      ...reviewDocument,
+      syncState: "cloud",
+      savedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    cacheReviewDocument({ ...reviewDocument, syncState: "cloud", updatedAt: new Date().toISOString() });
+  }));
 }
 
 function mergeStoredReviews(cloudReviews: StoredReview[], cachedReviews: StoredReview[]) {

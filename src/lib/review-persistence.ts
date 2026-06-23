@@ -84,6 +84,10 @@ export function getCachedReviewDocuments(userId: string, storage: StorageLike | 
   }
 }
 
+export function getPendingLocalReviewDocuments(userId: string, storage: StorageLike | null = getBrowserStorage()) {
+  return getCachedReviewDocuments(userId, storage).filter((document) => document.syncState === "local");
+}
+
 function storedReviewDocumentSchema(value: unknown): StoredReviewDocument | null {
   if (typeof value !== "object" || value === null) return null;
   const candidate = value as Partial<StoredReviewDocument>;
