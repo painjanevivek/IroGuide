@@ -10,25 +10,31 @@ export const feedbackModes = ["friendly", "mentor", "direct"] as const;
 
 const maxImageBase64Length = Math.ceil((10 * 1024 * 1024 * 4) / 3) + 16;
 
+export const reviewFileSchema = z.object({
+  name: z.string().min(1).max(180),
+  type: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  size: z.number().int().positive().max(10 * 1024 * 1024),
+});
+
+export const reviewBriefSchema = z.object({
+  audience: z.string().trim().min(3).max(300),
+  purpose: z.string().trim().min(3).max(500),
+  style: z.string().trim().min(2).max(200),
+  goal: z.string().trim().min(3).max(500),
+  concern: z.string().trim().max(500).optional(),
+});
+
+export const reviewImageSchema = z.object({
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  dataBase64: z.string().min(16).max(maxImageBase64Length),
+});
+
 export const reviewRequestSchema = z.object({
   category: z.enum(reviewCategories),
   mode: z.enum(feedbackModes),
-  file: z.object({
-    name: z.string().min(1).max(180),
-    type: z.enum(["image/jpeg", "image/png", "image/webp"]),
-    size: z.number().int().positive().max(10 * 1024 * 1024),
-  }),
-  brief: z.object({
-    audience: z.string().trim().min(3).max(300),
-    purpose: z.string().trim().min(3).max(500),
-    style: z.string().trim().min(2).max(200),
-    goal: z.string().trim().min(3).max(500),
-    concern: z.string().trim().max(500).optional(),
-  }),
-  image: z.object({
-    mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
-    dataBase64: z.string().min(16).max(maxImageBase64Length),
-  }).optional(),
+  file: reviewFileSchema,
+  brief: reviewBriefSchema,
+  image: reviewImageSchema.optional(),
 });
 
 export const reviewIssueSchema = z.object({

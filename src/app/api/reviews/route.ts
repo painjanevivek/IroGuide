@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: "Review details are incomplete or invalid.", details: error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: getReviewValidationMessage(error), details: error.flatten() }, { status: 400 });
     }
     if (error instanceof ReviewProviderUnavailableError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
@@ -115,4 +115,20 @@ class ReviewRequestValidationError extends Error {
     super(message);
     this.name = "ReviewRequestValidationError";
   }
+}
+
+function getReviewValidationMessage(error: ZodError) {
+  const firstIssue = error.issues[0];
+  const field = firstIssue?.path.join(".");
+
+  if (field === "brief.audience") return "Target audience must be at least 3 characters.";
+  if (field === "brief.purpose") return "Purpose must be at least 3 characters.";
+  if (field === "brief.style") return "Style direction must be at least 2 characters.";
+  if (field === "brief.goal") return "Primary goal must be at least 3 characters.";
+  if (field === "brief.concern") return "Specific concern is too long.";
+  if (field === "category") return "Choose a valid design category.";
+  if (field === "mode") return "Choose a valid feedback mode.";
+  if (field?.startsWith("file")) return "Choose a valid PNG, JPEG, or WebP image before starting a critique.";
+
+  return "Review details are incomplete or invalid.";
 }
