@@ -1,6 +1,9 @@
 import { cert, deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { loadEnvConfig } from "@next/env";
+
+loadEnvConfig(process.cwd());
 
 const baseUrl = normalizeBaseUrl(process.env.SMOKE_BASE_URL ?? "https://iroguide.com");
 const requireReady = process.env.SMOKE_REQUIRE_READY !== "false";
