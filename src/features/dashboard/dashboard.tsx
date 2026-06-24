@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { Route } from "next";
 import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -21,7 +22,7 @@ import { syncPendingAccountReviews } from "@/lib/review-sync";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
-type StoredReview = ReviewOutput & ProgressReview & { category?: string; sourceImage?: ReviewSourceImage; syncState?: StoredReviewDocument["syncState"] };
+type StoredReview = ReviewOutput & ProgressReview & { category?: string; documentId: string; sourceImage?: ReviewSourceImage; syncState?: StoredReviewDocument["syncState"] };
 type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
@@ -90,7 +91,7 @@ export function Dashboard() {
       if (!review.sourceImage) return null;
       try {
         const url = await getDownloadURL(ref(getFirebaseClientStorage(), review.sourceImage.storagePath));
-        return [review.id, url] as const;
+        return [review.documentId, url] as const;
       } catch {
         return null;
       }
@@ -164,6 +165,7 @@ export function Dashboard() {
   const reviews = mergeStoredReviews(cloudReviews, cachedReviews);
   const progress = calculateProgress(reviews);
   const recentReview = getRecentReviewSummary(reviews);
+  const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
   const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => cachedReview.syncState === "local" && !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
 
@@ -228,7 +230,7 @@ export function Dashboard() {
         </Reveal>
       ) : (
         <>
-          {recentReview && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} /></Reveal>}
+          {recentReview && recentReviewDocument && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} reviewHref={getReviewDetailHref(recentReviewDocument.documentId)} /></Reveal>}
           {hasCachedOnlyReviews && (
             <Reveal delay={0.09}>
               <div className="workspace-badge workspace-badge-muted">
@@ -254,14 +256,14 @@ export function Dashboard() {
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>
           </Reveal>
-          <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.id}><article className="history-card" id={`review-${review.id}`}>
+          <Stagger className="review-history">{reviews.map((review) => <StaggerItem key={review.documentId}><Link className="history-card" href={getReviewDetailHref(review.documentId)} id={`review-${review.id}`} aria-label={`Open full critique for ${review.category ?? "design review"} scored ${review.overallScore} out of 10`}>
             {review.sourceImage && (
               <div className="history-card-image">
-                {reviewImageUrls[review.id] ? <Image src={reviewImageUrls[review.id]} alt={`${review.category ?? "Design"} source image`} fill unoptimized /> : <FileImage />}
+                {reviewImageUrls[review.documentId] ? <Image src={reviewImageUrls[review.documentId]} alt={`${review.category ?? "Design"} source image`} fill unoptimized /> : <FileImage />}
               </div>
             )}
             <span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time>
-          </article></StaggerItem>)}</Stagger>
+          </Link></StaggerItem>)}</Stagger>
         </>
       )}
 
@@ -282,9 +284,14 @@ function toStoredReview(id: string, data: DocumentData): StoredReview | null {
   return {
     ...parsed.data,
     category,
+    documentId: id,
     ...(parsedSourceImage.success ? { sourceImage: parsedSourceImage.data } : {}),
     syncState,
   };
+}
+
+function getReviewDetailHref(documentId: string) {
+  return `/dashboard/reviews/${encodeURIComponent(documentId)}` as Route;
 }
 
 function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {

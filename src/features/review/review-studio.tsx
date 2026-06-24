@@ -286,7 +286,7 @@ export function ReviewStudio() {
 
 function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
 
-function ReviewResult({
+export function ReviewResult({
   review,
   preview,
   sourceFile,

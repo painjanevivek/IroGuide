@@ -45,6 +45,10 @@ test("signs in, submits a review, and shows private source-image status on the d
   await page.getByRole("link", { name: /^dashboard$/i }).click();
   await expect(page.getByText(/saved source images are loaded from private account storage/i)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole("heading", { name: /keep the thread/i })).toBeVisible();
+
+  await page.getByRole("link", { name: /open critique/i }).click();
+  await expect(page).toHaveURL(/\/dashboard\/reviews\//);
+  await expect(page.getByText(/your critique is ready/i)).toBeVisible({ timeout: 45_000 });
 });
 
 async function signIn(page: Page) {
