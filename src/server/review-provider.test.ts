@@ -102,8 +102,8 @@ describe("review provider routing", () => {
       configuredMode: "live",
       liveReady: true,
       openRouterConfigured: true,
-      openRouterModel: "test/vision-model",
     }));
+    expect(getReviewProviderStatus()).not.toHaveProperty("openRouterModel");
   });
 
   it("requires image bytes for live vision critique", async () => {
@@ -134,6 +134,16 @@ describe("review provider routing", () => {
     expect(review.provider).toBe("live");
     expect(body.model).toBe("test/vision-model");
     expect(imagePart?.image_url?.url).toBe(`data:image/png;base64,${requestWithImage.image?.dataBase64}`);
+  });
+
+  it("rejects unsafe custom review endpoints before making an outbound request", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "endpoint");
+    vi.stubEnv("IROGUIDE_VISION_REVIEW_ENDPOINT", "https://127.0.0.1/review");
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createReview(requestWithImage)).rejects.toThrow("endpoint host is not allowed");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("normalizes salvageable live provider JSON before validating the review", async () => {

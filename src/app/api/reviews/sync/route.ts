@@ -3,8 +3,9 @@ import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
 import { storedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
+import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent } from "@/server/observability";
+import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { syncReviewDocumentsForUser } from "@/server/review-storage";
 
@@ -19,6 +20,11 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createRequestContext(request, "api.reviews.sync");
+  const originCheck = enforceSameOriginRequest(request, context, "review_sync");
+  if ("response" in originCheck) return originCheck.response;
+  const contentTypeCheck = requireContentType(request, context, "review_sync", ["application/json", "multipart/form-data"]);
+  if ("response" in contentTypeCheck) return contentTypeCheck.response;
+
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) {
     logRequestEvent("warn", "review_sync.auth_missing", context);
@@ -32,7 +38,7 @@ export async function POST(request: Request) {
       ...SYNC_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {
-      logRequestEvent("warn", "review_sync.rate_limited", context, { uid: decodedToken.uid });
+      logRequestEvent("warn", "review_sync.rate_limited", context, { user: toLogSafeUserId(decodedToken.uid) });
       return NextResponse.json(
         { error: "Too many sync requests. Please try again shortly." },
         { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
@@ -45,7 +51,7 @@ export async function POST(request: Request) {
       requested: parsed.documents.length,
       saved: result.savedIds.length,
       sourceImages: result.sourceImages.length,
-      uid: decodedToken.uid,
+      user: toLogSafeUserId(decodedToken.uid),
     });
 
     return NextResponse.json(result, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
@@ -65,7 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: "Review sync details are incomplete or invalid.", details: error.flatten() }, { status: 400, headers: jsonHeaders(context) });
+      return NextResponse.json({ error: "Review sync details are incomplete or invalid." }, { status: 400, headers: jsonHeaders(context) });
     }
 
     logRequestEvent("error", "review_sync.failed", context);
@@ -149,6 +155,5 @@ class ReviewSyncValidationError extends Error {
 function getAuthDiagnosticHeaders(error: FirebaseTokenVerificationError): HeadersInit {
   return {
     ...(error.code ? { "x-iroguide-auth-error": error.code } : {}),
-    ...(error.detail ? { "x-iroguide-auth-detail": error.detail } : {}),
   };
 }

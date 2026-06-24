@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { enforceSameOriginRequest } from "@/server/api-security";
 import { deleteFirebaseUser, FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent } from "@/server/observability";
+import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser } from "@/server/review-storage";
 
@@ -10,6 +11,9 @@ export const runtime = "nodejs";
 
 export async function DELETE(request: Request) {
   const context = createRequestContext(request, "api.account.delete");
+  const originCheck = enforceSameOriginRequest(request, context, "account_delete");
+  if ("response" in originCheck) return originCheck.response;
+
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) {
     logRequestEvent("warn", "account_delete.auth_missing", context);
@@ -23,7 +27,7 @@ export async function DELETE(request: Request) {
       ...ACCOUNT_DELETE_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {
-      logRequestEvent("warn", "account_delete.rate_limited", context, { uid: decodedToken.uid });
+      logRequestEvent("warn", "account_delete.rate_limited", context, { user: toLogSafeUserId(decodedToken.uid) });
       return NextResponse.json(
         { error: "Too many account deletion requests. Please try again shortly." },
         { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
@@ -36,7 +40,7 @@ export async function DELETE(request: Request) {
       draftsDeleted: result.draftsDeleted,
       reviewsDeleted: result.reviewsDeleted,
       sourceImagesDeleted: result.sourceImagesDeleted,
-      uid: decodedToken.uid,
+      user: toLogSafeUserId(decodedToken.uid),
     });
 
     return NextResponse.json({ deleted: true, ...result }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
@@ -58,6 +62,5 @@ export async function DELETE(request: Request) {
 function getAuthDiagnosticHeaders(error: FirebaseTokenVerificationError): HeadersInit {
   return {
     ...(error.code ? { "x-iroguide-auth-error": error.code } : {}),
-    ...(error.detail ? { "x-iroguide-auth-detail": error.detail } : {}),
   };
 }

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Check, Clipboard, LoaderCircle, Sparkles, WandSparkles } from "lucide-react";
 import { improvementOutputSchema, type ImprovementOutput } from "@/domain/improvement";
 import type { ReviewOutput } from "@/domain/review";
+import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
 
 export function ImprovementPanel({ review }: { review: ReviewOutput }) {
+  const { user } = useAuth();
   const [output, setOutput] = useState<ImprovementOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -15,11 +17,13 @@ export function ImprovementPanel({ review }: { review: ReviewOutput }) {
   async function generate() {
     setLoading(true); setError("");
     try {
+      const idToken = await user?.getIdToken();
+      if (!idToken) throw new Error("Sign in again before generating an improvement plan.");
       const payload = await postJsonWithFallback({
         path: "/api/improvements",
         unavailableMessage: "The improvement plan is unavailable right now.",
         failureMessage: "The improvement plan is unavailable right now.",
-        init: { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review, target: "human-designer" }) },
+        init: { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` }, body: JSON.stringify({ review, target: "human-designer" }) },
       });
       setOutput(improvementOutputSchema.parse(payload));
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The improvement plan failed."); }

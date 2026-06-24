@@ -58,7 +58,7 @@ describe("review persistence", () => {
 
   it("caches completed reviews per signed-in user", () => {
     const storage = new MemoryStorage();
-    const firstReview = createDemoReview(request);
+    const firstReview = { ...createDemoReview(request), createdAt: "2026-06-23T00:00:00.000Z" };
     const secondReview = { ...firstReview, id: "second", createdAt: "2026-06-24T00:00:00.000Z" };
     const firstDocument = createStoredReviewDocument({ userId: "user-a", review: firstReview, category: "logo" });
     const secondDocument = createStoredReviewDocument({ userId: "user-a", review: secondReview, category: "poster" });

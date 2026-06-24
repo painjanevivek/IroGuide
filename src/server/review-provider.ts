@@ -381,7 +381,7 @@ function normalizeLiveReview(payload: LiveReviewPayload): ReviewOutput {
 const endpointReviewProvider: ReviewProvider = {
   name: "live",
   async createReview(request) {
-    const endpoint = process.env.IROGUIDE_VISION_REVIEW_ENDPOINT?.trim();
+    const endpoint = getValidatedReviewEndpoint(process.env.IROGUIDE_VISION_REVIEW_ENDPOINT);
     if (!endpoint) {
       throw new ReviewProviderUnavailableError("Live vision critique endpoint is not configured.");
     }
@@ -405,6 +405,50 @@ const endpointReviewProvider: ReviewProvider = {
     return normalizeLiveReview(parsed.data);
   },
 };
+
+function getValidatedReviewEndpoint(value: string | undefined) {
+  const rawEndpoint = value?.trim();
+  if (!rawEndpoint) return null;
+
+  let endpoint: URL;
+  try {
+    endpoint = new URL(rawEndpoint);
+  } catch {
+    throw new ReviewProviderUnavailableError("Live vision critique endpoint is invalid.");
+  }
+
+  if (endpoint.protocol !== "https:") {
+    throw new ReviewProviderUnavailableError("Live vision critique endpoint must use HTTPS.");
+  }
+
+  if (isBlockedOutboundHost(endpoint.hostname)) {
+    throw new ReviewProviderUnavailableError("Live vision critique endpoint host is not allowed.");
+  }
+
+  endpoint.username = "";
+  endpoint.password = "";
+  endpoint.hash = "";
+  return endpoint.toString();
+}
+
+function isBlockedOutboundHost(hostname: string) {
+  const host = hostname.trim().toLowerCase();
+  if (!host || host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host === "0.0.0.0" || host === "::" || host === "::1") return true;
+
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!ipv4) return false;
+
+  const octets = ipv4.slice(1).map(Number);
+  if (octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return true;
+  const [first, second] = octets;
+
+  return first === 10
+    || first === 127
+    || (first === 169 && second === 254)
+    || (first === 172 && second >= 16 && second <= 31)
+    || (first === 192 && second === 168);
+}
 
 export async function createReview(request: ReviewRequest): Promise<ReviewOutput> {
   return getReviewProvider().createReview(request);
@@ -432,6 +476,5 @@ export function getReviewProviderStatus() {
     endpointConfigured,
     liveReady,
     openRouterConfigured,
-    openRouterModel: process.env.OPENROUTER_MODEL?.trim() || defaultOpenRouterModel,
   };
 }

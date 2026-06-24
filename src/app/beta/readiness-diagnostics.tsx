@@ -22,17 +22,12 @@ type ReadinessPayload = {
     firebaseProjectMatch: boolean;
     liveVision: boolean;
   };
-  firebase: {
-    accountStorageProjectId: string | null;
-    publicFirebaseProjectId: string | null;
-  };
   reviewProvider: {
     activeProvider: string;
     configuredMode: string;
     endpointConfigured: boolean;
     liveReady: boolean;
     openRouterConfigured: boolean;
-    openRouterModel: string;
   };
 };
 
@@ -192,10 +187,6 @@ export function ReadinessDiagnostics() {
               <dt>Configured mode</dt>
               <dd>{state.payload.reviewProvider.configuredMode}</dd>
             </div>
-            <div>
-              <dt>OpenRouter model</dt>
-              <dd>{state.payload.reviewProvider.openRouterModel}</dd>
-            </div>
           </dl>
         </div>
       </div>
@@ -220,12 +211,12 @@ export function ReadinessDiagnostics() {
           <p className="eyebrow"><ShieldCheck /> Environment details</p>
           <dl>
             <div>
-              <dt>Public Firebase project</dt>
-              <dd>{state.payload.firebase.publicFirebaseProjectId ?? "Missing NEXT_PUBLIC_FIREBASE_PROJECT_ID"}</dd>
+              <dt>Firebase project match</dt>
+              <dd>{state.payload.checks.firebaseProjectMatch ? "Matched" : "Needs verification"}</dd>
             </div>
             <div>
-              <dt>Admin Firebase project</dt>
-              <dd>{state.payload.firebase.accountStorageProjectId ?? "Missing Firebase Admin project ID"}</dd>
+              <dt>Firebase Admin storage</dt>
+              <dd>{state.payload.checks.accountStorage ? "Configured" : "Missing"}</dd>
             </div>
             <div>
               <dt>OpenRouter credential</dt>
@@ -299,7 +290,7 @@ function buildDiagnostics(payload: ReadinessPayload) {
       label: "Firebase Admin credentials",
       passed: payload.checks.accountStorage,
       detail: payload.checks.accountStorage
-        ? `Server credentials are present for ${payload.firebase.accountStorageProjectId ?? "the configured project"}.`
+        ? "Server credentials are present for the configured Firebase project."
         : "The API cannot verify signed-in users or persist account review history.",
       fix: "Set FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON, FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64, or the split FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, and FIREBASE_ADMIN_PRIVATE_KEY variables.",
     },
@@ -309,7 +300,7 @@ function buildDiagnostics(payload: ReadinessPayload) {
       passed: payload.checks.firebaseProjectMatch,
       detail: payload.checks.firebaseProjectMatch
         ? "Browser Firebase config and server Admin credentials point at the same project."
-        : `Public project: ${payload.firebase.publicFirebaseProjectId ?? "missing"}; Admin project: ${payload.firebase.accountStorageProjectId ?? "missing"}.`,
+        : "Browser Firebase config and server Admin credentials do not appear to point at the same project.",
       fix: "Make NEXT_PUBLIC_FIREBASE_PROJECT_ID match the Firebase Admin service account project, then redeploy the frontend and API together.",
     },
   ];
@@ -339,7 +330,7 @@ function buildDiagnostics(payload: ReadinessPayload) {
       label: "Live vision readiness",
       passed: payload.checks.liveVision,
       detail: payload.checks.liveVision
-        ? `Live pixel analysis is ready with ${payload.reviewProvider.openRouterModel}.`
+        ? "Live pixel analysis is ready with the configured provider."
         : "The review route is not ready to analyze uploaded pixels in this environment.",
       fix: "Confirm the live provider mode and credential variables are present in the deployed server environment, then redeploy.",
     },
@@ -365,7 +356,7 @@ function getLiveCredentialDetail(payload: ReadinessPayload) {
     return "Custom vision review endpoint is configured.";
   }
 
-  return `OpenRouter is configured with ${payload.reviewProvider.openRouterModel}.`;
+  return "OpenRouter credential is configured.";
 }
 
 async function readReadiness() {
@@ -394,7 +385,7 @@ function formatCheckedAt(date: Date) {
 }
 
 function isReadinessPayload(value: unknown): value is ReadinessPayload {
-  if (!isRecord(value) || !isRecord(value.checks) || !isRecord(value.firebase) || !isRecord(value.reviewProvider)) {
+  if (!isRecord(value) || !isRecord(value.checks) || !isRecord(value.reviewProvider)) {
     return false;
   }
 
@@ -402,20 +393,13 @@ function isReadinessPayload(value: unknown): value is ReadinessPayload {
     && typeof value.checks.accountStorage === "boolean"
     && typeof value.checks.firebaseProjectMatch === "boolean"
     && typeof value.checks.liveVision === "boolean"
-    && isNullableString(value.firebase.accountStorageProjectId)
-    && isNullableString(value.firebase.publicFirebaseProjectId)
     && typeof value.reviewProvider.activeProvider === "string"
     && typeof value.reviewProvider.configuredMode === "string"
     && typeof value.reviewProvider.endpointConfigured === "boolean"
     && typeof value.reviewProvider.liveReady === "boolean"
-    && typeof value.reviewProvider.openRouterConfigured === "boolean"
-    && typeof value.reviewProvider.openRouterModel === "string";
+    && typeof value.reviewProvider.openRouterConfigured === "boolean";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function isNullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
 }
