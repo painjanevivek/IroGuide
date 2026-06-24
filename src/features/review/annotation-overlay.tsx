@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getSafeReviewAnnotations } from "@/domain/review-annotations";
+import { getAnnotationIssueId, getSafeReviewAnnotations } from "@/domain/review-annotations";
 import type { ReviewOutput } from "@/domain/review";
 import { getContainedMediaFrame, type AnnotationFrame } from "./annotation-frame";
 
@@ -48,7 +48,7 @@ export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }
     };
   }, [visible]);
 
-  if (annotations.length === 0) {
+  if (annotations.length === 0 && review.issues.length === 0) {
     return null;
   }
 
@@ -67,7 +67,29 @@ export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }
           {visible ? "Hide notes" : "Show notes"}
         </button>
       </div>
-      {visible && (
+      {visible && annotations.length === 0 && (
+        <div className="annotation-note-panel" aria-label="Review notes">
+          <span className="mono-label">Review notes</span>
+          <ul>
+            {review.issues.slice(0, 3).map((issue, index) => {
+              const issueId = getAnnotationIssueId(issue, index);
+
+              return (
+                <li key={issue.id ?? issue.category}>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById(`review-${issueId}`)?.scrollIntoView({ block: "center", behavior: "smooth" })}
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <strong>{issue.category}</strong>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {visible && annotations.length > 0 && (
         <div
           ref={layerRef}
           className="annotation-layer"

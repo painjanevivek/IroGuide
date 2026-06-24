@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Save, Sparkles, Upload, X } from "lucide-react";
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
@@ -311,10 +311,11 @@ function ReviewResult({
   const [saveState, setSaveState] = useState<ReviewSaveState>(initialSaveState);
   const [saveError, setSaveError] = useState(initialSaveError);
   const [sourceImage, setSourceImage] = useState<ReviewSourceImage | null>(initialSourceImage);
+  const autoSyncAttemptedRef = useRef(false);
   const fixFirst = getFixFirstAction(review);
   const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
 
-  async function saveReview() {
+  const saveReview = useCallback(async () => {
     if (saveState === "saving") return;
     const currentUser = user;
     if (!currentUser) {
@@ -334,7 +335,13 @@ function ReviewResult({
       setSaveState("idle");
       setSaveError(error instanceof Error ? error.message : "Could not save this review. Please try again.");
     }
-  }
+  }, [category, review, saveState, sourceFile, user]);
+
+  useEffect(() => {
+    if (saveState !== "local" || !user || autoSyncAttemptedRef.current) return;
+    autoSyncAttemptedRef.current = true;
+    void saveReview();
+  }, [saveReview, saveState, user]);
 
   return (
     <main className="result-shell">
@@ -342,8 +349,8 @@ function ReviewResult({
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
         <div className="result-header-actions">
           <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
-          <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved"}>
-            {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><Save size={14} /> Retry account sync</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
+          <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved" || saveState === "local"}>
+            {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><Save size={14} /> Syncing automatically</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
