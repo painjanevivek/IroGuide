@@ -1,9 +1,10 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSafeReviewAnnotations } from "@/domain/review-annotations";
 import type { ReviewOutput } from "@/domain/review";
+import { getContainedMediaFrame, type AnnotationFrame } from "./annotation-frame";
 
 type AnnotationOverlayProps = {
   review: Pick<ReviewOutput, "annotations" | "issues">;
@@ -13,7 +14,39 @@ type AnnotationOverlayProps = {
 
 export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }: AnnotationOverlayProps) {
   const [visible, setVisible] = useState(true);
+  const [frame, setFrame] = useState<AnnotationFrame | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
   const annotations = getSafeReviewAnnotations(review);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const layer = layerRef.current;
+    const container = layer?.parentElement;
+    const image = container?.querySelector("img");
+    if (!container || !image) return;
+
+    const updateFrame = () => {
+      const containerRect = container.getBoundingClientRect();
+      const nextFrame = getContainedMediaFrame(
+        { width: containerRect.width, height: containerRect.height },
+        { width: image.naturalWidth, height: image.naturalHeight },
+      );
+      setFrame(nextFrame);
+    };
+
+    updateFrame();
+    image.addEventListener("load", updateFrame);
+
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateFrame);
+    observer?.observe(container);
+    observer?.observe(image);
+
+    return () => {
+      image.removeEventListener("load", updateFrame);
+      observer?.disconnect();
+    };
+  }, [visible]);
 
   if (annotations.length === 0) {
     return null;
@@ -35,7 +68,19 @@ export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }
         </button>
       </div>
       {visible && (
-        <div className="annotation-layer" aria-label="Visual critique annotations">
+        <div
+          ref={layerRef}
+          className="annotation-layer"
+          style={frame ? {
+            bottom: "auto",
+            height: `${frame.height}px`,
+            left: `${frame.left}px`,
+            right: "auto",
+            top: `${frame.top}px`,
+            width: `${frame.width}px`,
+          } : undefined}
+          aria-label="Visual critique annotations"
+        >
           {annotations.map((annotation) => {
             const isActive = activeIssueId === annotation.issueId;
             const isNearRightEdge = annotation.x + annotation.width > 0.72;
