@@ -13,7 +13,7 @@ type AnnotationOverlayProps = {
 };
 
 export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }: AnnotationOverlayProps) {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [frame, setFrame] = useState<AnnotationFrame | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const annotations = getSafeReviewAnnotations(review);
