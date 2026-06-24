@@ -9,6 +9,12 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "test:rules": "firebase emulators:exec --project demo-iroguide-rules --only firestore,storage \"vitest run --config vitest.rules.config.ts\"",
+    "dast:prelaunch": "node scripts/prelaunch-dast.mjs",
+    "smoke:security": "node scripts/prelaunch-dast.mjs",
+    "check": "npm run typecheck && npm run lint && npm test && npm run test:rules && npm run build",
     "smoke:production": "node scripts/production-smoke.mjs"
   },
   "dependencies": {
@@ -24,6 +30,7 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

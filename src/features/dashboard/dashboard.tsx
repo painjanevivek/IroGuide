@@ -15,6 +15,7 @@ import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type Revie
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
+import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
 import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
@@ -78,6 +79,10 @@ export function Dashboard() {
       queueMicrotask(() => setReviewImageUrls({}));
       return;
     }
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => setReviewImageUrls({}));
+      return;
+    }
 
     const reviewsWithImages = mergeStoredReviews(cloudReviews, cachedReviews).filter((review) => review.sourceImage);
     if (reviewsWithImages.length === 0) {
@@ -106,6 +111,14 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => {
+        setCloudReviews([]);
+        setLoadError("");
+        setLoading(false);
+      });
+      return;
+    }
     const db = getFirebaseClientFirestore();
     const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", user.uid), limit(30));
 
@@ -131,6 +144,10 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => setDrafts([]));
+      return;
+    }
     const db = getFirebaseClientFirestore();
     const draftsQuery = query(collection(db, "reviewDrafts"), where("userId", "==", user.uid), where("status", "==", "draft"), limit(12));
 

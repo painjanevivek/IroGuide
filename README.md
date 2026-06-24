@@ -49,6 +49,35 @@ npx firebase-tools deploy --only firestore:rules --project <firebase-project-id>
 The browser signs in with Firebase and sends the ID token to the review API.
 The API verifies the token server-side before saving completed reviews.
 
+### Security rules emulator tests
+
+The Firestore and Storage rules have emulator-backed ownership tests for saved
+reviews, active drafts, and private source images at
+`users/{uid}/reviews/{reviewId}/source.*`.
+
+```powershell
+npm run test:rules
+```
+
+The command starts local Firestore and Storage emulators with the checked-in
+rules and runs `src/firebase-security.rules.test.ts` against the demo project
+`demo-iroguide-rules`. Install JDK 21 or newer and keep Java available on
+`PATH` before running the Firebase emulators locally.
+
+### Prelaunch security smoke
+
+Run the deployed route/header/API gate smoke against production or a preview:
+
+```powershell
+$env:DAST_BASE_URL="https://iroguide.com"; npm run dast:prelaunch
+```
+
+The script writes a JSON report to `artifacts/dast-prelaunch-report.json` and
+checks public security headers, protected API auth gates, cross-site blocking,
+unsupported media rejection, API no-store headers, and sensitive response leaks.
+`npm run smoke:security` is kept as an alias. See `docs/prelaunch-dast.md` for
+the staging runbook and CI example.
+
 ## Live vision setup
 
 Local demo mode is used until production vision credentials are configured.
@@ -83,5 +112,42 @@ secret/environment settings, then redeploy. Successful live reviews show the
 npm run typecheck
 npm run lint
 npm test
+npm run test:e2e
+npm run test:rules
+npm run dast:prelaunch
 npm run build
 ```
+
+Run the core project gate with:
+
+```powershell
+npm run check
+```
+
+## End-to-end smoke
+
+Install the Chromium browser once before the first Playwright run:
+
+```powershell
+npm run test:e2e:install
+```
+
+By default, `npm run test:e2e` starts the app with `NEXT_PUBLIC_E2E_LOCAL_AUTH=true`.
+That local fallback signs in through the manual email UI, mocks only the review
+creation API, and verifies that the dashboard recognizes a saved critique with a
+private source image. It is meant for laptops and CI jobs that should not depend
+on a live Firebase project.
+
+To exercise the Firebase-backed path instead, provide a dedicated email/password
+test account plus the normal Firebase web and admin environment variables:
+
+```powershell
+$env:E2E_AUTH_MODE="firebase"
+$env:E2E_EMAIL="iroguide-e2e@example.com"
+$env:E2E_PASSWORD="your-test-password"
+npm run test:e2e
+```
+
+Firebase mode uses the real manual sign-in flow, the real `/api/reviews` route,
+and account storage. Use a disposable Firebase test account because the smoke
+saves a critique to that account.

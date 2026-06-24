@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { clearE2ELocalUser, createE2ELocalUser, isE2ELocalAuthEnabled, readE2ELocalUser, writeE2ELocalUser } from "@/lib/e2e-local-auth";
 
 type AuthState = {
   user: User | null;
@@ -48,6 +49,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let unsubscribe = () => {};
     let active = true;
+
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => {
+        if (!active) return;
+        const nextUser = readE2ELocalUser();
+        setUser(nextUser);
+        setAvatarUrl(nextUser ? getStoredAvatar(nextUser) : "");
+        setProviderIds(getProviderIds(nextUser));
+        setLoading(false);
+      });
+      return () => {
+        active = false;
+      };
+    }
 
     if (!shouldInitializeAuthSession()) {
       queueMicrotask(() => {
@@ -101,6 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     setError("");
+    if (isE2ELocalAuthEnabled()) {
+      const nextUser = createE2ELocalUser("e2e@iroguide.test", "IroGuide E2E");
+      writeE2ELocalUser(nextUser);
+      setUser(nextUser);
+      setAvatarUrl(getStoredAvatar(nextUser));
+      setProviderIds(getProviderIds(nextUser));
+      return true;
+    }
+
     try {
       const [{ getFirebaseClientAuth }, { GoogleAuthProvider, signInWithPopup, signInWithRedirect }] = await Promise.all([
         import("@/lib/firebase/auth"),
@@ -126,6 +150,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     setError("");
+    if (isE2ELocalAuthEnabled()) {
+      const nextUser = createE2ELocalUser(email);
+      writeE2ELocalUser(nextUser);
+      setUser(nextUser);
+      setAvatarUrl(getStoredAvatar(nextUser));
+      setProviderIds(getProviderIds(nextUser));
+      return;
+    }
+
     try {
       const [{ getFirebaseClientAuth }, { signInWithEmailAndPassword }] = await Promise.all([
         import("@/lib/firebase/auth"),
@@ -141,6 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithEmail = useCallback(async (email: string, password: string, displayName?: string) => {
     setError("");
+    if (isE2ELocalAuthEnabled()) {
+      const nextUser = createE2ELocalUser(email, displayName);
+      writeE2ELocalUser(nextUser);
+      setUser(nextUser);
+      setAvatarUrl(getStoredAvatar(nextUser));
+      setProviderIds(getProviderIds(nextUser));
+      return;
+    }
+
     try {
       const [{ getFirebaseClientAuth }, { createUserWithEmailAndPassword, updateProfile }] = await Promise.all([
         import("@/lib/firebase/auth"),
@@ -159,6 +201,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     setError("");
+    if (isE2ELocalAuthEnabled()) {
+      clearE2ELocalUser();
+      setUser(null);
+      setAvatarUrl("");
+      setProviderIds([]);
+      return;
+    }
+
     try {
       const [{ getFirebaseClientAuth }, { signOut: firebaseSignOut }] = await Promise.all([
         import("@/lib/firebase/auth"),

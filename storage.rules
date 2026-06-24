@@ -6,8 +6,22 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    match /users/{userId}/reviews/{reviewId}/{fileName} {
-      allow read: if signedIn() && request.auth.uid == userId;
+    function ownsUserPath(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/reviews/{reviewId}/source.png {
+      allow read: if ownsUserPath(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/reviews/{reviewId}/source.jpg {
+      allow read: if ownsUserPath(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/reviews/{reviewId}/source.webp {
+      allow read: if ownsUserPath(userId);
       allow write: if false;
     }
   }

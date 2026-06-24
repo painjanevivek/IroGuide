@@ -40,5 +40,6 @@ Status: Updated on 2026-06-24
 - Verify the deployed CDN preserves all security headers.
 - Configure Firebase security rules in production and test with denied cross-user access.
 - Add provider-side spend caps and alerts for OpenRouter or any future vision provider.
-- Run a hosted DAST scan against the deployed preview before public launch.
+- Run `npm run dast:prelaunch` against staging with `DAST_REQUIRE_READY=true`
+  before public launch, then archive the generated JSON report.
 - Have privacy policy and terms reviewed by qualified counsel before broad commercial release.

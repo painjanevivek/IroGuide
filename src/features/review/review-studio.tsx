@@ -17,6 +17,7 @@ import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, rev
 import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client";
+import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
@@ -79,6 +80,7 @@ export function ReviewStudio() {
   }, [step]);
 
   useEffect(() => {
+    if (isE2ELocalAuthEnabled()) return;
     if (!user || hasLoadedDraftRef.current) return;
     let active = true;
     hasLoadedDraftRef.current = true;
@@ -108,6 +110,7 @@ export function ReviewStudio() {
   }, [brief, file, user]);
 
   useEffect(() => {
+    if (isE2ELocalAuthEnabled()) return;
     if (!user || review || !hasDraftContent({ brief, category, file, mode, step })) return;
     const timeout = window.setTimeout(() => {
       const parsed = reviewDraftSchema.safeParse({
@@ -517,6 +520,7 @@ async function postReviewSyncForm(idToken: string, storedReview: ReturnType<type
 }
 
 async function deleteActiveReviewDraft(userId: string) {
+  if (isE2ELocalAuthEnabled()) return;
   await deleteDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(userId)));
 }
 

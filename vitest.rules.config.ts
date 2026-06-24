@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from "node:url";
-import { configDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -9,6 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: [...configDefaults.exclude, "**/*.rules.test.ts", "e2e/**"],
+    include: ["src/**/*.rules.test.ts"],
+    pool: "forks",
+    fileParallelism: false,
   },
 });
