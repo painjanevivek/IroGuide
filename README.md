@@ -78,6 +78,19 @@ unsupported media rejection, API no-store headers, and sensitive response leaks.
 `npm run smoke:security` is kept as an alias. See `docs/prelaunch-dast.md` for
 the staging runbook and CI example.
 
+Run the production smoke before launch or after CDN/Firebase rule changes:
+
+```powershell
+$env:SMOKE_BASE_URL="https://iroguide.com"; npm run smoke:production
+```
+
+In addition to route and readiness checks, the production smoke verifies that the
+deployed preview preserves the security headers from `next.config.ts` and that
+live Firebase rules deny cross-user reads for saved reviews and private source
+images. It uses the same Firebase web key and Admin credential environment
+variables described above. Set `SMOKE_SECURITY_HEADERS=false` or
+`SMOKE_FIREBASE_RULES=false` only when intentionally narrowing a diagnostic run.
+
 ## Live vision setup
 
 Local demo mode is used until production vision credentials are configured.

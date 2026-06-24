@@ -35,10 +35,15 @@ Status: Updated on 2026-06-24
 - API9 Improper Inventory Management: current API route surface is documented through the Next route tree and pre-launch audit.
 - API10 Unsafe Consumption of APIs: live provider responses are parsed as JSON, schema checked, normalized, and never rendered as HTML.
 
+## Automated launch checks
+
+- Verify the deployed CDN preserves all security headers with
+  `SMOKE_BASE_URL=<preview-or-production-url> npm run smoke:production`.
+- Configure Firebase security rules in production and test denied cross-user
+  review/storage reads with `npm run smoke:production`.
+
 ## Remaining launch checks
 
-- Verify the deployed CDN preserves all security headers.
-- Configure Firebase security rules in production and test with denied cross-user access.
 - Add provider-side spend caps and alerts for OpenRouter or any future vision provider.
 - Run `npm run dast:prelaunch` against staging with `DAST_REQUIRE_READY=true`
   before public launch, then archive the generated JSON report.

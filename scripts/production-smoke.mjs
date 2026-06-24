@@ -1,15 +1,50 @@
-import { cert, deleteApp, initializeApp } from "firebase-admin/app";
+import { pathToFileURL } from "node:url";
+import { cert, deleteApp as deleteAdminApp, initializeApp as initializeAdminApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage as getAdminStorage } from "firebase-admin/storage";
 import nextEnv from "@next/env";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
+const PRODUCTION_SECURITY_CSP = [
+  "default-src 'self'",
+  "img-src 'self' blob: data: https://lh3.googleusercontent.com",
+  "font-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://www.google.com https://www.gstatic.com https://*.gstatic.com https://*.firebaseapp.com https://*.web.app",
+  "connect-src 'self' http://localhost:4000 https://*.vercel.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com",
+  "frame-src 'self' https://accounts.google.com https://apis.google.com https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com https://*.web.app",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+export const EXPECTED_SECURITY_HEADERS = Object.freeze([
+  { name: "content-security-policy", value: PRODUCTION_SECURITY_CSP },
+  { name: "strict-transport-security", value: "max-age=63072000; includeSubDomains; preload" },
+  { name: "referrer-policy", value: "strict-origin-when-cross-origin" },
+  { name: "x-content-type-options", value: "nosniff" },
+  { name: "x-frame-options", value: "DENY" },
+  { name: "permissions-policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { name: "cross-origin-opener-policy", value: "same-origin-allow-popups" },
+  { name: "cross-origin-resource-policy", value: "same-origin" },
+  { name: "x-dns-prefetch-control", value: "off" },
+  { name: "x-download-options", value: "noopen" },
+  { name: "x-permitted-cross-domain-policies", value: "none" },
+]);
+
 const baseUrl = normalizeBaseUrl(process.env.SMOKE_BASE_URL ?? "https://iroguide.com");
 const requireReady = process.env.SMOKE_REQUIRE_READY !== "false";
 const runAuthenticatedReview = process.env.SMOKE_AUTHENTICATED_REVIEW !== "false";
+const runSecurityHeaders = process.env.SMOKE_SECURITY_HEADERS !== "false";
+const runFirebaseRules = process.env.SMOKE_FIREBASE_RULES !== "false";
 const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms"];
+const securityHeaderRoutes = getListEnv("SMOKE_SECURITY_HEADER_PATHS", ["/", "/api/readiness"]);
+const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
 
 const results = [];
 
@@ -18,9 +53,19 @@ async function main() {
     await expectStatus(route, { method: "GET" }, 200);
   }
 
+  if (runSecurityHeaders) {
+    for (const route of securityHeaderRoutes) {
+      await checkSecurityHeaders(route);
+    }
+  }
+
   await expectStatus("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }, 401);
   await expectStatus("/api/reviews/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{\"documents\":[]}" }, 401);
   await checkReadiness();
+
+  if (runFirebaseRules) {
+    await firebaseRulesSmoke();
+  }
 
   if (runAuthenticatedReview) {
     await authenticatedReviewSmoke();
@@ -47,6 +92,38 @@ async function expectStatus(path, init, expectedStatus) {
   }
 }
 
+async function checkSecurityHeaders(path) {
+  const name = `security headers ${path}`;
+  try {
+    const response = await fetch(`${baseUrl}${path}`, { method: "GET" });
+    const evaluation = evaluateSecurityHeaders(response.headers);
+    addResult(name, evaluation.ok, `status=${response.status} ${evaluation.detail}`);
+  } catch (error) {
+    addResult(name, false, getErrorMessage(error));
+  }
+}
+
+export function evaluateSecurityHeaders(headers) {
+  const failures = [];
+
+  for (const expected of EXPECTED_SECURITY_HEADERS) {
+    const actual = headers.get(expected.name);
+    if (!actual) {
+      failures.push(`${expected.name}=missing`);
+      continue;
+    }
+
+    if (actual.trim() !== expected.value) {
+      failures.push(`${expected.name}=unexpected`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length > 0 ? failures.join(", ") : `headers=${EXPECTED_SECURITY_HEADERS.length}`,
+  };
+}
+
 async function checkReadiness() {
   const name = "GET /api/readiness";
   try {
@@ -59,15 +136,88 @@ async function checkReadiness() {
   }
 }
 
+async function firebaseRulesSmoke() {
+  const settings = getFirebaseSmokeSettings();
+  if (settings.missing.length > 0) {
+    addResult("Firebase cross-user rules smoke", false, `missing ${settings.missing.join(", ")}`);
+    return;
+  }
+
+  const { apiKey, projectId, serviceAccount, storageBucket } = settings;
+  const app = initializeAdminApp({
+    credential: cert(serviceAccount),
+    projectId,
+    storageBucket,
+  }, `iroguide-prod-rules-smoke-${Date.now()}`);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const bucket = getAdminStorage(app).bucket(storageBucket);
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const ownerUid = `smoke-owner-${stamp}`;
+  const otherUid = `smoke-other-${stamp}`;
+  const reviewId = `production-smoke-${stamp}`;
+  const storagePath = `users/${ownerUid}/reviews/${reviewId}/source.png`;
+
+  try {
+    const [ownerCustomToken, otherCustomToken] = await Promise.all([
+      auth.createCustomToken(ownerUid),
+      auth.createCustomToken(otherUid),
+    ]);
+    const [ownerIdToken, otherIdToken] = await Promise.all([
+      exchangeCustomToken(apiKey, ownerCustomToken),
+      exchangeCustomToken(apiKey, otherCustomToken),
+    ]);
+
+    await db.collection("reviews").doc(reviewId).set({
+      id: reviewId,
+      userId: ownerUid,
+      status: "complete",
+      savedAt: new Date().toISOString(),
+      sourceImagePath: storagePath,
+      smoke: true,
+    });
+    await bucket.file(storagePath).save(png, {
+      resumable: false,
+      metadata: {
+        cacheControl: "private, max-age=0, no-transform",
+        contentType: "image/png",
+        metadata: { smoke: "true" },
+      },
+    });
+
+    const [ownerReview, otherReview, ownerStorage, otherStorage] = await Promise.all([
+      fetchFirestoreDocument({ projectId, documentPath: `reviews/${reviewId}`, idToken: ownerIdToken }),
+      fetchFirestoreDocument({ projectId, documentPath: `reviews/${reviewId}`, idToken: otherIdToken }),
+      fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: ownerIdToken }),
+      fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: otherIdToken }),
+    ]);
+
+    const ok = ownerReview.ok
+      && isDeniedStatus(otherReview.status)
+      && ownerStorage.ok
+      && isDeniedStatus(otherStorage.status);
+    addResult(
+      "Firebase cross-user rules smoke",
+      ok,
+      `reviewOwner=${ownerReview.status} reviewOther=${otherReview.status} storageOwner=${ownerStorage.status} storageOther=${otherStorage.status}`,
+    );
+  } catch (error) {
+    addResult("Firebase cross-user rules smoke", false, getErrorMessage(error));
+  } finally {
+    await cleanupRulesSmoke({ auth, db, bucket, ownerUid, otherUid, reviewId, storagePath });
+    await deleteAdminApp(app);
+  }
+}
+
 async function authenticatedReviewSmoke() {
   const serviceAccount = getServiceAccount();
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!serviceAccount || !apiKey) {
-    addResult("authenticated review smoke", false, "missing Firebase Admin JSON or Firebase web API key");
+    addResult("authenticated review smoke", false, "missing Firebase Admin credentials or Firebase web API key");
     return;
   }
 
-  const app = initializeApp({ credential: cert(serviceAccount), projectId: serviceAccount.projectId }, `iroguide-prod-smoke-${Date.now()}`);
+  const app = initializeAdminApp({ credential: cert(serviceAccount), projectId: serviceAccount.projectId }, `iroguide-prod-smoke-${Date.now()}`);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const uid = `iroguide-prod-smoke-${Date.now()}`;
@@ -92,7 +242,7 @@ async function authenticatedReviewSmoke() {
     addResult("authenticated review smoke", false, getErrorMessage(error));
   } finally {
     await cleanupSmokeUser({ auth, db, uid });
-    await deleteApp(app);
+    await deleteAdminApp(app);
   }
 }
 
@@ -108,7 +258,6 @@ async function exchangeCustomToken(apiKey, customToken) {
 }
 
 async function submitReview(idToken) {
-  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
   const form = new FormData();
   form.append("category", "logo");
   form.append("mode", "mentor");
@@ -128,6 +277,25 @@ async function submitReview(idToken) {
   });
 }
 
+async function fetchFirestoreDocument({ projectId, documentPath, idToken }) {
+  const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${documentPath}`;
+  return fetch(url, { headers: { Authorization: `Bearer ${idToken}` } });
+}
+
+async function fetchStorageMetadata({ bucketName, storagePath, idToken }) {
+  const url = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucketName)}/o/${encodeURIComponent(storagePath)}`;
+  return fetch(url, { headers: { Authorization: `Firebase ${idToken}` } });
+}
+
+async function cleanupRulesSmoke({ auth, db, bucket, ownerUid, otherUid, reviewId, storagePath }) {
+  await Promise.allSettled([
+    db.collection("reviews").doc(reviewId).delete(),
+    bucket.file(storagePath).delete({ ignoreNotFound: true }),
+    auth.deleteUser(ownerUid),
+    auth.deleteUser(otherUid),
+  ]);
+}
+
 async function cleanupSmokeUser({ auth, db, uid }) {
   try {
     const snapshot = await db.collection("reviews").where("userId", "==", uid).limit(20).get();
@@ -139,23 +307,57 @@ async function cleanupSmokeUser({ auth, db, uid }) {
   } catch {}
 }
 
-function getServiceAccount() {
-  const raw = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON ?? getServiceAccountJsonFromBase64();
+function getFirebaseSmokeSettings(env = process.env) {
+  const serviceAccount = getServiceAccount(env);
+  const projectId = serviceAccount?.projectId ?? getEnvValue(env, "FIREBASE_ADMIN_PROJECT_ID") ?? getEnvValue(env, "NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  const apiKey = getEnvValue(env, "NEXT_PUBLIC_FIREBASE_API_KEY");
+  const storageBucket = getEnvValue(env, "FIREBASE_ADMIN_STORAGE_BUCKET")
+    ?? getEnvValue(env, "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET")
+    ?? (projectId ? `${projectId}.appspot.com` : null);
+  const missing = [];
+
+  if (!serviceAccount) missing.push("Firebase Admin credentials");
+  if (!apiKey) missing.push("NEXT_PUBLIC_FIREBASE_API_KEY");
+  if (!projectId) missing.push("Firebase project id");
+  if (!storageBucket) missing.push("Firebase storage bucket");
+
+  return { apiKey, missing, projectId, serviceAccount, storageBucket };
+}
+
+export function getServiceAccount(env = process.env) {
+  return parseServiceAccount(getEnvValue(env, "FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON") ?? getServiceAccountJsonFromBase64(env))
+    ?? getSplitServiceAccount(env);
+}
+
+export function parseServiceAccount(raw) {
   if (!raw) return null;
+
   try {
     const parsed = JSON.parse(raw);
-    return {
+    const serviceAccount = {
       projectId: parsed.project_id ?? parsed.projectId,
       clientEmail: parsed.client_email ?? parsed.clientEmail,
-      privateKey: parsed.private_key ?? parsed.privateKey,
+      privateKey: normalizePrivateKey(parsed.private_key ?? parsed.privateKey),
     };
+
+    return isCompleteServiceAccount(serviceAccount) ? serviceAccount : null;
   } catch {
     return null;
   }
 }
 
-function getServiceAccountJsonFromBase64() {
-  const encodedValue = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64;
+function getSplitServiceAccount(env) {
+  const serviceAccount = {
+    projectId: getEnvValue(env, "FIREBASE_ADMIN_PROJECT_ID") ?? getEnvValue(env, "NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
+    clientEmail: getEnvValue(env, "FIREBASE_ADMIN_CLIENT_EMAIL"),
+    privateKey: normalizePrivateKey(getEnvValue(env, "FIREBASE_ADMIN_PRIVATE_KEY")),
+  };
+
+  return isCompleteServiceAccount(serviceAccount) ? serviceAccount : null;
+}
+
+function getServiceAccountJsonFromBase64(env = process.env) {
+  const encodedValue = getEnvValue(env, "FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64");
   if (!encodedValue) return null;
 
   try {
@@ -165,16 +367,41 @@ function getServiceAccountJsonFromBase64() {
   }
 }
 
+function isCompleteServiceAccount(serviceAccount) {
+  return Boolean(serviceAccount?.projectId && serviceAccount.clientEmail && serviceAccount.privateKey);
+}
+
+function normalizePrivateKey(value) {
+  return typeof value === "string" ? value.replace(/\\n/g, "\n") : value;
+}
+
 function addResult(name, ok, detail = "") {
   results.push({ name, ok, detail });
 }
 
-function normalizeBaseUrl(value) {
+export function normalizeBaseUrl(value) {
   return value.replace(/\/+$/, "");
+}
+
+function getListEnv(name, fallback) {
+  const value = process.env[name];
+  if (!value) return fallback;
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function getEnvValue(env, name) {
+  const value = env[name];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function isDeniedStatus(status) {
+  return status === 401 || status === 403 || status === 404;
 }
 
 function getErrorMessage(error) {
   return error instanceof Error ? error.message : "unknown error";
 }
 
-await main();
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  await main();
+}
