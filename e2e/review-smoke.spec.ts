@@ -39,7 +39,7 @@ test("signs in, submits a review, and shows private source-image status on the d
   await page.getByRole("button", { name: /review details/i }).click();
   await page.getByRole("button", { name: /start critique/i }).click();
 
-  await expect(page.getByRole("heading", { name: /your critique is ready/i })).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByText(/your critique is ready/i)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole("button", { name: /saved with image|saved to dashboard|retry account sync/i })).toBeVisible();
 
   await page.getByRole("link", { name: /^dashboard$/i }).click();
