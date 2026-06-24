@@ -13,6 +13,10 @@ export function AuthPage() {
   const { user, loading, error } = useAuth();
 
   useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
+
+  useEffect(() => {
     if (!loading && user) router.replace("/dashboard");
   }, [loading, router, user]);
 

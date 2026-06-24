@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, LoaderCircle, Mail, ShieldCheck } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
 
 type EmailAuthPageProps = {
@@ -12,13 +12,21 @@ type EmailAuthPageProps = {
 
 export function EmailAuthPage({ mode }: EmailAuthPageProps) {
   const router = useRouter();
-  const { error, signInWithEmail, signUpWithEmail } = useAuth();
+  const { error, signInWithEmail, signUpWithEmail, user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const isSignUp = mode === "sign-up";
+
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
+
+  useEffect(() => {
+    if (user) router.replace("/dashboard");
+  }, [router, user]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +38,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
       } else {
         await signInWithEmail(email, password);
       }
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (submitError) {
       setFormError(submitError instanceof Error ? submitError.message : "Authentication failed. Please try again.");
     } finally {

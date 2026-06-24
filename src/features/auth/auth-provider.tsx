@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { AccountSyncManager } from "./account-sync-manager";
 import { clearE2ELocalUser, createE2ELocalUser, isE2ELocalAuthEnabled, readE2ELocalUser, writeE2ELocalUser } from "@/lib/e2e-local-auth";
 
 type AuthState = {
@@ -85,7 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProviderIds(getProviderIds(nextUser));
             setLoading(false);
           });
-          void getRedirectResult(auth).catch((redirectError) => {
+          void getRedirectResult(auth).then((credential) => {
+            if (!active || !credential?.user) return;
+            setUser(credential.user);
+            setAvatarUrl(getStoredAvatar(credential.user));
+            setProviderIds(getProviderIds(credential.user));
+            setLoading(false);
+          }).catch((redirectError) => {
             if (!active) return;
             if (getAuthErrorCode(redirectError) === "auth/internal-error") {
               return;
@@ -135,6 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const auth = getFirebaseClientAuth();
       try {
         const credential = await signInWithPopup(auth, provider);
+        setUser(credential.user);
+        setAvatarUrl(getStoredAvatar(credential.user));
+        setProviderIds(getProviderIds(credential.user));
         return Boolean(credential.user);
       } catch (popupError) {
         if (!shouldFallbackToGoogleRedirect(popupError)) throw popupError;
@@ -164,7 +174,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         import("@/lib/firebase/auth"),
         import("firebase/auth"),
       ]);
-      await signInWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
+      const credential = await signInWithEmailAndPassword(getFirebaseClientAuth(), email.trim(), password);
+      setUser(credential.user);
+      setAvatarUrl(getStoredAvatar(credential.user));
+      setProviderIds(getProviderIds(credential.user));
     } catch (signInError) {
       const message = getAuthErrorMessage(signInError);
       setError(message);
@@ -192,6 +205,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (displayName?.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
       }
+      setUser(credential.user);
+      setAvatarUrl(getStoredAvatar(credential.user));
+      setProviderIds(getProviderIds(credential.user));
     } catch (signUpError) {
       const message = getAuthErrorMessage(signUpError);
       setError(message);
@@ -336,7 +352,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [avatarUrl, changePassword, deleteAccount, error, linkGoogleProvider, loading, providerIds, purgeReviewData, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <AccountSyncManager user={user} />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

@@ -12,13 +12,12 @@ import { getRecentReviewSummary } from "@/domain/dashboard-review";
 import { calculateProgress, type ProgressReview } from "@/domain/progress";
 import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
-import { reviewSyncResponseSchema } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
-import { postJsonWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
-import { cacheReviewDocument, getCachedReviewDocuments, getPendingLocalReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
+import { getCachedReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
+import { syncPendingAccountReviews } from "@/lib/review-sync";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
@@ -45,15 +44,11 @@ export function Dashboard() {
 
     async function syncPendingReviews() {
       if (!user) return;
-      const pendingDocuments = getPendingLocalReviewDocuments(user.uid);
-      if (pendingDocuments.length === 0) {
-        refreshCachedReviews();
-        return;
-      }
-
       try {
-        const idToken = await user.getIdToken();
-        await syncLocalReviewDocuments(idToken, pendingDocuments);
+        await syncPendingAccountReviews({
+          getIdToken: () => user.getIdToken(),
+          userId: user.uid,
+        });
       } catch {
         // Keep pending reviews cached locally; the next dashboard visit or online event retries.
       } finally {
@@ -309,38 +304,6 @@ function toStoredCachedReview(data: ReturnType<typeof getCachedReviewDocuments>[
 
 function readCachedStoredReviews(userId: string) {
   return getCachedReviewDocuments(userId).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null);
-}
-
-async function syncLocalReviewDocuments(idToken: string, documents: StoredReviewDocument[]) {
-  if (documents.length === 0) return;
-  const payload = await postJsonWithFallback({
-    path: "/api/reviews/sync",
-    unavailableMessage: "Review sync is not available right now.",
-    failureMessage: "Review sync failed.",
-    init: {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${idToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ documents }),
-    },
-  });
-  const syncResult = reviewSyncResponseSchema.parse(payload);
-  const syncedIds = new Set(syncResult.savedIds);
-  const sourceImagesById = new Map(syncResult.sourceImages.map((item) => [item.id, item.sourceImage]));
-
-  for (const reviewDocument of documents) {
-    if (syncedIds.has(reviewDocument.id)) {
-      const sourceImage = sourceImagesById.get(reviewDocument.id) ?? reviewDocument.sourceImage;
-      cacheReviewDocument({
-        ...reviewDocument,
-        ...(sourceImage ? { sourceImage } : {}),
-        syncState: "cloud",
-        updatedAt: new Date().toISOString(),
-      });
-    }
-  }
 }
 
 function mergeStoredReviews(cloudReviews: StoredReview[], cachedReviews: StoredReview[]) {
