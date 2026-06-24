@@ -38,12 +38,20 @@ export function AnnotationOverlay({ review, activeIssueId, onActiveIssueChange }
         <div className="annotation-layer" aria-label="Visual critique annotations">
           {annotations.map((annotation) => {
             const isActive = activeIssueId === annotation.issueId;
+            const isNearRightEdge = annotation.x + annotation.width > 0.72;
+            const isNearTopEdge = annotation.y < 0.16;
+            const markerClassName = [
+              "annotation-marker",
+              isActive ? "is-active" : "",
+              isNearRightEdge ? "edge-right" : "",
+              isNearTopEdge ? "edge-top" : "",
+            ].filter(Boolean).join(" ");
 
             return (
               <button
                 type="button"
                 key={annotation.id}
-                className={`annotation-marker${isActive ? " is-active" : ""}`}
+                className={markerClassName}
                 style={{
                   left: `${annotation.x * 100}%`,
                   top: `${annotation.y * 100}%`,
