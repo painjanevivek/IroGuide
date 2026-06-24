@@ -43,6 +43,13 @@ const modeCopy = {
   direct: ["Direct", "Sharp and honest, never personal."],
 } as const;
 
+function getSourcePreviewCaption(preview: string | null, sourceImage: ReviewSourceImage | null) {
+  if (preview && sourceImage) return "Private account image";
+  if (preview) return "Private local preview";
+  if (sourceImage) return "Source image still syncing";
+  return "Source image unavailable";
+}
+
 export function ReviewStudio() {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -358,13 +365,21 @@ export function ReviewResult({
       <div className="result-layout">
         <aside className="result-preview">
           <button className="back-link light-button" onClick={onRestart}><ArrowLeft /> New review</button>
-          {preview && (
-            <div className="result-image">
-              <Image src={preview} alt="Reviewed design" fill unoptimized />
-              <AnnotationOverlay review={review} activeIssueId={activeIssueId} onActiveIssueChange={setActiveIssueId} />
-            </div>
-          )}
-          <div className="preview-caption"><span className="mono-label">SOURCE DESIGN</span><p>{sourceImage ? "Private account image" : "Private local preview"}</p></div>
+          <div className={`result-image${preview ? "" : " result-image-empty"}`}>
+            {preview ? (
+              <>
+                <Image src={preview} alt="Reviewed design" fill unoptimized />
+                <AnnotationOverlay review={review} activeIssueId={activeIssueId} onActiveIssueChange={setActiveIssueId} />
+              </>
+            ) : (
+              <div>
+                <FileImage aria-hidden="true" />
+                <h2>Source image preview unavailable.</h2>
+                <p>{sourceImage ? "The critique is saved, but the private source image is still syncing or could not be loaded on this device." : "This saved critique does not include a source image preview. The review notes remain available."}</p>
+              </div>
+            )}
+          </div>
+          <div className="preview-caption"><span className="mono-label">SOURCE DESIGN</span><p>{getSourcePreviewCaption(preview, sourceImage)}</p></div>
         </aside>
         <section className="result-content">
           <Reveal>
