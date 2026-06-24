@@ -362,7 +362,7 @@ function ReviewResult({
         <section className="result-content">
           <Reveal>
             <div className="result-hero">
-              <div>
+              <div className="result-hero-copy">
                 <p className="eyebrow">Your critique is ready</p>
                 <h1>{review.summary.split(".")[0]}.</h1>
                 <p>{review.summary}</p>
