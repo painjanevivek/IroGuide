@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Manrope, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { siteConfig } from "@/config/site";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
@@ -7,21 +7,20 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
 
-const display = Space_Grotesk({
+const display = Geist({
   variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
 });
 
-const body = Manrope({
+const body = Geist({
   variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
 });
 
-const mono = IBM_Plex_Mono({
+const mono = Geist_Mono({
   variable: "--font-mono",
-  weight: ["400", "500", "600"],
   subsets: ["latin"],
   display: "swap",
 });
