@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "@/app/route-styles.css";
 import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "IroGuide Privacy Policy",
@@ -55,6 +56,16 @@ export default function PrivacyPage() {
           image bytes or critique text.
         </p>
 
+        <h2>Cookies and browser storage</h2>
+        <p>
+          IroGuide uses essential cookies and browser storage to keep sign-in working, remember the cookie notice choice,
+          sync private review drafts, preserve local preferences such as community sample interactions, and run privacy-aware
+          product analytics after consent. Analytics events are used to understand page usage and core product actions, not
+          to store uploaded designs, review text, passwords, or private prompts. We do not use advertising cookies. Blocking
+          cookies or site data may prevent Google sign-in, account sync, saved local drafts, or analytics preferences from
+          working correctly.
+        </p>
+
         <h2>Security baseline</h2>
         <ul>
           <li>Authentication uses Firebase-supported sign-in methods.</li>
@@ -65,7 +76,7 @@ export default function PrivacyPage() {
 
         <h2>Contact</h2>
         <p>
-          For privacy or account questions beyond the profile controls, use the <Link href="/contact">contact page</Link>.
+          For privacy or account questions beyond the profile controls, email {siteConfig.supportEmail} or use the <Link href="/contact">contact page</Link>.
           This privacy notice should be reviewed by qualified counsel before broad commercial launch.
         </p>
       </main>

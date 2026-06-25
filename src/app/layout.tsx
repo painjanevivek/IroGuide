@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import { siteConfig } from "@/config/site";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
+import { CookieConsent } from "@/components/cookie-consent";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
 
@@ -79,7 +82,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <a className="skip-link" href="#app-content">Skip to main content</a>
         <AuthProvider>
-          <div id="app-content">{children}</div>
+          <div id="app-content">
+            <BoneyardSiteShell>{children}</BoneyardSiteShell>
+          </div>
+          <AnalyticsTracker />
+          <CookieConsent />
         </AuthProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "@/app/route-styles.css";
 import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "IroGuide Terms of Service",
@@ -59,7 +60,13 @@ export default function TermsPage() {
         <p>
           IroGuide may limit, suspend, or remove accounts or content that violates these terms or threatens service
           integrity. Signed-in users can delete account data and saved reviews from the <Link href="/profile">profile page</Link>.
-          Features may change as the product evolves.
+          Features may change as the product evolves. For account support, contact {siteConfig.supportEmail}.
+        </p>
+
+        <h2>Bug reports and support</h2>
+        <p>
+          Product bugs, broken review flows, upload issues, or sync problems can be reported from the <Link href="/contact#bug-report">bug report option</Link>.
+          Include the page URL, steps to reproduce, expected result, actual result, and browser details so the issue can be investigated quickly.
         </p>
 
         <h2>Commercial readiness</h2>

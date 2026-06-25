@@ -85,9 +85,9 @@ export function LandingPage() {
           <h1>IroGuide<br /><span className="display-accent">Design critique.</span></h1>
           <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
           <div className="hero-actions">
-            <Link className="button button-large" href="/review/new" prefetch={false}>Review my design <WandSparkles size={19} /></Link>
+            <Link className="button button-large" href="/review/new" prefetch={false} data-analytics-event="hero_review_design_click">Review my design <WandSparkles size={19} /></Link>
             <LandingHeroAuthButton />
-            <Link className="button-quiet" href="#example">See a real critique <ArrowRight size={18} /></Link>
+            <Link className="button-quiet" href="#example" data-analytics-event="hero_example_click">See a real critique <ArrowRight size={18} /></Link>
           </div>
           <div className="micro-proof">
             <span><Check size={15} /> Context-aware</span>
@@ -151,7 +151,7 @@ export function LandingPage() {
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
         <div className="mode-grid">
-          {modes.map((mode) => <article className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false}>Try {mode.title} mode <ChevronRight size={17} /></Link></article>)}
+          {modes.map((mode) => <article className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false} data-analytics-event="mode_review_click" data-analytics-label={mode.title}>Try {mode.title} mode <ChevronRight size={17} /></Link></article>)}
         </div>
       </section>
 
@@ -169,7 +169,7 @@ export function LandingPage() {
           <div className="score-bars">
             {[['Composition', 7], ['Typography', 6], ['Hierarchy', 5], ['Color', 8]].map(([label, score]) => <div key={String(label)}><span>{label}</span><i><b style={{width: `${Number(score) * 10}%`}} /></i><strong>{score}</strong></div>)}
           </div>
-          <Link className="button button-dark" href="/review/new" prefetch={false}>Get feedback on my work <ArrowRight size={18} /></Link>
+          <Link className="button button-dark" href="/review/new" prefetch={false} data-analytics-event="example_review_click">Get feedback on my work <ArrowRight size={18} /></Link>
         </div>
       </section>
 

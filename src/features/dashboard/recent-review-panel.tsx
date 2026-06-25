@@ -29,8 +29,8 @@ export function RecentReviewPanel({ review, reviewHref }: { review: DashboardRev
 
       <div className="recent-review-actions">
         <span className="recent-review-storage">{review.sourceImageSaved ? "Private source image saved" : "Source image still syncing"}</span>
-        <Link className="button button-dark" href={reviewHref}>Open critique <ArrowRight size={17} /></Link>
-        <Link className="button-secondary" href="/review/new?revision=latest">Review next version <RotateCcw size={16} /></Link>
+        <Link className="button button-dark" href={reviewHref} data-analytics-event="dashboard_open_recent_review">Open critique <ArrowRight size={17} /></Link>
+        <Link className="button-secondary" href="/review/new?revision=latest" data-analytics-event="dashboard_review_next_version">Review next version <RotateCcw size={16} /></Link>
       </div>
     </section>
   );

@@ -1,0 +1,95 @@
+{
+  "breakpoints": {
+    "390": {
+      "name": "iroguide-site-shell",
+      "viewportWidth": 390,
+      "width": 390,
+      "height": 2686,
+      "bones": [
+        [
+          0,
+          0,
+          100,
+          2686,
+          8,
+          true
+        ],
+        [
+          0,
+          0,
+          100,
+          76,
+          8
+        ],
+        [
+          0,
+          76,
+          100,
+          2610,
+          8
+        ]
+      ]
+    },
+    "768": {
+      "name": "iroguide-site-shell",
+      "viewportWidth": 768,
+      "width": 768,
+      "height": 1874,
+      "bones": [
+        [
+          0,
+          0,
+          100,
+          1874,
+          8,
+          true
+        ],
+        [
+          0,
+          0,
+          100,
+          76,
+          8
+        ],
+        [
+          0,
+          76,
+          100,
+          1798,
+          8
+        ]
+      ]
+    },
+    "1280": {
+      "name": "iroguide-site-shell",
+      "viewportWidth": 1280,
+      "width": 1280,
+      "height": 2044,
+      "bones": [
+        [
+          0,
+          0,
+          100,
+          2044,
+          8,
+          true
+        ],
+        [
+          0,
+          0,
+          100,
+          76,
+          8
+        ],
+        [
+          18.75,
+          76,
+          62.5,
+          1968,
+          8
+        ]
+      ]
+    }
+  },
+  "_hash": "8f012095caf845bd5ea7cc131e80c003"
+}

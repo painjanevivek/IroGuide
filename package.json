@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
+    "boneyard-js": "^1.8.2",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.1.0",
     "framer-motion": "^12.40.0",

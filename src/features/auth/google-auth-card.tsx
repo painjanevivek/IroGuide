@@ -48,10 +48,10 @@ export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", se
 
       <div className="google-auth-card">
         {visibleError && <p className="form-error" role="alert">{visibleError}</p>}
-        <button className="button button-dark google-button" type="button" onClick={() => void onGoogleClick()} disabled={submitting}>
+        <button className="button button-dark google-button" type="button" data-analytics-event="auth_google_click" data-analytics-label={intent} onClick={() => void onGoogleClick()} disabled={submitting}>
           {submitting ? <><LoaderCircle className="spin" /> Opening Google...</> : <><GoogleMark /> Continue with Google</>}
         </button>
-        <Link className="button-secondary" href={isSignUp ? "/auth/sign-up" : "/auth/sign-in"}>
+        <Link className="button-secondary" href={isSignUp ? "/auth/sign-up" : "/auth/sign-in"} data-analytics-event="auth_manual_click" data-analytics-label={intent}>
           {isSignUp ? "Sign up manually with email" : "Sign in manually with email"}
         </Link>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>

@@ -9,6 +9,7 @@ const scriptSrc = [
   "https://accounts.google.com",
   "https://www.google.com",
   "https://www.gstatic.com",
+  "https://www.googletagmanager.com",
   "https://*.gstatic.com",
   "https://*.firebaseapp.com",
   "https://*.web.app",
@@ -30,6 +31,9 @@ const connectSrc = [
   "https://apis.google.com",
   "https://www.google.com",
   "https://www.gstatic.com",
+  "https://www.google-analytics.com",
+  "https://*.google-analytics.com",
+  "https://region1.google-analytics.com",
 ].join(" ");
 
 const frameSrc = [
@@ -84,7 +88,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [{ source: "/(.*)", headers: [
-      { key: "Content-Security-Policy", value: `default-src 'self'; img-src 'self' blob: data: https://lh3.googleusercontent.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src ${scriptSrc}; connect-src ${connectSrc}; frame-src ${frameSrc}; object-src 'none'; base-uri 'self'; form-action ${formAction}; frame-ancestors 'none'; upgrade-insecure-requests` },
+      { key: "Content-Security-Policy", value: `default-src 'self'; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com https://*.google-analytics.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src ${scriptSrc}; connect-src ${connectSrc}; frame-src ${frameSrc}; object-src 'none'; base-uri 'self'; form-action ${formAction}; frame-ancestors 'none'; upgrade-insecure-requests` },
       { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "X-Content-Type-Options", value: "nosniff" },

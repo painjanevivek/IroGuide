@@ -24,6 +24,7 @@ type AuthState = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   linkGoogleProvider: () => Promise<void>;
@@ -215,6 +216,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    setError("");
+    try {
+      const [{ getFirebaseClientAuth }, { sendPasswordResetEmail }] = await Promise.all([
+        import("@/lib/firebase/auth"),
+        import("firebase/auth"),
+      ]);
+      await sendPasswordResetEmail(getFirebaseClientAuth(), email.trim(), {
+        url: `${window.location.origin}/auth/sign-in`,
+      });
+    } catch (resetError) {
+      const message = getAuthErrorMessage(resetError);
+      setError(message);
+      throw new Error(message);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     setError("");
     if (isE2ELocalAuthEnabled()) {
@@ -348,8 +366,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const value = useMemo<AuthState>(
-    () => ({ user, avatarUrl, providerIds, loading, error, deleteAccount, purgeReviewData, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, changePassword, linkGoogleProvider, updateAvatar, resetAvatar }),
-    [avatarUrl, changePassword, deleteAccount, error, linkGoogleProvider, loading, providerIds, purgeReviewData, resetAvatar, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
+    () => ({ user, avatarUrl, providerIds, loading, error, deleteAccount, purgeReviewData, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword, signOut, changePassword, linkGoogleProvider, updateAvatar, resetAvatar }),
+    [avatarUrl, changePassword, deleteAccount, error, linkGoogleProvider, loading, providerIds, purgeReviewData, resetAvatar, resetPassword, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, updateAvatar, user],
   );
 
   return (

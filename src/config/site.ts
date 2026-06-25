@@ -22,6 +22,8 @@ export const siteConfig = {
   creator: "IroGuide",
   repositoryUrl: "https://github.com/painjanevivek/IroGuide",
   contactUrl: "/contact",
+  supportEmail: "support@iroguide.com",
+  bugReportEmail: "bugs@iroguide.com",
   navigation: [
     { label: "How it works", href: "/#how-it-works" },
     { label: "Modes", href: "/#modes" },
@@ -37,6 +39,7 @@ export const siteConfig = {
     { label: "About", href: "/about" },
     { label: "Projects", href: "/projects" },
     { label: "Contact", href: "/contact" },
+    { label: "Bug report", href: "/contact#bug-report" },
     { label: "Pricing", href: "/pricing" },
     { label: "Community", href: "/community" },
     { label: "Beta", href: "/beta" },
