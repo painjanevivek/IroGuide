@@ -3,10 +3,32 @@
 import { registerBones } from 'boneyard-js'
 import { configureBoneyard } from 'boneyard-js/react'
 
-import _iroguide_site_shell from './iroguide-site-shell.bones.json'
+import _iroguide_route_home from './iroguide-route-home.bones.json'
+import _iroguide_route_community from './iroguide-route-community.bones.json'
+import _iroguide_route_projects from './iroguide-route-projects.bones.json'
+import _iroguide_route_pricing from './iroguide-route-pricing.bones.json'
+import _iroguide_route_about from './iroguide-route-about.bones.json'
+import _iroguide_route_contact from './iroguide-route-contact.bones.json'
+import _iroguide_route_dashboard from './iroguide-route-dashboard.bones.json'
+import _iroguide_route_auth from './iroguide-route-auth.bones.json'
+import _iroguide_route_review_new from './iroguide-route-review-new.bones.json'
+import _iroguide_route_beta from './iroguide-route-beta.bones.json'
+import _iroguide_route_privacy from './iroguide-route-privacy.bones.json'
+import _iroguide_route_terms from './iroguide-route-terms.bones.json'
 
 configureBoneyard({"color":"rgba(9, 9, 15, 0.09)","darkColor":"rgba(255, 255, 255, 0.12)","animate":"shimmer","shimmerColor":"rgba(255, 255, 255, 0.45)","darkShimmerColor":"rgba(255, 255, 255, 0.18)","speed":"1.65s","shimmerAngle":108,"transition":260})
 
 registerBones({
-  "iroguide-site-shell": _iroguide_site_shell,
+  "iroguide-route-home": _iroguide_route_home,
+  "iroguide-route-community": _iroguide_route_community,
+  "iroguide-route-projects": _iroguide_route_projects,
+  "iroguide-route-pricing": _iroguide_route_pricing,
+  "iroguide-route-about": _iroguide_route_about,
+  "iroguide-route-contact": _iroguide_route_contact,
+  "iroguide-route-dashboard": _iroguide_route_dashboard,
+  "iroguide-route-auth": _iroguide_route_auth,
+  "iroguide-route-review-new": _iroguide_route_review_new,
+  "iroguide-route-beta": _iroguide_route_beta,
+  "iroguide-route-privacy": _iroguide_route_privacy,
+  "iroguide-route-terms": _iroguide_route_terms,
 })

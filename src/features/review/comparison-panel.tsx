@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowRight, Check, FileImage, LoaderCircle, RotateCcw, TrendingUp, Upload, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, FileImage, RotateCcw, TrendingUp, Upload, X } from "lucide-react";
+import { ProgressFlow } from "@/components/progress-flow";
 import { comparisonOutputSchema, type ComparisonOutput } from "@/domain/comparison";
 import type { ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
@@ -10,6 +11,12 @@ import { postJsonWithFallback } from "@/lib/api-client";
 
 const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+const COMPARISON_STEPS = [
+  { title: "Checking revision", detail: "Confirming the revised image metadata and signed-in session." },
+  { title: "Reading changes", detail: "Comparing the new version against the original critique context." },
+  { title: "Scoring movement", detail: "Estimating improvements, unresolved issues, and regressions." },
+  { title: "Preparing next action", detail: "Turning the comparison into one practical follow-up." },
+] as const;
 
 export function ComparisonPanel({ review, originalPreview }: { review: ReviewOutput; originalPreview: string | null }) {
   const { user } = useAuth();
@@ -105,8 +112,17 @@ export function ComparisonPanel({ review, originalPreview }: { review: ReviewOut
           <input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={(event: ChangeEvent<HTMLInputElement>) => { acceptFile(event.target.files?.[0]); event.target.value = ""; }} />
           <div className="comparison-actions">
             <button type="button" className="button-secondary" onClick={() => inputRef.current?.click()}><RotateCcw size={16} /> {file ? "Replace revision" : "Choose revision"}</button>
-            <button type="button" className="button button-lime" disabled={!file || submitting} onClick={compareRevision}>{submitting ? <><LoaderCircle className="spin" /> Comparing...</> : <>Compare version <ArrowRight size={17} /></>}</button>
+            <button type="button" className="button button-lime" disabled={!file || submitting} onClick={compareRevision}>{submitting ? "Comparing..." : <>Compare version <ArrowRight size={17} /></>}</button>
           </div>
+          {submitting && (
+            <ProgressFlow
+              backgroundNote="Still comparing. Your selected revision stays ready if this needs a retry."
+              longRunningMs={14000}
+              stageIntervalMs={1700}
+              steps={COMPARISON_STEPS}
+              title="Revision comparison in progress"
+            />
+          )}
           {error && <p className="form-error" role="alert"><AlertCircle /> {error}</p>}
         </div>
       </div>

@@ -4,11 +4,10 @@ import { Skeleton } from "boneyard-js/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import "@/bones/registry";
-import { useAuth } from "@/features/auth/auth-provider";
 
 export function BoneyardSiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { loading: authLoading } = useAuth();
+  const skeletonName = getRouteSkeletonName(pathname);
   const [pendingPathname, setPendingPathname] = useState<string | null>(null);
   const routeLoading = pendingPathname !== null && pendingPathname !== pathname;
 
@@ -34,8 +33,8 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
 
   return (
     <Skeleton
-      name="iroguide-site-shell"
-      loading={authLoading || routeLoading}
+      name={skeletonName}
+      loading={routeLoading}
       className="boneyard-site-shell"
       fallback={<IroGuideSkeletonScreen />}
       transition={260}
@@ -43,6 +42,12 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
       <div onClick={handleClick}>{children}</div>
     </Skeleton>
   );
+}
+
+function getRouteSkeletonName(pathname: string | null) {
+  if (!pathname || pathname === "/") return "iroguide-route-home";
+  const routeKey = pathname.replace(/^\/+|\/+$/g, "").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
+  return `iroguide-route-${routeKey || "home"}`;
 }
 
 function IroGuideSkeletonScreen() {

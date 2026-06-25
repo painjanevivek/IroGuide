@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   Bookmark,
@@ -35,6 +35,7 @@ import { communityCommentSchema, communityPostSchema, type CommunityPostInput } 
 import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
+import { createOptimisticMutationScope, runOptimisticMutation } from "@/lib/optimistic-mutation";
 
 type SavedReview = {
   savedDocId: string;
@@ -66,6 +67,10 @@ type PostInteraction = {
 type InteractionMap = Record<string, PostInteraction>;
 type CommentMap = Record<string, CommunityComment[]>;
 type PendingInteractionMap = Record<string, Partial<Record<keyof PostInteraction, boolean>>>;
+type InteractionRetry = {
+  key: keyof PostInteraction;
+  post: CommunityPost;
+};
 
 type CommunityNotification = {
   id: string;
@@ -129,6 +134,8 @@ const fallbackPosts: CommunityPost[] = [
 
 export function CommunityBoard() {
   const { user, avatarUrl } = useAuth();
+  const interactionsRef = useRef<InteractionMap>({});
+  const interactionMutationScopeRef = useRef(createOptimisticMutationScope());
   const [activeView, setActiveView] = useState<CommunityView>("home");
   const [savedReviews, setSavedReviews] = useState<SavedReview[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -147,6 +154,11 @@ export function CommunityBoard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const [interactionRetry, setInteractionRetry] = useState<InteractionRetry | null>(null);
+
+  useEffect(() => {
+    interactionsRef.current = interactions;
+  }, [interactions]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -301,38 +313,57 @@ export function CommunityBoard() {
   }
 
   async function toggleInteraction(post: CommunityPost, key: keyof PostInteraction) {
-    const existing = interactions[post.id] ?? emptyInteraction;
+    if (pendingInteractions[post.id]?.[key]) return;
+    const existing = interactionsRef.current[post.id] ?? emptyInteraction;
     const nextValue = !existing[key];
 
-    setInteractions((current) => {
+    const applyInteraction = (current: InteractionMap) => {
       const currentPostInteraction = current[post.id] ?? emptyInteraction;
       return { ...current, [post.id]: { ...currentPostInteraction, [key]: nextValue } };
-    });
+    };
 
     if (isSamplePost(post)) {
+      commitInteractions(applyInteraction(interactionsRef.current));
       setShareMessage(getLocalInteractionMessage(key));
+      setInteractionRetry(null);
       return;
     }
 
     if (!user) {
+      commitInteractions(applyInteraction(interactionsRef.current));
       setShareMessage("Sign in to keep community reactions across devices.");
+      setInteractionRetry(null);
       return;
     }
 
+    const mutationToken = interactionMutationScopeRef.current.start(`${post.id}:${key}`);
     setPendingInteractions((current) => setPendingInteraction(current, post.id, key, true));
+    setInteractionRetry(null);
+    setShareMessage(nextValue ? "Updating community action..." : "Removing community action...");
 
-    try {
-      await persistPostInteraction(post.id, user.uid, key, nextValue);
+    const mutationResult = await runOptimisticMutation<InteractionMap, void>({
+      apply: applyInteraction,
+      commit: commitInteractions,
+      getState: () => interactionsRef.current,
+      isCurrent: () => interactionMutationScopeRef.current.isCurrent(mutationToken),
+      run: () => persistPostInteraction(post.id, user.uid, key, nextValue),
+    });
+
+    if (mutationResult.status === "success") {
       setShareMessage(getPersistedInteractionMessage(key, nextValue));
-    } catch (interactionError) {
-      setInteractions((current) => {
-        const currentPostInteraction = current[post.id] ?? emptyInteraction;
-        return { ...current, [post.id]: { ...currentPostInteraction, [key]: existing[key] } };
-      });
-      setShareMessage(interactionError instanceof Error ? interactionError.message : "Could not update this community action.");
-    } finally {
-      setPendingInteractions((current) => setPendingInteraction(current, post.id, key, false));
+      setInteractionRetry(null);
+    } else {
+      setShareMessage(mutationResult.error instanceof Error ? mutationResult.error.message : "Could not update this community action.");
+      setInteractionRetry({ post, key });
     }
+
+    interactionMutationScopeRef.current.finish(mutationToken);
+    setPendingInteractions((current) => setPendingInteraction(current, post.id, key, false));
+  }
+
+  function commitInteractions(nextInteractions: InteractionMap) {
+    interactionsRef.current = nextInteractions;
+    setInteractions(nextInteractions);
   }
 
   async function sharePost(post: CommunityPost) {
@@ -440,7 +471,12 @@ export function CommunityBoard() {
             />
           )}
 
-          {shareMessage && <p className="community-share-state" role="status">{shareMessage}</p>}
+          {shareMessage && (
+            <div className="community-share-state" role={interactionRetry ? "alert" : "status"}>
+              <p>{shareMessage}</p>
+              {interactionRetry && <button type="button" onClick={() => void toggleInteraction(interactionRetry.post, interactionRetry.key)}>Retry</button>}
+            </div>
+          )}
 
           {activeView === "notifications" ? (
             <NotificationPanel notifications={notifications} />
@@ -601,7 +637,7 @@ function CommunityPostCard({
   onAddLocalComment: (postId: string, comment: CommunityComment) => void;
   onOpenComments: (postId: string) => void;
   onShare: () => void;
-  onToggleInteraction: (post: CommunityPost, key: keyof PostInteraction) => void;
+  onToggleInteraction: (post: CommunityPost, key: keyof PostInteraction) => void | Promise<void>;
   pendingInteraction: Partial<Record<keyof PostInteraction, boolean>>;
   post: CommunityPost;
 }) {
@@ -662,12 +698,19 @@ function CommunityComments({
   post: CommunityPost;
 }) {
   const { user } = useAuth();
+  const optimisticCommentsRef = useRef<CommunityComment[]>([]);
   const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [optimisticComments, setOptimisticComments] = useState<CommunityComment[]>([]);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [retryCommentBody, setRetryCommentBody] = useState("");
   const isSample = isSamplePost(post);
-  const visibleComments = isSample ? localComments : comments;
+  const visibleComments = isSample ? localComments : mergeComments(comments, optimisticComments);
+
+  useEffect(() => {
+    optimisticCommentsRef.current = optimisticComments;
+  }, [optimisticComments]);
 
   useEffect(() => {
     if (isSample) return;
@@ -680,6 +723,7 @@ function CommunityComments({
         .sort((left, right) => left.createdAtMs - right.createdAtMs)
         .slice(-4);
       setComments(nextComments);
+      commitOptimisticComments(optimisticCommentsRef.current.filter((comment) => !nextComments.some((nextComment) => nextComment.id === comment.id)));
     });
   }, [isSample, post.id]);
 
@@ -697,30 +741,48 @@ function CommunityComments({
       return;
     }
 
+    const commentBody = parsed.data.body;
+    const optimisticComment = {
+      id: `optimistic-${post.id}-${Date.now()}`,
+      authorName: parsed.data.authorName,
+      body: commentBody,
+      createdAtMs: Date.now(),
+    };
+
     setSubmitting(true);
+    setBody("");
+    setRetryCommentBody("");
     try {
       if (isSample) {
-        onAddLocalComment(post.id, {
-          id: `local-${Date.now()}`,
-          authorName: parsed.data.authorName,
-          body: parsed.data.body,
-          createdAtMs: Date.now(),
-        });
-        setBody("");
+        onAddLocalComment(post.id, optimisticComment);
         return;
       }
 
       const db = getFirebaseClientFirestore();
-      await addDoc(collection(db, "communityPosts", post.id, "comments"), {
-        ...parsed.data,
-        createdAt: serverTimestamp(),
+      const result = await runOptimisticMutation<CommunityComment[], { id: string }>({
+        apply: (current) => [...current, optimisticComment],
+        commit: commitOptimisticComments,
+        getState: () => optimisticCommentsRef.current,
+        reconcile: ({ id }, current) => current.map((comment) => comment.id === optimisticComment.id ? { ...comment, id } : comment),
+        run: async () => {
+          const commentRef = await addDoc(collection(db, "communityPosts", post.id, "comments"), {
+            ...parsed.data,
+            createdAt: serverTimestamp(),
+          });
+          await updateDoc(doc(db, "communityPosts", post.id), {
+            "stats.comments": increment(1),
+            updatedAt: serverTimestamp(),
+          });
+          return { id: commentRef.id };
+        },
       });
-      await updateDoc(doc(db, "communityPosts", post.id), {
-        "stats.comments": increment(1),
-        updatedAt: serverTimestamp(),
-      });
-      setBody("");
+
+      if (result.status === "error") {
+        throw result.error;
+      }
     } catch (commentError) {
+      setBody(commentBody);
+      setRetryCommentBody(commentBody);
       setError(commentError instanceof Error ? commentError.message : "Could not post this comment.");
     } finally {
       setSubmitting(false);
@@ -731,7 +793,9 @@ function CommunityComments({
     <div id={`comments-${post.id}`} className="community-comments">
       {isSample && <p className="community-comment-empty">Example thread. Your comment stays on this device.</p>}
       {visibleComments.length > 0 ? visibleComments.map((comment) => (
-        <p key={comment.id} className="community-comment"><strong>{comment.authorName}</strong>{comment.body}</p>
+        <p key={comment.id} className={`community-comment${comment.id.startsWith("optimistic-") ? " is-pending" : ""}`}>
+          <strong>{comment.authorName}{comment.id.startsWith("optimistic-") ? <em>Sending</em> : null}</strong>{comment.body}
+        </p>
       )) : <p className="community-comment-empty">Start the critique thread.</p>}
       {user ? (
         <form onSubmit={submitComment} className="community-comment-form">
@@ -741,9 +805,19 @@ function CommunityComments({
       ) : (
         <Link className="community-comment-login" href="/auth?mode=sign-up">Sign in to comment</Link>
       )}
-      {error && <p className="community-comment-error" role="alert">{error}</p>}
+      {error && (
+        <div className="community-comment-error" role="alert">
+          <p>{error}</p>
+          {retryCommentBody && <button type="button" onClick={() => { setBody(retryCommentBody); setError(""); }}>Retry</button>}
+        </div>
+      )}
     </div>
   );
+
+  function commitOptimisticComments(nextComments: CommunityComment[]) {
+    optimisticCommentsRef.current = nextComments;
+    setOptimisticComments(nextComments);
+  }
 }
 
 function NotificationPanel({ notifications }: { notifications: CommunityNotification[] }) {
@@ -971,6 +1045,13 @@ function toInteractionMap(entries: ReadonlyArray<readonly [string, PostInteracti
     nextInteractions[postId] = interaction;
     return nextInteractions;
   }, {});
+}
+
+function mergeComments(serverComments: CommunityComment[], pendingComments: CommunityComment[]) {
+  const serverIds = new Set(serverComments.map((comment) => comment.id));
+  return [...serverComments, ...pendingComments.filter((comment) => !serverIds.has(comment.id))]
+    .sort((left, right) => left.createdAtMs - right.createdAtMs)
+    .slice(-6);
 }
 
 function writeStoredSampleComments(comments: CommentMap) {
