@@ -162,6 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     setError("");
     if (isE2ELocalAuthEnabled()) {
+      if (password === "wrong-password") {
+        throw new Error("The email or password is incorrect.");
+      }
       const nextUser = createE2ELocalUser(email);
       writeE2ELocalUser(nextUser);
       setUser(nextUser);
@@ -218,6 +221,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     setError("");
+    if (isE2ELocalAuthEnabled()) return;
+
     try {
       const [{ getFirebaseClientAuth }, { sendPasswordResetEmail }] = await Promise.all([
         import("@/lib/firebase/auth"),

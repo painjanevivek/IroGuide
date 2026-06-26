@@ -148,8 +148,10 @@ npm run test:e2e:install
 By default, `npm run test:e2e` starts the app with `NEXT_PUBLIC_E2E_LOCAL_AUTH=true`.
 That local fallback signs in through the manual email UI, mocks only the review
 creation API, and verifies that the dashboard recognizes a saved critique with a
-private source image. It is meant for laptops and CI jobs that should not depend
-on a live Firebase project.
+private source image. The local storage mock serves reopened source previews from
+`/__e2e__/private-storage/users/{uid}/reviews/{documentId}/source.png` so the
+browser smoke can prove the saved private image actually renders. It is meant for
+laptops and CI jobs that should not depend on a live Firebase project.
 
 To exercise the Firebase-backed path instead, provide a dedicated email/password
 test account plus the normal Firebase web and admin environment variables:

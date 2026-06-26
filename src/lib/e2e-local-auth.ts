@@ -2,6 +2,7 @@ import type { User } from "firebase/auth";
 
 const E2E_LOCAL_AUTH_STORAGE_KEY = "iroguide:e2e-local-auth-user";
 const E2E_LOCAL_AUTH_TOKEN = "iroguide-e2e-local-token";
+const E2E_LOCAL_PRIVATE_STORAGE_URL_PREFIX = "/__e2e__/private-storage/";
 
 type LocalE2EUserRecord = {
   displayName: string;
@@ -56,6 +57,18 @@ export function clearE2ELocalUser(storage: Storage | null = getStorage()) {
   storage?.removeItem(E2E_LOCAL_AUTH_STORAGE_KEY);
 }
 
+export function getE2ELocalPrivateSourceImageUrl(storagePath: string, userId: string) {
+  if (!isE2ELocalAuthEnabled()) return null;
+
+  const normalizedPath = storagePath.replaceAll("\\", "/");
+  const expectedPrefix = `users/${userId}/reviews/`;
+  if (!normalizedPath.startsWith(expectedPrefix) || normalizedPath.split("/").includes("..")) {
+    return null;
+  }
+
+  return `${E2E_LOCAL_PRIVATE_STORAGE_URL_PREFIX}${normalizedPath.split("/").map(encodeURIComponent).join("/")}`;
+}
+
 function toFirebaseUser(record: LocalE2EUserRecord): User {
   const providerData = [{
     displayName: record.displayName,
@@ -98,8 +111,8 @@ function toFirebaseUser(record: LocalE2EUserRecord): User {
   } as User;
 }
 
-function getE2EUserId(email: string) {
-  return `e2e_${email.replace(/[^\w.-]/g, "_")}`;
+export function getE2EUserId(email: string) {
+  return `e2e_${email.trim().toLowerCase().replace(/[^\w.-]/g, "_")}`;
 }
 
 function getStorage() {

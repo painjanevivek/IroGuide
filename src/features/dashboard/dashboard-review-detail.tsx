@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
-import { getDownloadURL, ref } from "firebase/storage";
 import { LoaderCircle, LayoutDashboard } from "lucide-react";
 import { storedReviewDocumentSchema, type StoredReviewDocument } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { ReviewResult } from "@/features/review/review-studio";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
-import { getFirebaseClientStorage } from "@/lib/firebase/storage";
+import { getReviewSourceImageDownloadUrl } from "@/lib/firebase/storage";
 import { getCachedReviewDocuments } from "@/lib/review-persistence";
 
 export function DashboardReviewDetail({ documentId }: { documentId: string }) {
@@ -74,13 +73,13 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   }, [documentId, user]);
 
   useEffect(() => {
-    if (!document?.sourceImage || isE2ELocalAuthEnabled()) {
+    if (!document?.sourceImage || !user) {
       queueMicrotask(() => setPreviewUrl(null));
       return;
     }
 
     let active = true;
-    void getDownloadURL(ref(getFirebaseClientStorage(), document.sourceImage.storagePath))
+    void getReviewSourceImageDownloadUrl(document.sourceImage, user.uid)
       .then((url) => {
         if (active) setPreviewUrl(url);
       })
@@ -91,7 +90,7 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
     return () => {
       active = false;
     };
-  }, [document]);
+  }, [document, user]);
 
   if (document) {
     return (

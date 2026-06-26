@@ -12,12 +12,13 @@ test("signs in, submits a review, and shows private source-image status on the d
     test.skip(true, "Set E2E_EMAIL and E2E_PASSWORD for Firebase-backed Playwright runs.");
   }
 
-  if (!useFirebaseFlow) {
-    await mockLocalReviewApi(page);
-  }
-
   const imagePath = testInfo.outputPath("fixtures", "source-design.png");
-  await writePngFixture(imagePath);
+  const sourceImageBytes = await writePngFixture(imagePath);
+  const localPrivateImageRequests: string[] = [];
+
+  if (!useFirebaseFlow) {
+    await mockLocalReviewApi(page, { localPrivateImageRequests, sourceImageBytes });
+  }
 
   await signIn(page);
 
@@ -49,7 +50,14 @@ test("signs in, submits a review, and shows private source-image status on the d
   await page.getByRole("link", { name: /open critique/i }).click();
   await expect(page).toHaveURL(/\/dashboard\/reviews\//);
   await expect(page.getByText(/your critique is ready/i)).toBeVisible({ timeout: 45_000 });
-  await expect(page.getByText(/source image preview unavailable/i)).toBeVisible();
+  await expect(page.getByText(/source image preview unavailable/i)).toHaveCount(0);
+  await expect(page.getByText(/private account image/i)).toBeVisible();
+  const reviewedImage = page.getByRole("img", { name: /reviewed design/i });
+  await expect(reviewedImage).toBeVisible();
+  await expect.poll(async () => reviewedImage.evaluate((image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)).toBe(true);
+  if (!useFirebaseFlow) {
+    expect(localPrivateImageRequests.some((url) => url.includes("/__e2e__/private-storage/users/"))).toBe(true);
+  }
 });
 
 async function signIn(page: Page) {
@@ -61,7 +69,35 @@ async function signIn(page: Page) {
   await expect(page.getByText(/private signed-in workspace/i)).toBeVisible();
 }
 
-async function mockLocalReviewApi(page: Page) {
+async function mockLocalReviewApi(
+  page: Page,
+  {
+    localPrivateImageRequests,
+    sourceImageBytes,
+  }: {
+    localPrivateImageRequests: string[];
+    sourceImageBytes: Buffer;
+  },
+) {
+  const reviewId = `e2e-${Date.now()}`;
+  const userId = getE2ELocalUserId(testEmail);
+  const reviewDocumentId = `${userId}_${reviewId}`;
+  const storagePath = `users/${userId}/reviews/${reviewDocumentId}/source.png`;
+  const privateStorageUrlPath = `/__e2e__/private-storage/${storagePath.split("/").map(encodeURIComponent).join("/")}`;
+
+  await page.route(`**${privateStorageUrlPath}`, async (route) => {
+    localPrivateImageRequests.push(route.request().url());
+    await route.fulfill({
+      body: sourceImageBytes,
+      contentType: "image/png",
+      headers: {
+        "Cache-Control": "private, max-age=300",
+        "X-IroGuide-E2E-Storage-Path": storagePath,
+      },
+      status: 200,
+    });
+  });
+
   await page.route("**/api/reviews", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -72,8 +108,8 @@ async function mockLocalReviewApi(page: Page) {
           sourceImage: {
             contentType: "image/png",
             originalName: "source-design.png",
-            size: 178,
-            storagePath: "users/e2e/reviews/e2e-source/source.png",
+            size: sourceImageBytes.byteLength,
+            storagePath,
             uploadedAt: new Date().toISOString(),
           },
         },
@@ -85,7 +121,7 @@ async function mockLocalReviewApi(page: Page) {
           ],
           createdAt: new Date().toISOString(),
           followUps: ["What should I adjust first?"],
-          id: `e2e-${Date.now()}`,
+          id: reviewId,
           issues: [
             {
               actions: ["Raise the headline contrast.", "Reduce one competing decorative element."],
@@ -116,11 +152,21 @@ async function mockLocalReviewApi(page: Page) {
 }
 
 async function writePngFixture(path: string) {
+  const bytes = getPngFixtureBytes();
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, Buffer.from(
+  await writeFile(path, bytes);
+  return bytes;
+}
+
+function getPngFixtureBytes() {
+  return Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAXElEQVR4nO3PQQ3AIADAQEDJ6KcH" +
     "NxxYwLSV8D29d94D+GgDcAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYA" +
     "HYAHYAHYAHYAHYAPYD3lwG+qEB3tAZAAAAABJRU5ErkJggg==",
     "base64",
-  ));
+  );
+}
+
+function getE2ELocalUserId(email: string) {
+  return `e2e_${email.trim().toLowerCase().replace(/[^\w.-]/g, "_")}`;
 }
