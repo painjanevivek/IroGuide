@@ -34,6 +34,13 @@ import {
 import { communityCommentSchema, communityPostSchema, type CommunityPostInput } from "@/domain/community";
 import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
+import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
+import {
+  getE2ELocalCommunityPosts,
+  persistE2ELocalCommunityComment,
+  persistE2ELocalCommunityInteraction,
+  readE2ELocalCommunityComments,
+} from "@/lib/e2e-community";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { createOptimisticMutationScope, runOptimisticMutation } from "@/lib/optimistic-mutation";
 
@@ -187,6 +194,9 @@ export function CommunityBoard() {
     if (!user || posts.length === 0) {
       return;
     }
+    if (isE2ELocalAuthEnabled()) {
+      return;
+    }
 
     let active = true;
     const db = getFirebaseClientFirestore();
@@ -208,6 +218,14 @@ export function CommunityBoard() {
   }, [posts, user]);
 
   useEffect(() => {
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => {
+        setPosts(getE2ELocalCommunityPosts());
+        setLoadingPosts(false);
+      });
+      return;
+    }
+
     const db = getFirebaseClientFirestore();
     const postsQuery = query(collection(db, "communityPosts"), where("visibility", "==", "public"), limit(40));
 
@@ -230,6 +248,13 @@ export function CommunityBoard() {
 
   useEffect(() => {
     if (!user) {
+      return;
+    }
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => {
+        setSavedReviews([]);
+        setLoadingSaved(false);
+      });
       return;
     }
 
@@ -714,6 +739,11 @@ function CommunityComments({
 
   useEffect(() => {
     if (isSample) return;
+    if (isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => setComments(readE2ELocalCommunityComments(post.id)));
+      return;
+    }
+
     const db = getFirebaseClientFirestore();
 
     return onSnapshot(collection(db, "communityPosts", post.id, "comments"), (snapshot) => {
@@ -755,6 +785,25 @@ function CommunityComments({
     try {
       if (isSample) {
         onAddLocalComment(post.id, optimisticComment);
+        return;
+      }
+
+      if (isE2ELocalAuthEnabled()) {
+        const result = await runOptimisticMutation<CommunityComment[], { id: string }>({
+          apply: (current) => [...current, optimisticComment],
+          commit: commitOptimisticComments,
+          getState: () => optimisticCommentsRef.current,
+          reconcile: ({ id }, current) => current.map((comment) => comment.id === optimisticComment.id ? { ...comment, id } : comment),
+          run: () => persistE2ELocalCommunityComment({
+            authorName: parsed.data.authorName,
+            body: commentBody,
+            postId: post.id,
+          }),
+        });
+
+        if (result.status === "error") {
+          throw result.error;
+        }
         return;
       }
 
@@ -891,6 +940,11 @@ function toCommunityComment(id: string, data: DocumentData): CommunityComment | 
 }
 
 async function persistPostInteraction(postId: string, userId: string, key: keyof PostInteraction, nextValue: boolean) {
+  if (isE2ELocalAuthEnabled()) {
+    await persistE2ELocalCommunityInteraction(postId, key);
+    return;
+  }
+
   const db = getFirebaseClientFirestore();
   const postRef = doc(db, "communityPosts", postId);
   const interactionRef = doc(db, "communityPosts", postId, "interactions", userId);
