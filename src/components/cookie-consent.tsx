@@ -29,10 +29,10 @@ export function CookieConsent() {
         acceptedAt: new Date().toISOString(),
         version: 1,
       }));
-      window.dispatchEvent(new CustomEvent(ANALYTICS_CONSENT_EVENT, { detail: { state } }));
     } catch {
       // If browser storage is unavailable, still let the user dismiss the notice for this session.
     }
+    window.dispatchEvent(new CustomEvent(ANALYTICS_CONSENT_EVENT, { detail: { state } }));
     setIsVisible(false);
   }
 
