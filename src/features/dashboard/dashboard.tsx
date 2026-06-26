@@ -10,65 +10,32 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { getRecentReviewSummary } from "@/domain/dashboard-review";
-import { calculateProgress, type ProgressReview } from "@/domain/progress";
+import { calculateProgress } from "@/domain/progress";
 import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
-import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
+import { categoryLabels } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
-import { getCachedReviewDocuments, type StoredReviewDocument } from "@/lib/review-persistence";
-import { syncPendingAccountReviews } from "@/lib/review-sync";
+import { mergeAccountReviews } from "@/lib/account-reviews";
+import { useAccountReviews } from "@/lib/use-account-reviews";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
 
-type StoredReview = ReviewOutput & ProgressReview & { category?: string; documentId: string; sourceImage?: ReviewSourceImage; syncState?: StoredReviewDocument["syncState"] };
 type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
   const { user } = useAuth();
-  const [cloudReviews, setCloudReviews] = useState<StoredReview[]>([]);
-  const [cachedReviews, setCachedReviews] = useState<StoredReview[]>([]);
+  const {
+    cachedReviews,
+    cloudReviews,
+    hasCachedOnlyReviews,
+    loadError,
+    loading,
+    reviews,
+  } = useAccountReviews({ user });
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
   const [reviewImageUrls, setReviewImageUrls] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-
-    function refreshCachedReviews() {
-      if (!active || !user) return;
-      setCachedReviews(readCachedStoredReviews(user.uid));
-    }
-
-    async function syncPendingReviews() {
-      if (!user) return;
-      try {
-        await syncPendingAccountReviews({
-          getIdToken: () => user.getIdToken(),
-          userId: user.uid,
-        });
-      } catch {
-        // Keep pending reviews cached locally; the next dashboard visit or online event retries.
-      } finally {
-        refreshCachedReviews();
-      }
-    }
-
-    const refreshTimer = window.setTimeout(() => {
-      refreshCachedReviews();
-      void syncPendingReviews();
-    }, 0);
-    window.addEventListener("online", syncPendingReviews);
-
-    return () => {
-      active = false;
-      window.clearTimeout(refreshTimer);
-      window.removeEventListener("online", syncPendingReviews);
-    };
-  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -79,8 +46,7 @@ export function Dashboard() {
       queueMicrotask(() => setReviewImageUrls({}));
       return;
     }
-
-    const reviewsWithImages = mergeStoredReviews(cloudReviews, cachedReviews).filter((review) => review.sourceImage);
+    const reviewsWithImages = mergeAccountReviews(cloudReviews, cachedReviews).filter((review) => review.sourceImage);
     if (reviewsWithImages.length === 0) {
       queueMicrotask(() => setReviewImageUrls({}));
       return;
@@ -108,39 +74,6 @@ export function Dashboard() {
   useEffect(() => {
     if (!user) return;
     if (isE2ELocalAuthEnabled()) {
-      queueMicrotask(() => {
-        setCloudReviews([]);
-        setLoadError("");
-        setLoading(false);
-      });
-      return;
-    }
-    const db = getFirebaseClientFirestore();
-    const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", user.uid), limit(30));
-
-    return onSnapshot(
-      reviewsQuery,
-      (snapshot) => {
-        const nextReviews = snapshot.docs
-          .map((reviewDoc) => toStoredReview(reviewDoc.id, reviewDoc.data()))
-          .filter((review): review is StoredReview => review !== null)
-          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
-          .slice(0, 12);
-        setLoadError("");
-        setCloudReviews(nextReviews);
-        setLoading(false);
-      },
-      (error) => {
-        setLoadError(error.message);
-        setCloudReviews([]);
-        setLoading(false);
-      },
-    );
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    if (isE2ELocalAuthEnabled()) {
       queueMicrotask(() => setDrafts([]));
       return;
     }
@@ -162,11 +95,9 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  const reviews = mergeStoredReviews(cloudReviews, cachedReviews);
   const progress = calculateProgress(reviews);
   const recentReview = getRecentReviewSummary(reviews);
   const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
-  const hasCachedOnlyReviews = cachedReviews.some((cachedReview) => cachedReview.syncState === "local" && !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id));
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
 
   return (
@@ -272,24 +203,6 @@ export function Dashboard() {
   );
 }
 
-function toStoredReview(id: string, data: DocumentData): StoredReview | null {
-  const candidate = data.review ?? data;
-  const parsed = reviewOutputSchema.safeParse({ ...candidate, id: candidate.id ?? id });
-  if (!parsed.success) return null;
-  const category = typeof data.category === "string" && data.category in categoryLabels
-    ? categoryLabels[data.category as keyof typeof categoryLabels]
-    : undefined;
-  const parsedSourceImage = reviewSourceImageSchema.safeParse(data.sourceImage);
-  const syncState = data.syncState === "local" || data.syncState === "cloud" ? data.syncState : undefined;
-  return {
-    ...parsed.data,
-    category,
-    documentId: id,
-    ...(parsedSourceImage.success ? { sourceImage: parsedSourceImage.data } : {}),
-    syncState,
-  };
-}
-
 function getReviewDetailHref(documentId: string) {
   return `/dashboard/reviews/${encodeURIComponent(documentId)}` as Route;
 }
@@ -303,24 +216,6 @@ function toStoredDraft(id: string, data: DocumentData): StoredDraft | null {
     id,
     updatedAtMs: toMillis(data.updatedAt),
   };
-}
-
-function toStoredCachedReview(data: ReturnType<typeof getCachedReviewDocuments>[number]): StoredReview | null {
-  return toStoredReview(data.id, data);
-}
-
-function readCachedStoredReviews(userId: string) {
-  return getCachedReviewDocuments(userId).map(toStoredCachedReview).filter((review): review is StoredReview => review !== null);
-}
-
-function mergeStoredReviews(cloudReviews: StoredReview[], cachedReviews: StoredReview[]) {
-  const byId = new Map<string, StoredReview>();
-  for (const review of cachedReviews) byId.set(review.id, review);
-  for (const review of cloudReviews) byId.set(review.id, review);
-
-  return [...byId.values()]
-    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
-    .slice(0, 12);
 }
 
 function toMillis(value: unknown) {
