@@ -1,0 +1,135 @@
+name: Production Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Run against the configured staging or production URL.
+        required: true
+        type: choice
+        default: staging
+        options:
+          - staging
+          - production
+      require_ready:
+        description: Require /api/readiness to report ready.
+        required: true
+        type: boolean
+        default: true
+      run_authenticated_review:
+        description: Submit and clean up an authenticated review smoke.
+        required: true
+        type: boolean
+        default: true
+      run_firebase_rules:
+        description: Create temporary records to verify Firebase cross-user rules.
+        required: true
+        type: boolean
+        default: true
+      run_security_headers:
+        description: Verify deployed security headers.
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke-${{ github.ref }}-${{ inputs.target }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: ${{ inputs.target == 'production' && 'Production smoke gate' || 'Staging smoke gate' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STAGING_SMOKE_BASE_URL: ${{ vars.IROGUIDE_STAGING_URL || secrets.IROGUIDE_STAGING_URL }}
+      PRODUCTION_SMOKE_BASE_URL: ${{ vars.IROGUIDE_PRODUCTION_URL || secrets.IROGUIDE_PRODUCTION_URL }}
+      SMOKE_REPORT_PATH: artifacts/production-smoke-report.json
+      SMOKE_REQUIRE_READY: ${{ inputs.require_ready }}
+      SMOKE_AUTHENTICATED_REVIEW: ${{ inputs.run_authenticated_review }}
+      SMOKE_FIREBASE_RULES: ${{ inputs.run_firebase_rules }}
+      SMOKE_SECURITY_HEADERS: ${{ inputs.run_security_headers }}
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID || secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+      FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64 }}
+      FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON }}
+      FIREBASE_ADMIN_PROJECT_ID: ${{ vars.FIREBASE_ADMIN_PROJECT_ID || secrets.FIREBASE_ADMIN_PROJECT_ID || vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID || secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+      FIREBASE_ADMIN_CLIENT_EMAIL: ${{ secrets.FIREBASE_ADMIN_CLIENT_EMAIL }}
+      FIREBASE_ADMIN_PRIVATE_KEY: ${{ secrets.FIREBASE_ADMIN_PRIVATE_KEY }}
+      FIREBASE_ADMIN_STORAGE_BUCKET: ${{ vars.FIREBASE_ADMIN_STORAGE_BUCKET || secrets.FIREBASE_ADMIN_STORAGE_BUCKET || vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify smoke configuration
+        run: |
+          set -euo pipefail
+
+          if [ "${{ inputs.target }}" = "production" ]; then
+            smoke_base_url="${PRODUCTION_SMOKE_BASE_URL}"
+            url_name="vars.IROGUIDE_PRODUCTION_URL or secrets.IROGUIDE_PRODUCTION_URL"
+          else
+            smoke_base_url="${STAGING_SMOKE_BASE_URL}"
+            url_name="vars.IROGUIDE_STAGING_URL or secrets.IROGUIDE_STAGING_URL"
+          fi
+
+          missing=()
+          if [ -z "${smoke_base_url}" ]; then
+            missing+=("${url_name}")
+          fi
+          if [ -z "${NEXT_PUBLIC_FIREBASE_API_KEY}" ]; then
+            missing+=("secrets.NEXT_PUBLIC_FIREBASE_API_KEY")
+          fi
+          if [ -z "${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" ]; then
+            missing+=("vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID or secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID")
+          fi
+          if [ -z "${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" ] && [ -z "${FIREBASE_ADMIN_STORAGE_BUCKET}" ]; then
+            missing+=("vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, vars.FIREBASE_ADMIN_STORAGE_BUCKET, or secrets.FIREBASE_ADMIN_STORAGE_BUCKET")
+          fi
+
+          has_admin_bundle=false
+          if [ -n "${FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64}" ] || [ -n "${FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON}" ]; then
+            has_admin_bundle=true
+          fi
+
+          has_admin_split=false
+          if [ -n "${FIREBASE_ADMIN_PROJECT_ID}" ] && [ -n "${FIREBASE_ADMIN_CLIENT_EMAIL}" ] && [ -n "${FIREBASE_ADMIN_PRIVATE_KEY}" ]; then
+            has_admin_split=true
+          fi
+
+          if [ "${has_admin_bundle}" != "true" ] && [ "${has_admin_split}" != "true" ]; then
+            missing+=("secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64, secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON, or split vars.FIREBASE_ADMIN_PROJECT_ID/secrets.FIREBASE_ADMIN_PROJECT_ID with secrets.FIREBASE_ADMIN_CLIENT_EMAIL and secrets.FIREBASE_ADMIN_PRIVATE_KEY")
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf 'Configure the following before running production smoke:\n' >&2
+            printf -- '- %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+          echo "SMOKE_BASE_URL=${smoke_base_url}" >> "${GITHUB_ENV}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run production smoke
+        run: npm run smoke:production
+
+      - name: Upload production smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-report-${{ inputs.target }}
+          path: artifacts/production-smoke-report.json
+          if-no-files-found: warn

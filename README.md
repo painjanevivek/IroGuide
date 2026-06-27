@@ -91,6 +91,22 @@ images. It uses the same Firebase web key and Admin credential environment
 variables described above. Set `SMOKE_SECURITY_HEADERS=false` or
 `SMOKE_FIREBASE_RULES=false` only when intentionally narrowing a diagnostic run.
 
+The manual `Production Smoke` GitHub Actions workflow runs the same command
+against either staging or production and uploads
+`artifacts/production-smoke-report.json`. Configure one target URL before
+running it:
+
+- `vars.IROGUIDE_STAGING_URL` or `secrets.IROGUIDE_STAGING_URL`
+- `vars.IROGUIDE_PRODUCTION_URL` or `secrets.IROGUIDE_PRODUCTION_URL`
+
+Configure the Firebase web and Admin values used by the smoke:
+
+- `secrets.NEXT_PUBLIC_FIREBASE_API_KEY`
+- `vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID` or `secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` or `secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- one Admin credential format: `secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64`, `secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON`, or split `vars.FIREBASE_ADMIN_PROJECT_ID`/`secrets.FIREBASE_ADMIN_PROJECT_ID`, `secrets.FIREBASE_ADMIN_CLIENT_EMAIL`, and `secrets.FIREBASE_ADMIN_PRIVATE_KEY`
+- optional bucket override: `vars.FIREBASE_ADMIN_STORAGE_BUCKET` or `secrets.FIREBASE_ADMIN_STORAGE_BUCKET`
+
 ## Live vision setup
 
 Local demo mode is used until production vision credentials are configured.

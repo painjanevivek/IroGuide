@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { cert, deleteApp as deleteAdminApp, initializeApp as initializeAdminApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
@@ -7,6 +9,7 @@ import nextEnv from "@next/env";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
+const startedAt = new Date();
 
 const PRODUCTION_SECURITY_CSP = [
   "default-src 'self'",
@@ -38,6 +41,7 @@ export const EXPECTED_SECURITY_HEADERS = Object.freeze([
 ]);
 
 const baseUrl = normalizeBaseUrl(process.env.SMOKE_BASE_URL ?? "https://iroguide.com");
+const reportPath = process.env.SMOKE_REPORT_PATH ?? "artifacts/production-smoke-report.json";
 const requireReady = process.env.SMOKE_REQUIRE_READY !== "false";
 const runAuthenticatedReview = process.env.SMOKE_AUTHENTICATED_REVIEW !== "false";
 const runSecurityHeaders = process.env.SMOKE_SECURITY_HEADERS !== "false";
@@ -49,6 +53,8 @@ const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 const results = [];
 
 async function main() {
+  console.log(`IroGuide production smoke target: ${baseUrl}`);
+
   for (const route of publicRoutes) {
     await expectStatus(route, { method: "GET" }, 200);
   }
@@ -72,10 +78,28 @@ async function main() {
   }
 
   const failed = results.filter((result) => !result.ok);
+  const report = {
+    baseUrl,
+    startedAt: startedAt.toISOString(),
+    finishedAt: new Date().toISOString(),
+    options: {
+      requireReady,
+      runAuthenticatedReview,
+      runFirebaseRules,
+      runSecurityHeaders,
+      securityHeaderRoutes,
+    },
+    publicRoutes,
+    results,
+  };
+  await writeReport(report);
+
   for (const result of results) {
     const suffix = result.detail ? ` - ${result.detail}` : "";
     console.log(`${result.ok ? "PASS" : "FAIL"} ${result.name}${suffix}`);
   }
+  console.log(`Production smoke report: ${resolve(reportPath)}`);
+  console.log(`Production smoke summary: ${results.length - failed.length}/${results.length} checks passed`);
 
   if (failed.length > 0) {
     process.exitCode = 1;
@@ -377,6 +401,12 @@ function normalizePrivateKey(value) {
 
 function addResult(name, ok, detail = "") {
   results.push({ name, ok, detail });
+}
+
+async function writeReport(report) {
+  const fullPath = resolve(reportPath);
+  await mkdir(dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 }
 
 export function normalizeBaseUrl(value) {
