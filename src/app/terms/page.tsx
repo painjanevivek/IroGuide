@@ -65,8 +65,8 @@ export default function TermsPage() {
 
         <h2>Bug reports and support</h2>
         <p>
-          Product bugs, broken review flows, upload issues, or sync problems can be reported from the <Link href="/contact#bug-report">bug report option</Link>.
-          Include the page URL, steps to reproduce, expected result, actual result, and browser details so the issue can be investigated quickly.
+          Product bugs, broken review flows, upload issues, or sync problems can be reported from the public GitHub issue form linked from the <Link href="/contact#bug-report">bug report option</Link>.
+          Include the page URL, steps to reproduce, expected result, actual result, and browser details, but do not include private or sensitive information.
         </p>
 
         <h2>Commercial readiness</h2>
