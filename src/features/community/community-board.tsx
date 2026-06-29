@@ -893,7 +893,7 @@ function EmptyCommunityState({ activeView }: { activeView: CommunityView }) {
 
   return (
     <div className="community-feed-state">
-      <Sparkles />
+      <Sparkles className="sparkle-blink-glow" />
       <strong>{copy[0]}</strong>
       <p>{copy[1]}</p>
     </div>

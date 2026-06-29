@@ -83,7 +83,7 @@ export function LandingPage() {
       <section className="hero section-pad">
         <div className="hero-copy reveal">
           <p className="eyebrow"><span className="signal-dot" /> Official IroGuide website</p>
-          <h1>IroGuide<br /><span className="display-accent">Design critique.</span></h1>
+          <h1><span className="hero-title-line">IroGuide</span><span className="hero-title-line display-accent">Design critique.</span></h1>
           <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
           <div className="hero-actions">
             <Link className="button button-large" href="/review/new" prefetch={false} data-analytics-event="hero_review_design_click">Review my design <WandSparkles size={19} /></Link>

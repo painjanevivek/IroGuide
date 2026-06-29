@@ -100,7 +100,7 @@ function SourceReviewCard({
   if (source) {
     return (
       <div className="source-review">
-        <Sparkles />
+        <Sparkles className="sparkle-blink-glow" />
         <div>
           <span className="mono-label">LATEST SAVED CRITIQUE</span>
           <h3>{source.category ?? "Design project"} / {source.overallScore}/10</h3>

@@ -64,7 +64,7 @@ export default function CommunityPage() {
         </section>
 
         <section className="community-cta">
-          <Sparkles />
+          <Sparkles className="sparkle-blink-glow" />
           <h2>Build in public.<br /><span>Improve with purpose.</span></h2>
           <p>Start with a private critique, shape the next version, and turn the feedback into a story worth sharing.</p>
           <CommunityPrivateCritiqueLink className="button button-lime button-large" />

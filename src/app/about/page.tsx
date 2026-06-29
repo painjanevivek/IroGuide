@@ -22,7 +22,7 @@ export default function AboutPage() {
       </header>
       <main className="official-main">
         <section className="official-hero">
-          <p className="eyebrow"><Sparkles /> About IroGuide</p>
+          <p className="eyebrow"><Sparkles className="sparkle-blink-glow" /> About IroGuide</p>
           <h1>IroGuide is the official AI critique workspace for better design decisions.</h1>
           <p>IroGuide helps designers, students, creators, and founders understand what is working in a visual design, what is getting in the way, and what to improve next.</p>
           <Link className="button button-dark" href="/review/new">Start a design review <ArrowRight size={18} /></Link>

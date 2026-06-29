@@ -182,7 +182,7 @@ export function Dashboard() {
             </Stagger>
           </section>
           <Reveal delay={0.12}>
-            <section className="learning-card"><Sparkles /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
+            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
           </Reveal>
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>

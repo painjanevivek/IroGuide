@@ -67,7 +67,7 @@ export function FollowUpChat({ review }: { review: ReviewOutput }) {
   return (
     <section className="follow-up-chat">
       <div className="follow-up-heading">
-        <Sparkles />
+        <Sparkles className="sparkle-blink-glow" />
         <p className="eyebrow light">Keep the conversation going</p>
         <h2>Ask your mentor.</h2>
         <p>Messages stay scoped to this review in the current session. Production storage will persist them under the review owner.</p>
