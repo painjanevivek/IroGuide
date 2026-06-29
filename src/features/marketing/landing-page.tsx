@@ -17,6 +17,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { LandingFinalAuthActions, LandingHeaderActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
 
 const categories = [
@@ -133,16 +134,16 @@ export function LandingPage() {
           <p className="eyebrow">Beyond &quot;looks good&quot;</p>
           <h2>Opinions are cheap.<br /><span className="display-outline">Direction is rare.</span></h2>
         </div>
-        <div className="three-step-grid">
+        <Stagger className="three-step-grid" revealOnScroll>
           {[
             [Eye, "What", "We identify the exact visual decision helping or hurting the work."],
             [Target, "Why", "We connect it to hierarchy, readability, audience, and purpose."],
             [WandSparkles, "How", "You get concrete changes in priority order, not abstract advice."],
           ].map(([Icon, title, copy], index) => {
             const StepIcon = Icon as typeof Eye;
-            return <article className="step-card" key={String(title)}><span className="step-number">0{index + 1}</span><StepIcon size={28} /><h3>{String(title)}</h3><p>{String(copy)}</p></article>;
+            return <StaggerItem as="article" className="step-card" key={String(title)}><span className="step-number">0{index + 1}</span><StepIcon size={28} /><h3>{String(title)}</h3><p>{String(copy)}</p></StaggerItem>;
           })}
-        </div>
+        </Stagger>
       </section>
 
       <section className="modes-section section-pad" id="modes">
@@ -150,9 +151,9 @@ export function LandingPage() {
           <div><p className="eyebrow light">Choose your critic</p><h2>Same standards.<br />Your preferred voice.</h2></div>
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
-        <div className="mode-grid">
-          {modes.map((mode) => <article className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false} data-analytics-event="mode_review_click" data-analytics-label={mode.title}>Try {mode.title} mode <ChevronRight size={17} /></Link></article>)}
-        </div>
+        <Stagger className="mode-grid" revealOnScroll>
+          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false} data-analytics-event="mode_review_click" data-analytics-label={mode.title}>Try {mode.title} mode <ChevronRight size={17} /></Link></StaggerItem>)}
+        </Stagger>
       </section>
 
       <section className="example-section section-pad" id="example">
@@ -175,14 +176,14 @@ export function LandingPage() {
 
       <section className="audience-section section-pad">
         <div className="section-intro compact"><p className="eyebrow">Built for the work in progress</p><h2>Your second set of<br />experienced eyes.</h2></div>
-        <div className="audience-grid">
+        <Stagger className="audience-grid" revealOnScroll>
           {[
             [BookOpen, "Students", "Turn every critique into a lesson you can apply again."],
             [Layers3, "Designers", "Pressure-test work before the review, pitch, or handoff."],
             [Palette, "Creators", "Make fast-moving content clearer and more ownable."],
             [Target, "Founders", "Judge brand and product work against its real audience."],
-          ].map(([Icon, title, copy]) => { const AudienceIcon = Icon as typeof BookOpen; return <article key={String(title)}><AudienceIcon /><h3>{String(title)}</h3><p>{String(copy)}</p></article>; })}
-        </div>
+          ].map(([Icon, title, copy]) => { const AudienceIcon = Icon as typeof BookOpen; return <StaggerItem as="article" key={String(title)}><AudienceIcon /><h3>{String(title)}</h3><p>{String(copy)}</p></StaggerItem>; })}
+        </Stagger>
       </section>
 
       <section className="trust-strip section-pad">
