@@ -21,6 +21,7 @@ export const siteConfig = {
   logoPath: "/brand/iroguide-logo.png",
   creator: "IroGuide",
   repositoryUrl: "https://github.com/painjanevivek/IroGuide",
+  issuesUrl: "https://github.com/painjanevivek/IroGuide/issues",
   bugReportUrl: "https://github.com/painjanevivek/IroGuide/issues/new?template=bug_report.yml",
   contactUrl: "/contact",
   supportEmail: "support@iroguide.com",

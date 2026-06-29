@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight, Bug, Github, LifeBuoy, Mail, MessageSquareText } from "lucide-react";
+import { ArrowRight, Bug, Github, LifeBuoy, Mail } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -26,13 +26,12 @@ export default function ContactPage() {
         <section className="official-hero contact-hero">
           <p className="eyebrow"><Mail /> Contact IroGuide</p>
           <h1>Questions, support, bug reports, or collaboration.</h1>
-          <p>Email {siteConfig.supportEmail} for account, review, privacy, or product support. For product bugs, submit a public GitHub Issue Form so the report can be tracked openly.</p>
+          <p>Email {siteConfig.supportEmail} for account, review, privacy, or product support. For product bugs, use the public GitHub Issue Form below so the report can be written and tracked openly.</p>
         </section>
         <section className="contact-list" aria-label="Contact options">
           <a href={supportMailto} data-analytics-event="contact_support_email_click"><LifeBuoy /><span><strong>Contact support</strong><small>Email {siteConfig.supportEmail} for account help, saved critique questions, privacy requests, or product support.</small></span><ArrowRight /></a>
-          <a id="bug-report" href={siteConfig.bugReportUrl} target="_blank" rel="noreferrer" data-analytics-event="contact_bug_report_issue_click"><Bug /><span><strong>Report a public GitHub issue</strong><small>Use the GitHub Issue Form for bugs. Include the page URL, steps, expected result, actual result, and browser details.</small></span><ArrowRight /></a>
-          <Link href="/beta"><MessageSquareText /><span><strong>Beta access</strong><small>Join the early product path and try the critique workflow.</small></span><ArrowRight /></Link>
-          <Link href="/review/new"><Mail /><span><strong>Design critique support</strong><small>Start a private review and test the feedback experience.</small></span><ArrowRight /></Link>
+          <a id="bug-report" href={siteConfig.bugReportUrl} target="_blank" rel="noreferrer" data-analytics-event="contact_bug_report_issue_click"><Bug /><span><strong>Write a GitHub issue</strong><small>Open the public issue form and add the page URL, steps, expected result, actual result, and browser details.</small></span><ArrowRight /></a>
+          <a href={siteConfig.issuesUrl} target="_blank" rel="noreferrer" data-analytics-event="contact_public_issues_click"><Github /><span><strong>View public issues</strong><small>See submitted bug reports and follow their status in the GitHub Issues list.</small></span><ArrowRight /></a>
           <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer"><Github /><span><strong>Project repository</strong><small>Review related IroGuide engineering work on GitHub.</small></span><ArrowRight /></a>
         </section>
       </main>
