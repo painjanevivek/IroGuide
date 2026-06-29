@@ -1,0 +1,404 @@
+.docsMain {
+  width: var(--page);
+  margin: 0 auto;
+}
+
+.hero {
+  min-height: 720px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  align-items: center;
+  gap: clamp(3rem, 8vw, 7rem);
+  padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+}
+
+.heroCopy {
+  max-width: 880px;
+}
+
+.heroCopy :global(.eyebrow),
+.sectionLead :global(.eyebrow),
+.reference :global(.eyebrow) {
+  color: var(--violet);
+}
+
+.heroCopy h1,
+.sectionLead h2,
+.advanced h2,
+.reference h2 {
+  margin: 1rem 0 1.2rem;
+  font: 650 clamp(3rem, 7vw, 6.8rem) / .9 var(--font-display);
+  letter-spacing: -.075em;
+}
+
+.heroCopy p:not(:global(.eyebrow)),
+.sectionLead p:not(:global(.eyebrow)),
+.advanced p {
+  max-width: 720px;
+  color: var(--graphite);
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.mapPanel {
+  position: relative;
+  display: grid;
+  gap: .7rem;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  background: var(--ink);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 26px 70px rgba(9, 9, 15, .2);
+}
+
+.mapPanel::before {
+  content: "";
+  position: absolute;
+  inset: .75rem;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+}
+
+.mapPanel :global(.mono-label) {
+  position: relative;
+  color: var(--lime);
+}
+
+.mapPanel a {
+  position: relative;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  padding: .8rem .9rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, .78);
+  font-size: .78rem;
+  font-weight: 760;
+  transition:
+    transform var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.mapPanel a:hover {
+  transform: translateX(3px);
+  border-color: rgba(200, 244, 93, .46);
+  color: white;
+}
+
+.quickStart,
+.learningPaths,
+.concepts,
+.reference {
+  padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+}
+
+.sectionLead {
+  max-width: 920px;
+  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.stepGrid,
+.pathGrid,
+.conceptGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.stepGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stepGrid article,
+.pathGrid article,
+.conceptGrid article {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.stepGrid article {
+  min-height: 320px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(1.2rem, 2.4vw, 1.7rem);
+  background: var(--paper-2);
+}
+
+.stepGrid article:nth-child(2) {
+  background: var(--violet);
+  color: white;
+}
+
+.stepGrid article:nth-child(2) p,
+.stepGrid article:nth-child(2) .stepNumber {
+  color: rgba(255, 255, 255, .78);
+}
+
+.stepGrid svg,
+.conceptGrid svg,
+.referenceLinks svg:first-child {
+  color: var(--violet);
+}
+
+.stepGrid article:nth-child(2) svg {
+  color: var(--lime);
+}
+
+.stepNumber {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  color: var(--graphite);
+  font: 650 .65rem var(--font-mono);
+}
+
+.stepGrid h3,
+.pathGrid h3,
+.conceptGrid h3 {
+  margin: 1.4rem 0 .6rem;
+  font: 650 1.45rem var(--font-display);
+  letter-spacing: -.04em;
+}
+
+.stepGrid p,
+.conceptGrid p {
+  margin: 0;
+  color: var(--graphite);
+  font-size: .84rem;
+  line-height: 1.65;
+}
+
+.learningPaths {
+  background: var(--paper-2);
+}
+
+.pathGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pathGrid article {
+  display: grid;
+  align-content: start;
+  gap: 1.2rem;
+  padding: clamp(1.2rem, 2.6vw, 1.8rem);
+  background: white;
+}
+
+.pathGrid :global(.mono-label) {
+  color: var(--violet);
+}
+
+.pathGrid ul {
+  display: grid;
+  gap: .8rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pathGrid li {
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  color: var(--graphite);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.pathGrid li svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  margin-top: .1rem;
+  color: #218354;
+}
+
+.conceptGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.conceptGrid article {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(1.2rem, 2.4vw, 1.6rem);
+}
+
+.advanced {
+  display: grid;
+  grid-template-columns: .9fr 1.1fr;
+  align-items: center;
+  gap: clamp(3rem, 8vw, 7rem);
+  padding: clamp(6rem, 10vw, 9rem) var(--gutter);
+  background: var(--ink);
+  color: white;
+}
+
+.advanced :global(.eyebrow.light) {
+  color: var(--lime);
+}
+
+.advanced p {
+  color: rgba(255, 255, 255, .64);
+}
+
+.advanced ol {
+  display: grid;
+  gap: .8rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  counter-reset: advancedSteps;
+}
+
+.advanced li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: .9rem;
+  align-items: start;
+  padding: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  counter-increment: advancedSteps;
+}
+
+.advanced li::before {
+  content: counter(advancedSteps, decimal-leading-zero);
+  grid-column: 1 / -1;
+  color: var(--lime);
+  font: 650 .64rem var(--font-mono);
+}
+
+.advanced li svg {
+  width: 20px;
+  height: 20px;
+  color: var(--coral);
+}
+
+.advanced li span {
+  color: rgba(255, 255, 255, .78);
+  font-size: .86rem;
+  line-height: 1.6;
+}
+
+.reference {
+  display: grid;
+  grid-template-columns: .78fr 1.22fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.reference h2 {
+  font-size: clamp(3rem, 5.5vw, 5.8rem);
+}
+
+.referenceLinks {
+  display: grid;
+  gap: .8rem;
+}
+
+.referenceLinks a {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 42px 1fr 24px;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition:
+    transform var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.referenceLinks a:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124, 92, 255, .36);
+  box-shadow: 0 18px 44px rgba(9, 9, 15, .08);
+}
+
+.referenceLinks span {
+  display: grid;
+  gap: .3rem;
+}
+
+.referenceLinks strong {
+  font: 650 1.2rem var(--font-display);
+  letter-spacing: -.035em;
+}
+
+.referenceLinks small {
+  color: var(--graphite);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.referenceLinks svg:last-child {
+  justify-self: end;
+}
+
+@media (max-width: 1050px) {
+  .hero,
+  .advanced,
+  .reference {
+    grid-template-columns: 1fr;
+  }
+
+  .stepGrid,
+  .conceptGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    min-height: 0;
+    padding-top: 4rem;
+  }
+
+  .heroActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .heroActions :global(.button),
+  .heroActions :global(.button-quiet) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stepGrid,
+  .pathGrid,
+  .conceptGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepGrid article,
+  .conceptGrid article {
+    min-height: 230px;
+  }
+
+  .referenceLinks a {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .referenceLinks svg:last-child {
+    display: none;
+  }
+}
