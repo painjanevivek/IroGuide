@@ -42,15 +42,14 @@ export function CookieConsent() {
     <section className="cookie-consent" aria-label="Cookie consent notice">
       <div className="cookie-consent-icon" aria-hidden="true"><ShieldCheck size={20} /></div>
       <div className="cookie-consent-copy">
-        <strong>Cookie and site data notice</strong>
+        <strong>Site data preferences</strong>
         <p>
-          IroGuide uses essential cookies and browser storage for sign-in, private review sync, security, saved preferences,
-          and privacy-aware product analytics. We do not use advertising cookies.
+          Essential cookies support sign-in and saved reviews. Optional analytics run after consent. No advertising cookies.
         </p>
-        <Link href="/privacy">Read privacy policy</Link>
+        <Link href="/privacy">Privacy policy</Link>
       </div>
       <div className="cookie-consent-actions">
-        <button type="button" className="button button-lime" data-analytics-event="cookie_consent_accept" onClick={() => saveConsent("accepted")}>Accept site data</button>
+        <button type="button" className="button button-lime" data-analytics-event="cookie_consent_accept" onClick={() => saveConsent("accepted")}>Accept</button>
         <button type="button" className="cookie-consent-dismiss" data-analytics-event="cookie_consent_dismiss" aria-label="Dismiss cookie notice" onClick={() => saveConsent("dismissed")}><X size={18} /></button>
       </div>
     </section>
