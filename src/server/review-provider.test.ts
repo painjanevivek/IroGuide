@@ -68,10 +68,29 @@ describe("review provider routing", () => {
   });
 
   it("uses the deterministic review provider by default", async () => {
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "");
+    vi.stubEnv("OPENROUTER_API_KEY", "");
+
     const review = await createReview(request);
 
     expect(getReviewProvider().name).toBe("demo");
     expect(review.provider).toBe("demo");
+  });
+
+  it("keeps copied local env files usable in auto mode without OpenRouter credentials", async () => {
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "auto");
+    vi.stubEnv("OPENROUTER_API_KEY", "");
+
+    const review = await createReview(requestWithImage);
+
+    expect(getReviewProvider().name).toBe("demo");
+    expect(review.provider).toBe("demo");
+    expect(getReviewProviderStatus()).toEqual(expect.objectContaining({
+      activeProvider: "demo",
+      configuredMode: "auto",
+      liveReady: false,
+      openRouterConfigured: false,
+    }));
   });
 
   it("uses the deterministic review provider in production when live credentials are not configured", async () => {
