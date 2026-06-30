@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sendBugReportEmail } from "./bug-report-email";
-import { saveBugReport, updateBugReportEmailStatus } from "./bug-report-storage";
+import { listBugReports, saveBugReport, updateBugReportEmailStatus } from "./bug-report-storage";
 
 const firestoreMock = vi.hoisted(() => {
+  const get = vi.fn();
+  const limit = vi.fn(() => ({ get }));
+  const orderBy = vi.fn(() => ({ limit }));
   const set = vi.fn();
   const doc = vi.fn(() => ({ set }));
-  const collection = vi.fn(() => ({ doc }));
+  const collection = vi.fn(() => ({ doc, orderBy }));
   const serverTimestamp = vi.fn(() => "server-time");
 
-  return { collection, doc, serverTimestamp, set };
+  return { collection, doc, get, limit, orderBy, serverTimestamp, set };
 });
 
 vi.mock("./firebase-admin", () => ({
@@ -30,6 +33,9 @@ describe("bug report storage", () => {
     delete process.env.BUG_REPORT_FROM_EMAIL;
     firestoreMock.collection.mockClear();
     firestoreMock.doc.mockClear();
+    firestoreMock.get.mockReset();
+    firestoreMock.limit.mockClear();
+    firestoreMock.orderBy.mockClear();
     firestoreMock.serverTimestamp.mockClear();
     firestoreMock.set.mockClear();
   });
@@ -66,6 +72,57 @@ describe("bug report storage", () => {
       emailProviderMessageId: "email-1",
       emailStatus: "sent",
     }), { merge: true });
+  });
+
+  it("lists newest bug reports from the server-only collection", async () => {
+    firestoreMock.get.mockResolvedValueOnce({
+      docs: [
+        {
+          id: "report-2",
+          data: () => ({
+            id: "report-2",
+            name: "Second Reporter",
+            email: "second@example.com",
+            problem: "The review submit action failed after upload.",
+            status: "new",
+            source: "contact",
+            emailStatus: "sent",
+            emailProviderMessageId: "email-2",
+            requestId: "request-2",
+            createdAtIso: "2026-06-30T08:00:00.000Z",
+          }),
+        },
+        {
+          id: "report-1",
+          data: () => ({
+            name: "First Reporter",
+            email: "first@example.com",
+            problem: "The dashboard did not load saved reviews.",
+            emailStatus: "failed",
+            requestId: "request-1",
+            createdAt: { toDate: () => new Date("2026-06-29T08:00:00.000Z") },
+          }),
+        },
+      ],
+    });
+
+    const reports = await listBugReports(25);
+
+    expect(firestoreMock.collection).toHaveBeenCalledWith("bugReports");
+    expect(firestoreMock.orderBy).toHaveBeenCalledWith("createdAt", "desc");
+    expect(firestoreMock.limit).toHaveBeenCalledWith(25);
+    expect(reports).toEqual([
+      expect.objectContaining({
+        id: "report-2",
+        emailStatus: "sent",
+        emailProviderMessageId: "email-2",
+      }),
+      expect.objectContaining({
+        id: "report-1",
+        emailStatus: "failed",
+        createdAtIso: "2026-06-29T08:00:00.000Z",
+      }),
+    ]);
   });
 
   it("does not send email when provider settings are missing", async () => {

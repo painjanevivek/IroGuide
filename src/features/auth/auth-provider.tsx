@@ -568,6 +568,7 @@ function shouldInitializeAuthSession() {
 function isAuthSensitivePath(pathname: string) {
   return (
     pathname.startsWith("/auth")
+    || pathname.startsWith("/admin")
     || pathname.startsWith("/community")
     || pathname.startsWith("/dashboard")
     || pathname.startsWith("/profile")
