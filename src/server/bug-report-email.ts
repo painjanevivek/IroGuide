@@ -36,6 +36,10 @@ export async function sendBugReportEmail(report: StoredBugReport): Promise<BugRe
   return { status: "sent", ...(payload.id ? { providerMessageId: payload.id } : {}) };
 }
 
+export function isBugReportEmailConfigured() {
+  return Boolean(getEnv("RESEND_API_KEY") && getEnv("BUG_REPORT_TO_EMAIL") && getEnv("BUG_REPORT_FROM_EMAIL"));
+}
+
 function getBugReportEmailText(report: StoredBugReport) {
   return [
     "New IroGuide bug report",

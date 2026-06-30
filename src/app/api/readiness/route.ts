@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createPublicRequestContext, enforceRateLimit } from "@/server/api-security";
+import { isBugReportEmailConfigured } from "@/server/bug-report-email";
 import { getFirebaseAdminProjectId, isFirebaseAdminConfigured } from "@/server/firebase-admin";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
 import { getReviewProviderStatus } from "@/server/review-provider";
@@ -25,12 +26,14 @@ export function GET(request: Request) {
   const publicFirebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || null;
   const checks = {
     accountStorage: isFirebaseAdminConfigured(),
+    bugReportEmail: isBugReportEmailConfigured(),
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
   };
-  const ready = checks.accountStorage && checks.firebaseProjectMatch && checks.liveVision;
+  const ready = checks.accountStorage && checks.bugReportEmail && checks.firebaseProjectMatch && checks.liveVision;
   logRequestEvent("info", "readiness.checked", context, {
     ready,
+    bugReportEmail: checks.bugReportEmail,
     liveVision: checks.liveVision,
   });
 

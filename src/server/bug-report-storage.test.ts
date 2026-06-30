@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendBugReportEmail } from "./bug-report-email";
+import { isBugReportEmailConfigured, sendBugReportEmail } from "./bug-report-email";
 import { listBugReports, saveBugReport, updateBugReportEmailStatus } from "./bug-report-storage";
 
 const firestoreMock = vi.hoisted(() => {
@@ -139,5 +139,15 @@ describe("bug report storage", () => {
     });
 
     expect(result).toEqual({ status: "not_configured" });
+  });
+
+  it("reports bug report email readiness only when all delivery settings exist", () => {
+    expect(isBugReportEmailConfigured()).toBe(false);
+
+    process.env.RESEND_API_KEY = "test-key";
+    process.env.BUG_REPORT_TO_EMAIL = "bugs@example.com";
+    process.env.BUG_REPORT_FROM_EMAIL = "IroGuide <bugs@iroguide.com>";
+
+    expect(isBugReportEmailConfigured()).toBe(true);
   });
 });

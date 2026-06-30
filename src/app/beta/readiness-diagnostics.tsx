@@ -9,6 +9,7 @@ import {
   Database,
   Eye,
   KeyRound,
+  MailCheck,
   RefreshCw,
   ServerCrash,
   ShieldCheck,
@@ -19,6 +20,7 @@ type ReadinessPayload = {
   ok: boolean;
   checks: {
     accountStorage: boolean;
+    bugReportEmail: boolean;
     firebaseProjectMatch: boolean;
     liveVision: boolean;
   };
@@ -137,8 +139,8 @@ export function ReadinessDiagnostics() {
 
   if (!diagnostics) return null;
 
-  const { firebaseChecks, liveReviewChecks, failingChecks, passingCount, totalCount } = diagnostics;
-  const readinessLabel = state.payload.ok ? "Ready for live review" : "Needs setup";
+  const { firebaseChecks, supportChecks, liveReviewChecks, failingChecks, passingCount, totalCount } = diagnostics;
+  const readinessLabel = state.payload.ok ? "Ready for launch checks" : "Needs setup";
   const statusIcon = state.payload.ok ? <CheckCircle2 /> : <AlertTriangle />;
 
   return (
@@ -162,7 +164,7 @@ export function ReadinessDiagnostics() {
           <span className="mono-label">LIVE READINESS</span>
           <strong>{passingCount}<small>/{totalCount}</small></strong>
           <p>{readinessLabel}</p>
-          <div aria-hidden="true">
+          <div aria-hidden="true" style={{ gridTemplateColumns: `repeat(${totalCount}, minmax(8px, 1fr))` }}>
             {Array.from({ length: totalCount }, (_, index) => (
               <i key={index} className={index < passingCount ? "is-lit" : undefined} />
             ))}
@@ -204,6 +206,12 @@ export function ReadinessDiagnostics() {
           icon={<Eye />}
           checks={liveReviewChecks}
         />
+        <DiagnosticGroup
+          title="Support checks"
+          eyebrow="BUG REPORT DELIVERY"
+          icon={<MailCheck />}
+          checks={supportChecks}
+        />
       </div>
 
       <div className="diagnostics-details">
@@ -225,6 +233,10 @@ export function ReadinessDiagnostics() {
             <div>
               <dt>Custom review endpoint</dt>
               <dd>{state.payload.reviewProvider.endpointConfigured ? "Configured" : "Missing"}</dd>
+            </div>
+            <div>
+              <dt>Bug report email</dt>
+              <dd>{state.payload.checks.bugReportEmail ? "Configured" : "Missing"}</dd>
             </div>
           </dl>
         </div>
@@ -336,10 +348,23 @@ function buildDiagnostics(payload: ReadinessPayload) {
     },
   ];
 
-  const allChecks = [...firebaseChecks, ...liveReviewChecks];
+  const supportChecks: DiagnosticItem[] = [
+    {
+      id: "bug-report-email",
+      label: "Bug report email delivery",
+      passed: payload.checks.bugReportEmail,
+      detail: payload.checks.bugReportEmail
+        ? "Bug report notification email is configured for the contact form."
+        : "Bug reports can be stored, but email delivery to the developer inbox is not configured.",
+      fix: "Set RESEND_API_KEY, BUG_REPORT_TO_EMAIL, and BUG_REPORT_FROM_EMAIL in the server environment, then redeploy.",
+    },
+  ];
+
+  const allChecks = [...firebaseChecks, ...liveReviewChecks, ...supportChecks];
 
   return {
     firebaseChecks,
+    supportChecks,
     liveReviewChecks,
     failingChecks: allChecks.filter((check) => !check.passed),
     passingCount: allChecks.filter((check) => check.passed).length,
@@ -391,6 +416,7 @@ function isReadinessPayload(value: unknown): value is ReadinessPayload {
 
   return typeof value.ok === "boolean"
     && typeof value.checks.accountStorage === "boolean"
+    && typeof value.checks.bugReportEmail === "boolean"
     && typeof value.checks.firebaseProjectMatch === "boolean"
     && typeof value.checks.liveVision === "boolean"
     && typeof value.reviewProvider.activeProvider === "string"

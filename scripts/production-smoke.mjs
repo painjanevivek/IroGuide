@@ -154,7 +154,7 @@ async function checkReadiness() {
     const response = await fetch(`${baseUrl}/api/readiness`);
     const payload = await response.json();
     const ok = requireReady ? response.ok && payload.ok === true : response.status === 200 || response.status === 503;
-    addResult(name, ok, `status=${response.status} accountStorage=${Boolean(payload.checks?.accountStorage)} liveVision=${Boolean(payload.checks?.liveVision)} provider=${payload.reviewProvider?.activeProvider ?? "unknown"}`);
+    addResult(name, ok, `status=${response.status} accountStorage=${Boolean(payload.checks?.accountStorage)} bugReportEmail=${Boolean(payload.checks?.bugReportEmail)} liveVision=${Boolean(payload.checks?.liveVision)} provider=${payload.reviewProvider?.activeProvider ?? "unknown"}`);
   } catch (error) {
     addResult(name, false, getErrorMessage(error));
   }
