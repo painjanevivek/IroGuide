@@ -91,10 +91,10 @@ images. It uses the same Firebase web key and Admin credential environment
 variables described above. Set `SMOKE_SECURITY_HEADERS=false` or
 `SMOKE_FIREBASE_RULES=false` only when intentionally narrowing a diagnostic run.
 
-The manual `Production Smoke` GitHub Actions workflow runs the same command
-against either staging or production and uploads
-`artifacts/production-smoke-report.json`. Configure one target URL before
-running it:
+The `Production Smoke` GitHub Actions workflow runs the same command and uploads
+`artifacts/production-smoke-report.json`. Successful deployments to the `staging`
+environment run staging smoke automatically; production remains a manual
+`workflow_dispatch` gate. Configure one target URL before running it:
 
 - `vars.IROGUIDE_STAGING_URL` or `secrets.IROGUIDE_STAGING_URL`
 - `vars.IROGUIDE_PRODUCTION_URL` or `secrets.IROGUIDE_PRODUCTION_URL`

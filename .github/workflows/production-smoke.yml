@@ -1,6 +1,7 @@
 name: Production Smoke
 
 on:
+  deployment_status:
   workflow_dispatch:
     inputs:
       target:
@@ -36,22 +37,24 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-smoke-${{ github.ref }}-${{ inputs.target }}
+  group: production-smoke-${{ github.event_name == 'deployment_status' && 'staging' || inputs.target }}
   cancel-in-progress: true
 
 jobs:
   smoke:
-    name: ${{ inputs.target == 'production' && 'Production smoke gate' || 'Staging smoke gate' }}
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.target == 'production' && 'Production smoke gate' || 'Staging smoke gate' }}
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'staging')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
+      SMOKE_TARGET: ${{ github.event_name == 'deployment_status' && 'staging' || inputs.target }}
       STAGING_SMOKE_BASE_URL: ${{ vars.IROGUIDE_STAGING_URL || secrets.IROGUIDE_STAGING_URL }}
       PRODUCTION_SMOKE_BASE_URL: ${{ vars.IROGUIDE_PRODUCTION_URL || secrets.IROGUIDE_PRODUCTION_URL }}
       SMOKE_REPORT_PATH: artifacts/production-smoke-report.json
-      SMOKE_REQUIRE_READY: ${{ inputs.require_ready }}
-      SMOKE_AUTHENTICATED_REVIEW: ${{ inputs.run_authenticated_review }}
-      SMOKE_FIREBASE_RULES: ${{ inputs.run_firebase_rules }}
-      SMOKE_SECURITY_HEADERS: ${{ inputs.run_security_headers }}
+      SMOKE_REQUIRE_READY: ${{ github.event_name == 'deployment_status' && 'true' || inputs.require_ready }}
+      SMOKE_AUTHENTICATED_REVIEW: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_authenticated_review }}
+      SMOKE_FIREBASE_RULES: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_firebase_rules }}
+      SMOKE_SECURITY_HEADERS: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_security_headers }}
       NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID || secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
@@ -76,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "${{ inputs.target }}" = "production" ]; then
+          if [ "${SMOKE_TARGET}" = "production" ]; then
             smoke_base_url="${PRODUCTION_SMOKE_BASE_URL}"
             url_name="vars.IROGUIDE_PRODUCTION_URL or secrets.IROGUIDE_PRODUCTION_URL"
           else
@@ -130,6 +133,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: production-smoke-report-${{ inputs.target }}
+          name: production-smoke-report-${{ env.SMOKE_TARGET }}
           path: artifacts/production-smoke-report.json
           if-no-files-found: warn
