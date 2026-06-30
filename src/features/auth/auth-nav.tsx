@@ -19,6 +19,7 @@ export function LandingHeaderActions() {
   if (user) {
     return (
       <div className="header-actions">
+        <Link className="text-link desktop-only" href="/docs" prefetch={false}>Docs</Link>
         <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
         <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
         <UserMenu />
@@ -28,6 +29,7 @@ export function LandingHeaderActions() {
 
   return (
     <div className="header-actions">
+      <Link className="text-link desktop-only" href="/docs" prefetch={false}>Docs</Link>
       <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
       <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
       <Link className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false} data-analytics-event="nav_sign_in_click">Sign in</Link>
@@ -44,6 +46,7 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
   if (user) {
     return (
       <>
+        <Link href="/docs" prefetch={false}>Docs</Link>
         {includeDashboard && <Link href="/dashboard" prefetch={false}>Dashboard</Link>}
         <UserMenu />
       </>
@@ -52,6 +55,7 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
 
   return (
     <>
+      <Link href="/docs" prefetch={false}>Docs</Link>
       {includeDashboard && <Link href="/dashboard" prefetch={false}>Dashboard</Link>}
       <Link href="/auth?mode=sign-in" prefetch={false} data-analytics-event="nav_sign_in_click">Sign in</Link>
       <Link className="button button-small" href="/auth?mode=sign-up" prefetch={false} data-analytics-event="nav_sign_up_click">Sign up <ArrowRight /></Link>

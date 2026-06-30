@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight, Github, LifeBuoy, Mail } from "lucide-react";
+import { ArrowRight, BookOpenText, Github, LifeBuoy, Mail } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { BugReportForm } from "@/features/contact/bug-report-form";
 
@@ -21,7 +21,7 @@ export default function ContactPage() {
     <div className="simple-page">
       <header className="simple-header">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
-        <nav><Link href="/about">About</Link><Link href="/projects">Projects</Link></nav>
+        <nav><Link href="/about">About</Link><Link href="/projects">Projects</Link><Link href="/docs">Docs</Link></nav>
       </header>
       <main className="official-main">
         <section className="official-hero contact-hero">
@@ -32,6 +32,7 @@ export default function ContactPage() {
         <BugReportForm />
         <section className="contact-list" aria-label="Contact options">
           <a href={supportMailto} data-analytics-event="contact_support_email_click"><LifeBuoy /><span><strong>Contact support</strong><small>Email {siteConfig.supportEmail} for account help, saved critique questions, privacy requests, or product support.</small></span><ArrowRight /></a>
+          <Link href="/docs"><BookOpenText /><span><strong>Read the docs</strong><small>Learn how reviews work, what to upload, and how saved critiques stay private before contacting support.</small></span><ArrowRight /></Link>
           <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer"><Github /><span><strong>Project repository</strong><small>Review related IroGuide engineering work on GitHub.</small></span><ArrowRight /></a>
         </section>
       </main>

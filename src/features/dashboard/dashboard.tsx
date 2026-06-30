@@ -156,7 +156,7 @@ export function Dashboard() {
       ) : reviews.length === 0 ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-empty">
-            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>Your dashboard becomes useful after the first critique—no fake charts, no invented progress.</p><Link className="button button-dark" href="/review/new">Review a design <Sparkles /></Link></div>
+            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>Your dashboard becomes useful after the first critique. New to the workflow? <Link href="/docs">Read the docs</Link>.</p><Link className="button button-dark" href="/review/new">Review a design <Sparkles /></Link></div>
           </div>
         </Reveal>
       ) : (
