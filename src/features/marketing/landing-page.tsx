@@ -19,6 +19,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { LandingFinalAuthActions, LandingHeaderActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
+import { FaqAccordion } from "@/features/marketing/faq-accordion";
 
 const categories = [
   "Brand identity",
@@ -194,7 +195,7 @@ export function LandingPage() {
 
       <section className="faq-section section-pad" id="faq">
         <div><p className="eyebrow">Questions, answered</p><h2>Before you<br />upload.</h2></div>
-        <div className="faq-list">{faqs.map(([question, answer], index) => <details key={question} open={index === 0}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}</div>
+        <FaqAccordion items={faqs} />
       </section>
 
       <section className="final-cta section-pad">
