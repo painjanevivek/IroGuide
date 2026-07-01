@@ -18,8 +18,12 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
-import { LandingFinalAuthActions, LandingHeaderActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
+import { LandingFinalAuthActions, LandingHeroAuthButton } from "@/features/auth/auth-nav";
+import { AnimatedCritiqueLab } from "@/features/marketing/animated-critique-lab";
 import { FaqAccordion } from "@/features/marketing/faq-accordion";
+import { LandingScrollHeader } from "@/features/marketing/landing-scroll-header";
+import { LandingSmoothMotion } from "@/features/marketing/landing-smooth-motion";
+import { MorphingExamplePoster } from "@/features/marketing/morphing-example-poster";
 
 const categories = [
   "Brand identity",
@@ -70,17 +74,9 @@ const faqs = [
 export function LandingPage() {
   return (
     <main className="site-shell">
-      <header className="site-header">
-        <Link className="wordmark" href="/">
-          <span className="wordmark-mark" aria-hidden="true">I</span>
-          <span>IroGuide</span>
-        </Link>
-        <nav className="desktop-nav" aria-label="Main navigation">
-          {siteConfig.navigation.map((item) => <Link key={item.href} href={item.href} prefetch={false}>{item.label}</Link>)}
-        </nav>
-        <LandingHeaderActions />
-      </header>
+      <LandingScrollHeader />
 
+      <LandingSmoothMotion>
       <section className="hero section-pad">
         <div className="hero-copy reveal">
           <p className="eyebrow"><span className="signal-dot" /> Official IroGuide website</p>
@@ -130,6 +126,8 @@ export function LandingPage() {
         </div>
       </div>
 
+      <AnimatedCritiqueLab />
+
       <section className="problem-section section-pad" id="how-it-works">
         <div className="section-intro">
           <p className="eyebrow">Beyond &quot;looks good&quot;</p>
@@ -159,7 +157,7 @@ export function LandingPage() {
 
       <section className="example-section section-pad" id="example">
         <div className="example-preview">
-          <div className="example-art"><span>SHIFT</span><strong>MAKE<br />SPACE<br />FOR<br /><em>BOLD</em></strong><div className="shape-one" /><div className="shape-two" /></div>
+          <MorphingExamplePoster />
           <span className="image-tag">ORIGINAL / POSTER</span>
         </div>
         <div className="example-review">
@@ -211,6 +209,7 @@ export function LandingPage() {
         <p>Critique that makes the work and the designer better.</p>
         <div>{siteConfig.footerNavigation.map((item) => <Link key={item.href} href={item.href} prefetch={false}>{item.label}</Link>)}<span>Copyright 2026 IroGuide</span></div>
       </footer>
+      </LandingSmoothMotion>
     </main>
   );
 }

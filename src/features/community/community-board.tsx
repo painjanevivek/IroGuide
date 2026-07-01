@@ -697,7 +697,7 @@ function CommunityPostCard({
         </div>
       </div>
       <div className="community-post-actions" aria-label="Post actions">
-        <button type="button" aria-pressed={interaction.liked} disabled={pendingInteraction.liked} onClick={() => onToggleInteraction(post, "liked")} data-analytics-event="community_like_click"><Heart size={17} /> {likedCount}</button>
+        <button type="button" className="like-action" aria-pressed={interaction.liked} disabled={pendingInteraction.liked} onClick={() => onToggleInteraction(post, "liked")} data-analytics-event="community_like_click"><Heart size={17} /> {likedCount}</button>
         <button type="button" aria-expanded={expandedComments} aria-controls={`comments-${post.id}`} onClick={() => onOpenComments(post.id)} data-analytics-event="community_comments_open"><MessageSquareText size={17} /> {commentCount}</button>
         <button type="button" aria-pressed={interaction.shared} onClick={onShare} data-analytics-event="community_share_click"><Share2 size={17} /> Share</button>
         <button type="button" aria-pressed={interaction.saved} disabled={pendingInteraction.saved} onClick={() => onToggleInteraction(post, "saved")} data-analytics-event="community_save_click"><Bookmark size={17} /> {savedCount}</button>

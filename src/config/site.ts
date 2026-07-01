@@ -27,13 +27,6 @@ export const siteConfig = {
     { label: "How it works", href: "/#how-it-works" },
     { label: "Modes", href: "/#modes" },
     { label: "Example review", href: "/#example" },
-    { label: "Docs", href: "/docs" },
-    { label: "Community", href: "/community" },
-    { label: "Projects", href: "/projects" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-    { label: "FAQ", href: "/#faq" },
   ],
   footerNavigation: [
     { label: "About", href: "/about" },
