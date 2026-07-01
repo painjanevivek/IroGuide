@@ -192,8 +192,14 @@ export function LandingScrollHeader() {
       <div className="landing-scroll-actions">
         {!loading && !user && <Link className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false}>Sign in</Link>}
         {loading ? <span className="auth-status">Checking session...</span> : user ? <UserMenu /> : null}
-        <Link className="button button-small landing-scroll-cta" href={user ? "/review/new" : "/auth?mode=sign-up"} prefetch={false}>
-          {user ? "Start review" : "Sign up"} <ArrowRight size={16} />
+        <Link
+          aria-label={user ? "Start a new review" : "Sign up for IroGuide"}
+          className="button button-small landing-scroll-cta"
+          href={user ? "/review/new" : "/auth?mode=sign-up"}
+          prefetch={false}
+        >
+          <span className="landing-scroll-cta-label">{user ? "Start review" : "Sign up"}</span>
+          <ArrowRight size={16} />
         </Link>
       </div>
     </header>
