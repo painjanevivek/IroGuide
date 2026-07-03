@@ -20,6 +20,7 @@ import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
+import { cacheLocalReviewSourceImage } from "@/lib/review-source-image-cache";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
 import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
@@ -232,7 +233,7 @@ export function ReviewStudio() {
       setResultSaveState("saving");
       setResultSaveError("");
       try {
-        const saveResult = cacheCompletedReviewForDashboard(currentUser.uid, parsed, category, reviewResponse.persistence.savedToAccount, reviewResponse.persistence.sourceImage);
+        const saveResult = await cacheCompletedReviewForDashboard(currentUser.uid, parsed, category, reviewResponse.persistence.savedToAccount, reviewResponse.persistence.sourceImage, file);
         void deleteActiveReviewDraft(currentUser.uid);
         setResultSaveState(saveResult.syncedToCloud ? "saved" : "local");
         setResultSaveError(saveResult.message ?? "");
@@ -465,7 +466,7 @@ function parseReviewCreatePayload(payload: unknown) {
   };
 }
 
-function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, category: ReviewCategory, savedToAccount: boolean, sourceImage?: ReviewSourceImage) {
+async function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, category: ReviewCategory, savedToAccount: boolean, sourceImage?: ReviewSourceImage, sourceFile?: File | null) {
   const storedReview = createStoredReviewDocument({
     userId,
     review,
@@ -476,6 +477,9 @@ function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, 
   const cached = cacheReviewDocument(storedReview);
   if (!cached) {
     throw new Error("The critique was created, but this browser could not prepare it for your dashboard.");
+  }
+  if (sourceFile) {
+    await cacheLocalReviewSourceImage(userId, storedReview.id, sourceFile);
   }
 
   return savedToAccount
@@ -490,6 +494,9 @@ function cacheCompletedReviewForDashboard(userId: string, review: ReviewOutput, 
 async function syncCompletedReviewToAccount(idToken: string, userId: string, review: ReviewOutput, category: ReviewCategory, sourceFile: File | null) {
   const storedReview = createStoredReviewDocument({ userId, review, category, syncState: "local" });
   cacheReviewDocument(storedReview);
+  if (sourceFile) {
+    await cacheLocalReviewSourceImage(userId, storedReview.id, sourceFile);
+  }
   const payload = sourceFile
     ? await postReviewSyncForm(idToken, storedReview, sourceFile)
     : await postJsonWithFallback({

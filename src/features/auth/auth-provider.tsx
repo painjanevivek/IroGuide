@@ -440,7 +440,9 @@ function parseReviewDataDeletionResult(payload: unknown, fallbackMessage: string
 
 async function clearLocalReviewData(userId: string) {
   const { clearCachedReviewDocuments } = await import("@/lib/review-persistence");
+  const { clearCachedLocalReviewSourceImages } = await import("@/lib/review-source-image-cache");
   clearCachedReviewDocuments(userId);
+  await clearCachedLocalReviewSourceImages(userId);
 }
 
 async function clearLocalAccountData(userId: string) {

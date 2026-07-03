@@ -11,6 +11,7 @@ import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getReviewSourceImageDownloadUrl } from "@/lib/firebase/storage";
 import { getCachedReviewDocuments } from "@/lib/review-persistence";
+import { getCachedLocalReviewSourceImage } from "@/lib/review-source-image-cache";
 
 export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   const { user } = useAuth();
@@ -73,22 +74,43 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   }, [documentId, user]);
 
   useEffect(() => {
-    if (!document?.sourceImage || !user) {
+    if (!document || !user) {
       queueMicrotask(() => setPreviewUrl(null));
       return;
     }
 
+    const currentDocument = document;
+    const currentUser = user;
     let active = true;
-    void getReviewSourceImageDownloadUrl(document.sourceImage, user.uid)
-      .then((url) => {
-        if (active) setPreviewUrl(url);
-      })
-      .catch(() => {
-        if (active) setPreviewUrl(null);
-      });
+    let localObjectUrl: string | null = null;
+
+    async function loadPreview() {
+      if (currentDocument.sourceImage) {
+        try {
+          const cloudUrl = await getReviewSourceImageDownloadUrl(currentDocument.sourceImage, currentUser.uid);
+          if (active) setPreviewUrl(cloudUrl);
+          return;
+        } catch {
+          // Fall back to the browser's private local source image cache below.
+        }
+      }
+
+      const localSourceImage = await getCachedLocalReviewSourceImage(currentUser.uid, currentDocument.id);
+      if (!active) return;
+
+      if (localSourceImage) {
+        localObjectUrl = URL.createObjectURL(localSourceImage);
+        setPreviewUrl(localObjectUrl);
+      } else {
+        setPreviewUrl(null);
+      }
+    }
+
+    void loadPreview();
 
     return () => {
       active = false;
+      if (localObjectUrl) URL.revokeObjectURL(localObjectUrl);
     };
   }, [document, user]);
 
