@@ -1,6 +1,14 @@
+const productionSiteUrl = "https://www.iroguide.com";
+
+function getCanonicalSiteUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  if (!configuredUrl || configuredUrl === "https://iroguide.com") return productionSiteUrl;
+  return configuredUrl;
+}
+
 export const siteConfig = {
   name: "IroGuide",
-  url: process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") || "https://iroguide.com",
+  url: getCanonicalSiteUrl(),
   title: "IroGuide - AI Design Critique and Creative Feedback",
   description:
     "IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.",
