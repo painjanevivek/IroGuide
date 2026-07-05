@@ -121,7 +121,6 @@ export function LandingScrollHeader() {
           "--landing-marker-border": "#c8f45d",
           ease: "none",
           duration: 1,
-          WebkitBackdropFilter: "blur(24px) saturate(150%)",
         }, 0)
         .to(brandText, { width: 0, opacity: 0, ease: "none", duration: 0.7 }, 0)
         .to(brandMark, { width: 38, height: 38, ease: "none", duration: 1 }, 0)
