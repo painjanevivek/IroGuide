@@ -182,3 +182,7 @@ npm run test:e2e
 Firebase mode uses the real manual sign-in flow, the real `/api/reviews` route,
 and account storage. Use a disposable Firebase test account because the smoke
 saves a critique to that account.
+
+## License
+
+This project is licensed under the Apache License 2.0.
