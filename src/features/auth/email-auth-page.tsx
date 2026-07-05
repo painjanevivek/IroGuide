@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, LoaderCircle, Mail, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
+import { AuthTemplateShell } from "./auth-template-shell";
 
 type EmailAuthPageProps = {
   mode: "sign-in" | "sign-up";
@@ -103,7 +104,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
   }
 
   return (
-    <main className="auth-gate">
+    <AuthTemplateShell mode={mode}>
       <ShieldCheck size={36} />
       <p className="eyebrow">Manual {isSignUp ? "sign up" : "sign in"}</p>
       <h1>{isSignUp ? "Create your account with email and password." : "Sign in with your email and password."}</h1>
@@ -169,7 +170,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
           )}
         </div>
       </form>
-    </main>
+    </AuthTemplateShell>
   );
 }
 

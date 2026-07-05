@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { Home, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
 
@@ -53,9 +53,6 @@ export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", se
         </button>
         <Link className="button-secondary" href={isSignUp ? "/auth/sign-up" : "/auth/sign-in"} data-analytics-event="auth_manual_click" data-analytics-label={intent}>
           {isSignUp ? "Sign up manually with email" : "Sign in manually with email"}
-        </Link>
-        <Link className="button-secondary" href="/" data-analytics-event="auth_home_click" data-analytics-label={intent}>
-          <Home size={16} /> Home
         </Link>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>
       </div>

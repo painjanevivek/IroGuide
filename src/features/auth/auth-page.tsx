@@ -5,6 +5,7 @@ import { LoaderCircle } from "lucide-react";
 import { useEffect } from "react";
 import { GoogleAuthCard } from "./google-auth-card";
 import { useAuth } from "./auth-provider";
+import { AuthTemplateShell } from "./auth-template-shell";
 
 export function AuthPage() {
   const router = useRouter();
@@ -34,5 +35,9 @@ export function AuthPage() {
     );
   }
 
-  return <main className="auth-gate"><GoogleAuthCard intent={intent} nextPath="/dashboard" setupError={error} /></main>;
+  return (
+    <AuthTemplateShell mode={intent}>
+      <GoogleAuthCard intent={intent} nextPath="/dashboard" setupError={error} />
+    </AuthTemplateShell>
+  );
 }
