@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { gsap, registerIroGuideGsap, ScrollTrigger } from "@/components/motion/gsap-runtime";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
 import { useAuth } from "@/features/auth/auth-provider";
+import { AuthTransitionLink } from "@/features/auth/auth-transition-link";
 import { UserMenu } from "@/features/auth/user-menu";
 
 const landingSections = [
@@ -190,17 +191,29 @@ export function LandingScrollHeader() {
       </nav>
 
       <div className="landing-scroll-actions">
-        {!loading && !user && <Link className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false}>Sign in</Link>}
+        {!loading && !user && <AuthTransitionLink className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false}>Sign in</AuthTransitionLink>}
         {loading ? <span className="auth-status">Checking session...</span> : user ? <UserMenu /> : null}
-        <Link
-          aria-label={user ? "Start a new review" : "Sign up for IroGuide"}
-          className="button button-small landing-scroll-cta"
-          href={user ? "/review/new" : "/auth?mode=sign-up"}
-          prefetch={false}
-        >
-          <span className="landing-scroll-cta-label">{user ? "Start review" : "Sign up"}</span>
-          <ArrowRight size={16} />
-        </Link>
+        {user ? (
+          <Link
+            aria-label="Start a new review"
+            className="button button-small landing-scroll-cta"
+            href="/review/new"
+            prefetch={false}
+          >
+            <span className="landing-scroll-cta-label">Start review</span>
+            <ArrowRight size={16} />
+          </Link>
+        ) : (
+          <AuthTransitionLink
+            aria-label="Sign up for IroGuide"
+            className="button button-small landing-scroll-cta"
+            href="/auth?mode=sign-up"
+            prefetch={false}
+          >
+            <span className="landing-scroll-cta-label">Sign up</span>
+            <ArrowRight size={16} />
+          </AuthTransitionLink>
+        )}
       </div>
     </header>
   );
