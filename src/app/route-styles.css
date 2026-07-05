@@ -65,13 +65,16 @@
 .improvement-empty { margin-top: 3rem; padding: 1.2rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; }
 .improvement-empty > div { flex: 1; }.improvement-empty svg { color: var(--lime); }.improvement-empty strong { display: block; margin-top: .5rem; }
 .improvement-empty p { max-width: 650px; margin: .4rem 0 0; color: rgba(255,255,255,.55); font-size: .72rem; line-height: 1.55; }
-.improvement-output { margin-top: 3rem; }.improvement-steps { display: grid; gap: .8rem; }
+.improvement-output { margin-top: 3rem; }.improvement-generation-status { width: fit-content; margin: 0 0 1rem; padding: .55rem .7rem; color: var(--lime); background: rgba(200,244,93,.08); border: 1px solid rgba(200,244,93,.18); border-radius: 8px; font: 650 .6rem var(--font-mono); text-transform: uppercase; }.improvement-steps { display: grid; gap: .8rem; }
 .improvement-steps article { display: grid; grid-template-columns: 45px 1fr; gap: 1rem; padding: 1.3rem; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; }
 .improvement-steps article > span { color: var(--lime); font: 600 .67rem var(--font-mono); }.improvement-steps h3 { margin: 0; font: 650 1.25rem var(--font-display); }
 .improvement-steps p, .improvement-steps li { color: rgba(255,255,255,.62); font-size: .72rem; line-height: 1.6; }.improvement-steps ul { padding: 0; list-style: none; }
 .improvement-steps li { display: flex; align-items: center; gap: .5rem; }.improvement-steps li svg { width: 14px; color: var(--lime); }
 .prompt-card { margin-top: 1rem; padding: 1.5rem; background: var(--paper); color: var(--ink); border-radius: 14px; }.prompt-card > p { line-height: 1.75; color: var(--graphite); }.prompt-card svg { width: 16px; }
 .manual-checks { display: grid; gap: .6rem; margin-top: 1.5rem; }.manual-checks strong { margin-bottom: .3rem; }.manual-checks span { display: flex; align-items: center; gap: .6rem; color: rgba(255,255,255,.65); font-size: .72rem; }.manual-checks svg { width: 15px; color: var(--lime); }
+.progressive-reveal { animation: progressiveReveal .42s var(--ease-standard) both; transform-origin: top center; }
+@keyframes progressiveReveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .progressive-reveal { animation: none; } }
 @media (max-width: 620px) { .improvement-empty { align-items: stretch; flex-direction: column; } }
 
 /* Revision comparison */
