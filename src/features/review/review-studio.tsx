@@ -32,6 +32,7 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 type Step = 1 | 2 | 3 | 4;
 type DragState = "idle" | "accept" | "reject";
 type ReviewSaveState = "idle" | "saving" | "saved" | "local";
+type FeedbackMode = (typeof feedbackModes)[number];
 
 const stepLabels = ["Upload", "Design brief", "Feedback mode", "Confirm"] as const;
 const stepSummaries = ["Choose one design image", "Tell us what success means", "Choose your critic", "Review the details"] as const;
@@ -43,6 +44,36 @@ const modeCopy = {
   mentor: ["Mentor", "Professional, detailed, and balanced."],
   direct: ["Direct", "Sharp and honest, never personal."],
 } as const;
+
+const sampleDesigns: Array<{
+  mode: FeedbackMode;
+  title: string;
+  description: string;
+  category: ReviewCategory;
+  fileName: string;
+}> = [
+  {
+    mode: "friendly",
+    title: "Friendly sample",
+    description: "A warm social launch graphic for clear, encouraging notes.",
+    category: "social",
+    fileName: "iroguide-friendly-sample.png",
+  },
+  {
+    mode: "mentor",
+    title: "Mentor sample",
+    description: "A product landing page with hierarchy and conversion tradeoffs.",
+    category: "website",
+    fileName: "iroguide-mentor-sample.png",
+  },
+  {
+    mode: "direct",
+    title: "Direct sample",
+    description: "A bold event poster that needs fast, decisive critique.",
+    category: "poster",
+    fileName: "iroguide-direct-sample.png",
+  },
+];
 
 function getSourcePreviewCaption(preview: string | null, sourceImage: ReviewSourceImage | null) {
   if (preview && sourceImage) return "Private account image";
@@ -66,7 +97,8 @@ export function ReviewStudio() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [dragState, setDragState] = useState<DragState>("idle");
   const [category, setCategory] = useState<(typeof reviewCategories)[number]>("website");
-  const [mode, setMode] = useState<(typeof feedbackModes)[number]>("mentor");
+  const [mode, setMode] = useState<FeedbackMode>("mentor");
+  const [selectedSampleMode, setSelectedSampleMode] = useState<FeedbackMode | null>(null);
   const [brief, setBrief] = useState({ audience: "", purpose: "", style: "", goal: "", concern: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -178,7 +210,31 @@ export function ReviewStudio() {
     previewRef.current = nextPreview;
     setPreview(nextPreview);
     setFile(candidate);
+    setSelectedSampleMode(null);
     setUploadStatus(`${candidate.name} is ready for critique.`);
+  }
+
+  async function selectSampleDesign(sample: (typeof sampleDesigns)[number]) {
+    setFileError("");
+    setSubmitError("");
+    setUploadStatus(`Preparing the ${sample.title.toLowerCase()}...`);
+    setMode(sample.mode);
+    setCategory(sample.category);
+
+    try {
+      const sampleFile = await createSampleDesignFile(sample);
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      const nextPreview = URL.createObjectURL(sampleFile);
+      previewRef.current = nextPreview;
+      setPreview(nextPreview);
+      setFile(sampleFile);
+      setSelectedSampleMode(sample.mode);
+      setUploadStatus(`${sample.title} is ready for critique.`);
+    } catch {
+      setSelectedSampleMode(null);
+      setUploadStatus("");
+      setFileError("The sample image could not be prepared. Upload your own design instead.");
+    }
   }
 
   function removeFile() {
@@ -186,6 +242,7 @@ export function ReviewStudio() {
     previewRef.current = null;
     setPreview(null);
     setFile(null);
+    setSelectedSampleMode(null);
     setUploadStatus("Selected image removed.");
   }
 
@@ -278,7 +335,7 @@ export function ReviewStudio() {
         <section className="studio-workspace">
           <div className="workspace-top" aria-live="polite"><span className="mono-label">STEP {step} / 4</span><span>{stepSummaries[step - 1]}</span></div>
           <StepTransition direction={stepDirection} stepKey={step}>
-          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()} data-analytics-event="review_replace_image_click"><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" data-drag-state={dragState} onDragEnter={onDragOver} onDragOver={onDragOver} onDragLeave={() => setDragState("idle")} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>{dragState === "reject" ? "This file type is not supported" : dragState === "accept" ? "Release to add this design" : "Drop your design here"}</h3><p>{dragState === "reject" ? "Use a PNG, JPEG, or WebP image." : "or choose a file from your device"}</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()} data-analytics-event="review_browse_files_click">Browse files</button><span>PNG, JPEG, or WebP · 10 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{uploadStatus && <p className="upload-status" role="status" aria-live="polite"><Check size={16} /> {uploadStatus}</p>}{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}{submitError && !file && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => goToStep(2)} data-analytics-event="review_upload_continue_click">Continue <ArrowRight size={17} /></button></div></div>}
+          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()} data-analytics-event="review_replace_image_click"><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" data-drag-state={dragState} onDragEnter={onDragOver} onDragOver={onDragOver} onDragLeave={() => setDragState("idle")} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>{dragState === "reject" ? "This file type is not supported" : dragState === "accept" ? "Release to add this design" : "Drop your design here"}</h3><p>{dragState === "reject" ? "Use a PNG, JPEG, or WebP image." : "or choose a file from your device"}</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()} data-analytics-event="review_browse_files_click">Browse files</button><span>PNG, JPEG, or WebP · 10 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{uploadStatus && <p className="upload-status" role="status" aria-live="polite"><Check size={16} /> {uploadStatus}</p>}{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}{submitError && !file && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<section className="sample-gallery" aria-labelledby="sample-gallery-title"><header><div><span className="mono-label">Try a sample</span><h3 id="sample-gallery-title">Or choose a critic sample</h3></div><p>Each sample selects its matching feedback mode and gives you a concrete design to critique.</p></header><div className="sample-grid">{sampleDesigns.map((sample) => <button key={sample.mode} type="button" className={`sample-card sample-${sample.mode}`} aria-pressed={selectedSampleMode === sample.mode} onClick={() => void selectSampleDesign(sample)} data-analytics-event="review_sample_select" data-analytics-label={sample.mode}><SampleDesignThumbnail mode={sample.mode} /><span className="sample-card-copy"><strong>{sample.title}</strong><span>{sample.description}</span></span><span className="sample-action">{selectedSampleMode === sample.mode ? "Selected" : "Use sample"}</span></button>)}</div></section><div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => goToStep(2)} data-analytics-event="review_upload_continue_click">Continue <ArrowRight size={17} /></button></div></div>}
 
           {step === 2 && <div className="form-panel"><div className="panel-heading"><span>02</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Give us the brief</h2><p>A good critique depends on audience, purpose, and intent.</p></div></div><fieldset className="category-field"><legend>Design category</legend><div className="category-grid">{reviewCategories.map((item) => <label key={item}><input type="radio" name="category" checked={category === item} onChange={() => setCategory(item)} /><span>{categoryLabels[item]}</span></label>)}</div></fieldset><div className="field-grid">{([['audience','Target audience','e.g. Independent designers aged 22–35'],['purpose','Purpose','e.g. Launch a creative conference'],['style','Style direction','e.g. Bold, editorial, energetic'],['goal','Primary goal','e.g. Drive early-bird registrations']] as const).map(([key,label,placeholder]) => <label className="field" key={key}><span>{label} <b>Required</b></span><textarea rows={2} value={brief[key]} placeholder={placeholder} onChange={(event) => { setSubmitError(""); setBrief({...brief, [key]: event.target.value}); }} required /></label>)}</div><label className="field"><span>Specific concern <em>Optional</em></span><textarea rows={3} value={brief.concern} placeholder="What already feels unresolved?" onChange={(event) => { setSubmitError(""); setBrief({...brief, concern: event.target.value}); }} /></label>{submitError && !briefValid && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(1)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" disabled={!briefValid} onClick={() => goToStep(3)}>Choose feedback <ArrowRight size={17} /></button></div></div>}
 
@@ -292,7 +349,158 @@ export function ReviewStudio() {
   );
 }
 
-function MessageIcon({ mode }: { mode: (typeof feedbackModes)[number] }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
+function MessageIcon({ mode }: { mode: FeedbackMode }) { return <span className="message-glyph" aria-hidden="true">{mode === "friendly" ? "○" : mode === "mentor" ? "⌗" : "↗"}</span>; }
+
+function SampleDesignThumbnail({ mode }: { mode: FeedbackMode }) {
+  if (mode === "friendly") {
+    return (
+      <svg className="sample-thumb" viewBox="0 0 320 220" role="img" aria-hidden="true" focusable="false">
+        <rect width="320" height="220" rx="14" fill="#fff3dc" />
+        <circle cx="244" cy="58" r="46" fill="#c8f45d" />
+        <circle cx="74" cy="158" r="54" fill="#55d9e8" opacity=".7" />
+        <rect x="28" y="30" width="112" height="16" rx="8" fill="#09090f" />
+        <rect x="28" y="63" width="190" height="22" rx="11" fill="#6848e8" />
+        <rect x="28" y="98" width="145" height="12" rx="6" fill="#09090f" opacity=".6" />
+        <rect x="28" y="124" width="238" height="54" rx="14" fill="#ffffff" stroke="rgba(9,9,15,.14)" />
+        <path d="M58 152h62m23 0h78" stroke="#ff6b57" strokeWidth="8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (mode === "direct") {
+    return (
+      <svg className="sample-thumb" viewBox="0 0 320 220" role="img" aria-hidden="true" focusable="false">
+        <rect width="320" height="220" rx="14" fill="#09090f" />
+        <rect x="20" y="20" width="280" height="180" rx="10" fill="#ff6b57" />
+        <rect x="42" y="42" width="178" height="20" rx="2" fill="#09090f" />
+        <rect x="42" y="78" width="236" height="34" rx="3" fill="#fffdf7" />
+        <rect x="42" y="124" width="210" height="34" rx="3" fill="#09090f" />
+        <rect x="42" y="174" width="88" height="8" rx="4" fill="#fffdf7" />
+        <path d="M246 35l34 34m0-34l-34 34" stroke="#09090f" strokeWidth="8" strokeLinecap="square" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="sample-thumb" viewBox="0 0 320 220" role="img" aria-hidden="true" focusable="false">
+      <rect width="320" height="220" rx="14" fill="#f6f1e7" />
+      <rect x="22" y="22" width="276" height="176" rx="12" fill="#ffffff" stroke="rgba(9,9,15,.14)" />
+      <rect x="42" y="42" width="236" height="18" rx="9" fill="#09090f" />
+      <rect x="42" y="82" width="122" height="46" rx="8" fill="#6848e8" />
+      <rect x="178" y="82" width="70" height="46" rx="8" fill="#55d9e8" />
+      <rect x="42" y="144" width="196" height="10" rx="5" fill="#09090f" opacity=".55" />
+      <rect x="42" y="166" width="154" height="10" rx="5" fill="#09090f" opacity=".25" />
+      <circle cx="258" cy="152" r="28" fill="#c8f45d" />
+    </svg>
+  );
+}
+
+function createSampleDesignFile(sample: (typeof sampleDesigns)[number]) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 900;
+  const context = canvas.getContext("2d");
+  if (!context) return Promise.reject(new Error("Canvas is unavailable."));
+
+  drawSampleDesign(context, sample.mode);
+
+  return new Promise<File>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Sample image could not be rendered."));
+        return;
+      }
+      resolve(new File([blob], sample.fileName, { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+function drawSampleDesign(context: CanvasRenderingContext2D, mode: FeedbackMode) {
+  context.clearRect(0, 0, 1200, 900);
+  if (mode === "friendly") {
+    context.fillStyle = "#fff3dc";
+    context.fillRect(0, 0, 1200, 900);
+    drawCircle(context, 930, 210, 185, "#c8f45d");
+    drawCircle(context, 250, 660, 210, "#55d9e8");
+    drawRoundRect(context, 96, 105, 420, 52, 26, "#09090f");
+    drawRoundRect(context, 96, 235, 720, 78, 39, "#6848e8");
+    drawRoundRect(context, 96, 370, 540, 34, 17, "rgba(9,9,15,.58)");
+    drawRoundRect(context, 96, 510, 890, 218, 42, "#ffffff");
+    drawText(context, "Open Studio", 128, 292, "700 72px Arial", "#ffffff");
+    drawText(context, "A softer launch for a creative workshop.", 128, 402, "500 34px Arial", "#09090f");
+    drawText(context, "Join the first session", 166, 638, "700 48px Arial", "#09090f");
+    drawLine(context, 166, 680, 740, 680, "#ff6b57", 20);
+    return;
+  }
+
+  if (mode === "direct") {
+    context.fillStyle = "#09090f";
+    context.fillRect(0, 0, 1200, 900);
+    drawRoundRect(context, 86, 86, 1028, 728, 36, "#ff6b57");
+    drawRoundRect(context, 164, 164, 660, 72, 6, "#09090f");
+    drawRoundRect(context, 164, 300, 840, 132, 8, "#fffdf7");
+    drawRoundRect(context, 164, 486, 770, 132, 8, "#09090f");
+    drawText(context, "TYPE", 194, 398, "800 108px Arial", "#09090f");
+    drawText(context, "NIGHT", 194, 584, "800 108px Arial", "#fffdf7");
+    drawText(context, "FRI 21:00 / HALL 4", 164, 720, "700 34px Arial", "#fffdf7");
+    drawLine(context, 930, 146, 1040, 256, "#09090f", 30);
+    drawLine(context, 1040, 146, 930, 256, "#09090f", 30);
+    return;
+  }
+
+  context.fillStyle = "#f6f1e7";
+  context.fillRect(0, 0, 1200, 900);
+  drawRoundRect(context, 80, 82, 1040, 736, 42, "#ffffff");
+  drawRoundRect(context, 148, 150, 900, 54, 27, "#09090f");
+  drawText(context, "Atlas Notes", 170, 190, "700 34px Arial", "#ffffff");
+  drawRoundRect(context, 148, 300, 455, 188, 28, "#6848e8");
+  drawRoundRect(context, 648, 300, 260, 188, 28, "#55d9e8");
+  drawText(context, "Plan better", 185, 390, "700 64px Arial", "#ffffff");
+  drawText(context, "Map research into launch priorities.", 185, 444, "500 30px Arial", "#ffffff");
+  drawRoundRect(context, 148, 580, 742, 32, 16, "rgba(9,9,15,.55)");
+  drawRoundRect(context, 148, 666, 580, 32, 16, "rgba(9,9,15,.22)");
+  drawCircle(context, 930, 622, 105, "#c8f45d");
+}
+
+function drawRoundRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number, fillStyle: string) {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
+  context.fillStyle = fillStyle;
+  context.fill();
+}
+
+function drawCircle(context: CanvasRenderingContext2D, x: number, y: number, radius: number, fillStyle: string) {
+  context.beginPath();
+  context.arc(x, y, radius, 0, Math.PI * 2);
+  context.fillStyle = fillStyle;
+  context.fill();
+}
+
+function drawLine(context: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number, strokeStyle: string, lineWidth: number) {
+  context.beginPath();
+  context.moveTo(fromX, fromY);
+  context.lineTo(toX, toY);
+  context.strokeStyle = strokeStyle;
+  context.lineWidth = lineWidth;
+  context.lineCap = "round";
+  context.stroke();
+}
+
+function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, font: string, fillStyle: string) {
+  context.font = font;
+  context.fillStyle = fillStyle;
+  context.textBaseline = "alphabetic";
+  context.fillText(text, x, y);
+}
 
 export function ReviewResult({
   review,
