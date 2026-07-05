@@ -53,6 +53,15 @@ firestore-debug.log*
 ui-debug.log*
 firebase-adminsdk-*.json
 service-account*.json
+google-services.json
+GoogleService-Info.plist
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.crt
+*.cer
 
 # logs
 *.log
