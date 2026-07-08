@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
 import { CookieConsent } from "@/components/cookie-consent";
-import { TargetCursor } from "@/components/target-cursor";
+import { TargetCursor } from "@/components/motion/target-cursor";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
 import "./target-cursor.css";
