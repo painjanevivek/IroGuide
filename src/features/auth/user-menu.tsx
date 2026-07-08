@@ -1,8 +1,17 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { LogOut, UserRound } from "lucide-react";
+import { GalleryVerticalEnd, LayoutDashboard, LogOut, MessageSquareText, PenLine, UserRound } from "lucide-react";
 import { useAuth } from "./auth-provider";
+
+const menuItems = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "New review", href: "/review/new", icon: PenLine },
+  { label: "Portfolio", href: "/portfolio", icon: GalleryVerticalEnd },
+  { label: "Community", href: "/community", icon: MessageSquareText },
+  { label: "Profile", href: "/profile", icon: UserRound },
+] as const;
 
 export function UserMenu() {
   const { user, avatarUrl, loading, signOut } = useAuth();
@@ -12,12 +21,23 @@ export function UserMenu() {
 
   return (
     <details className="user-menu">
-      <summary aria-label="Open profile menu">
+      <summary aria-label="Open workspace menu">
         <UserAvatar label={getUserLabel(user.displayName, user.email, user.phoneNumber)} src={avatarUrl} />
       </summary>
       <div className="user-menu-panel">
-        <Link href="/profile"><UserRound size={16} /> Profile</Link>
-        <button type="button" onClick={() => void signOut()}>
+        <div className="user-menu-heading">
+          <span>Workspace</span>
+          <strong>{getUserLabel(user.displayName, user.email, user.phoneNumber)}</strong>
+        </div>
+        {menuItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.href} className="user-menu-item" href={item.href} style={{ "--item-index": index } as CSSProperties}>
+              <Icon size={16} /> {item.label}
+            </Link>
+          );
+        })}
+        <button className="user-menu-item" type="button" onClick={() => void signOut()} style={{ "--item-index": menuItems.length } as CSSProperties}>
           <LogOut size={16} /> Sign out
         </button>
       </div>

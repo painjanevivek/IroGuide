@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gsap, registerIroGuideGsap } from "@/components/motion/gsap-runtime";
 
@@ -27,13 +27,8 @@ export function AuthTransitionLink({
 }: AuthTransitionLinkProps) {
   const router = useRouter();
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const label = href.includes("sign-in") ? "Opening workspace" : "Creating profile";
-
-  useEffect(() => {
-    setPortalNode(document.body);
-  }, []);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
@@ -83,7 +78,7 @@ export function AuthTransitionLink({
       <Link href={href} prefetch={prefetch} onClick={handleClick} {...props}>
         {children}
       </Link>
-      {isAnimating && portalNode ? createPortal(
+      {isAnimating && typeof document !== "undefined" ? createPortal(
         <div className="auth-route-transition" aria-hidden="true" ref={overlayRef}>
           <span className="auth-route-panel auth-route-panel-ink" />
           <span className="auth-route-panel auth-route-panel-violet" />
@@ -94,7 +89,7 @@ export function AuthTransitionLink({
             <span>IroGuide</span>
           </div>
         </div>,
-        portalNode,
+        document.body,
       ) : null}
     </>
   );

@@ -4,8 +4,10 @@ import { siteConfig } from "@/config/site";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
 import { CookieConsent } from "@/components/cookie-consent";
+import { TargetCursor } from "@/components/target-cursor";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import "./globals.css";
+import "./target-cursor.css";
 
 const display = Geist({
   variable: "--font-display",
@@ -86,6 +88,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
           <AnalyticsTracker />
           <CookieConsent />
+          <TargetCursor
+            targetSelector=".cursor-target, a[href], button, input, textarea, select, summary, [role='button']"
+            hideDefaultCursor={false}
+            hoverDuration={0.28}
+            cursorColorOnTarget="#c8f45d"
+          />
         </AuthProvider>
       </body>
     </html>
