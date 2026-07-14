@@ -1,6 +1,7 @@
 type AdminCandidate = {
   uid: string;
   email?: unknown;
+  email_verified?: unknown;
 };
 
 export function isBugReportInboxAdmin(user: AdminCandidate) {
@@ -8,7 +9,7 @@ export function isBugReportInboxAdmin(user: AdminCandidate) {
   const allowedEmails = getCsvEnvSet(process.env.IROGUIDE_ADMIN_EMAILS);
   const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
 
-  return allowedUids.has(user.uid) || (email.length > 0 && allowedEmails.has(email));
+  return allowedUids.has(user.uid) || (user.email_verified === true && email.length > 0 && allowedEmails.has(email));
 }
 
 function getCsvEnvSet(value: string | undefined) {

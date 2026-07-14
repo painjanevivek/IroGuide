@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { enforceSameOriginRequest } from "@/server/api-security";
-import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
+import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyRecentFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser } from "@/server/review-storage";
@@ -21,7 +21,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+    const decodedToken = await verifyRecentFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     const rateLimit = checkRateLimit({
       key: `account-reviews-delete:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...REVIEW_PURGE_RATE_LIMIT,

@@ -4,6 +4,7 @@ import type { App, AppOptions } from "firebase-admin/app";
 
 const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 const MAX_TOKEN_AGE_SKEW_SECONDS = 300;
+const MAX_DESTRUCTIVE_AUTH_AGE_SECONDS = 300;
 
 let firebaseCertCache: {
   certs: Record<string, string>;
@@ -29,12 +30,44 @@ export class FirebaseTokenVerificationError extends Error {
   }
 }
 
-export async function verifyFirebaseIdToken(idToken: string) {
+type VerifiedFirebaseToken = FirebaseJwtPayload & {
+  iat: number;
+  sub: string;
+  uid: string;
+};
+
+export async function verifyFirebaseIdToken(idToken: string): Promise<VerifiedFirebaseToken> {
   const projectId = getFirebaseAdminProjectId();
   if (!projectId) throw new FirebaseAdminUnavailableError();
 
   try {
     return await verifyFirebaseSecureToken(idToken, projectId);
+  } catch (error) {
+    if (isFirebaseAdminUnavailableError(error)) throw error;
+    throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error), getFirebaseAuthErrorDetail(error));
+  }
+}
+
+export async function verifyRecentFirebaseIdToken(idToken: string) {
+  const decodedToken = await verifyFirebaseIdToken(idToken);
+  const authTime = decodedToken["auth_time"];
+  const now = Math.floor(Date.now() / 1000);
+  if (
+    typeof authTime !== "number"
+    || typeof decodedToken.iat !== "number"
+    || authTime > now
+    || now - authTime > MAX_DESTRUCTIVE_AUTH_AGE_SECONDS
+  ) {
+    throw new FirebaseTokenVerificationError("auth/requires-recent-login");
+  }
+
+  try {
+    const user = await (await getFirebaseAdminAuth()).getUser(decodedToken.uid);
+    const validAfter = user.tokensValidAfterTime ? Date.parse(user.tokensValidAfterTime) / 1000 : Number.NaN;
+    if (user.disabled || (Number.isFinite(validAfter) && decodedToken.iat < validAfter)) {
+      throw new Error("Firebase ID token is no longer valid.");
+    }
+    return decodedToken;
   } catch (error) {
     if (isFirebaseAdminUnavailableError(error)) throw error;
     throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error), getFirebaseAuthErrorDetail(error));
@@ -115,7 +148,7 @@ function getFirebaseAuthErrorDetail(error: unknown) {
   return error.message.replace(/[\r\n]+/g, " ").slice(0, 180);
 }
 
-async function verifyFirebaseSecureToken(idToken: string, projectId: string) {
+async function verifyFirebaseSecureToken(idToken: string, projectId: string): Promise<VerifiedFirebaseToken> {
   const [encodedHeader, encodedPayload, encodedSignature] = idToken.split(".");
   if (!encodedHeader || !encodedPayload || !encodedSignature) {
     throw new Error("Firebase ID token must be a JWT.");
@@ -156,7 +189,7 @@ async function verifyFirebaseSecureToken(idToken: string, projectId: string) {
   return {
     ...payload,
     uid: payload.sub,
-  };
+  } as VerifiedFirebaseToken;
 }
 
 async function getFirebaseSecureTokenCerts() {

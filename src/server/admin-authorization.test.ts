@@ -13,7 +13,8 @@ describe("admin authorization", () => {
   it("allows configured admin emails case-insensitively", () => {
     vi.stubEnv("IROGUIDE_ADMIN_EMAILS", "owner@example.com, admin@example.com");
 
-    expect(isBugReportInboxAdmin({ uid: "user-1", email: "Admin@Example.com" })).toBe(true);
+    expect(isBugReportInboxAdmin({ uid: "user-1", email: "Admin@Example.com", email_verified: true })).toBe(true);
+    expect(isBugReportInboxAdmin({ uid: "user-1", email: "Admin@Example.com", email_verified: false })).toBe(false);
   });
 
   it("allows configured admin uids", () => {
