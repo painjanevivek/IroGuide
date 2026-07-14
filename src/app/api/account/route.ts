@@ -4,6 +4,7 @@ import { deleteFirebaseUser, FirebaseAdminUnavailableError, FirebaseTokenVerific
 import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser } from "@/server/review-storage";
+import { deleteCommunityDataForUser } from "@/server/community-storage";
 
 const ACCOUNT_DELETE_RATE_LIMIT = { limit: 4, windowMs: 10 * 60 * 1000 };
 
@@ -34,12 +35,18 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const result = await deleteReviewDataForUser(decodedToken.uid);
+    const [result, community] = await Promise.all([
+      deleteReviewDataForUser(decodedToken.uid),
+      deleteCommunityDataForUser(decodedToken.uid),
+    ]);
     await deleteFirebaseUser(decodedToken.uid);
     logRequestEvent("info", "account_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
       reviewsDeleted: result.reviewsDeleted,
       sourceImagesDeleted: result.sourceImagesDeleted,
+      communityCommentsDeleted: community.commentsDeleted,
+      communityInteractionsDeleted: community.interactionsDeleted,
+      communityPostsDeleted: community.postsDeleted,
       user: toLogSafeUserId(decodedToken.uid),
     });
 

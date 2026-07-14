@@ -90,6 +90,7 @@ service cloud.firestore {
       match /interactions/{userId} {
         allow read, write: if signedIn()
           && userId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
           && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
       }
     }

@@ -957,6 +957,7 @@ async function persistPostInteraction(postId: string, userId: string, key: keyof
     transaction.set(interactionRef, {
       ...currentInteraction,
       [key]: nextValue,
+      userId,
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
