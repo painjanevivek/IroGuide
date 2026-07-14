@@ -324,8 +324,8 @@ function buildDiagnostics(payload: ReadinessPayload) {
       label: "Live provider selected",
       passed: payload.reviewProvider.activeProvider === "live",
       detail: payload.reviewProvider.activeProvider === "live"
-        ? `Live provider is active in ${payload.reviewProvider.configuredMode} mode.`
-        : `Current provider is ${payload.reviewProvider.activeProvider}; reviews will use local demo output.`,
+        ? "Live provider is active in " + payload.reviewProvider.configuredMode + " mode."
+        : "Current provider is " + payload.reviewProvider.activeProvider + "; production reviews will remain unavailable until live vision is configured.",
       fix: "Set IROGUIDE_REVIEW_PROVIDER to openrouter, vision, live, or endpoint, or provide OPENROUTER_API_KEY so auto mode selects live review.",
     },
     {

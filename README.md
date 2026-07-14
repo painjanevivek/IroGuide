@@ -109,7 +109,8 @@ Configure the Firebase web and Admin values used by the smoke:
 
 ## Live vision setup
 
-Local demo mode is used until production vision credentials are configured.
+Local development may use demo mode. Production review requests fail clearly
+until live vision credentials are configured.
 To enable live pixel analysis, set these deployment environment variables:
 
 ```powershell

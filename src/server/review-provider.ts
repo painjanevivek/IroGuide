@@ -63,13 +63,20 @@ export class ReviewProviderUnavailableError extends Error {
 }
 
 type ReviewProvider = {
-  name: ReviewOutput["provider"];
+  name: ReviewOutput["provider"] | "unavailable";
   createReview: (request: ReviewRequest) => Promise<ReviewOutput>;
 };
 
 const demoReviewProvider: ReviewProvider = {
   name: "demo",
   createReview: async (request) => createDemoReview(request),
+};
+
+const unavailableReviewProvider: ReviewProvider = {
+  name: "unavailable",
+  createReview: async () => {
+    throw new ReviewProviderUnavailableError("Live vision critique is not configured. Please try again later.");
+  },
 };
 
 const liveVisionReviewProvider: ReviewProvider = {
@@ -460,11 +467,13 @@ export async function createReview(request: ReviewRequest): Promise<ReviewOutput
 
 export function getReviewProvider() {
   const configuredMode = process.env.IROGUIDE_REVIEW_PROVIDER?.trim().toLowerCase();
-  if (configuredMode === "demo") return demoReviewProvider;
+  const production = process.env.NODE_ENV === "production";
+
+  if (configuredMode === "demo") return production ? unavailableReviewProvider : demoReviewProvider;
   if (configuredMode === "endpoint") return endpointReviewProvider;
   if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return liveVisionReviewProvider;
   if (process.env.OPENROUTER_API_KEY?.trim()) return liveVisionReviewProvider;
-  return demoReviewProvider;
+  return production ? unavailableReviewProvider : demoReviewProvider;
 }
 
 export function getReviewProviderStatus() {

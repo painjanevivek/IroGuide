@@ -13,7 +13,7 @@ Status: Phase 12 implementation checklist
 ## Privacy
 
 - Live reviews send validated image bytes to the configured vision provider for pixel analysis.
-- Local demo mode remains a clearly labeled fallback when production credentials are not configured.
+- Local demo mode is limited to non-production environments and is clearly labeled.
 - Local review history can be deleted from the dashboard.
 - Production uploads require private storage, short-lived signed access, ownership checks, retention jobs, and deletion verification.
 - Public community and portfolio publishing remain disabled until separate explicit consent and moderation exist.
