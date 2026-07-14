@@ -11,6 +11,7 @@ import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
 const PROJECT_ID = "demo-iroguide-rules";
 const REVIEW_ID = "review-alpha";
 const DRAFT_ID = "draft-alpha";
+const COMMUNITY_POST_ID = "post-alpha";
 const OWNER_UID = "user-a";
 const OTHER_UID = "user-b";
 
@@ -104,6 +105,43 @@ describe("Firebase security rules", () => {
       userId: OTHER_UID,
       status: "draft",
     }));
+  });
+
+  it("allows signed-in users to read public community data but not write it directly", async () => {
+    await seedFirestoreDocument(`communityPosts/${COMMUNITY_POST_ID}`, {
+      authorId: OWNER_UID,
+      visibility: "public",
+      stats: { comments: 0, likes: 0, saves: 0 },
+    });
+    await seedFirestoreDocument(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-alpha`, {
+      authorId: OWNER_UID,
+      authorName: "Owner",
+      body: "Useful feedback",
+    });
+
+    await assertSucceeds(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}`).get());
+    await assertSucceeds(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-alpha`).get());
+    await assertFails(testEnv.unauthenticatedContext().firestore().doc(`communityPosts/${COMMUNITY_POST_ID}`).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}`).update({ "stats.likes": 999 }));
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-beta`).set({
+      authorId: OTHER_UID,
+      authorName: "Other",
+      body: "Forged browser write",
+    }));
+  });
+
+  it("keeps community interactions private to their owner and server-written", async () => {
+    const interactionPath = `communityPosts/${COMMUNITY_POST_ID}/interactions/${OWNER_UID}`;
+    await seedFirestoreDocument(`communityPosts/${COMMUNITY_POST_ID}`, {
+      authorId: OWNER_UID,
+      visibility: "public",
+      stats: { comments: 0, likes: 0, saves: 0 },
+    });
+    await seedFirestoreDocument(interactionPath, { userId: OWNER_UID, liked: true });
+
+    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(interactionPath).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(interactionPath).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(interactionPath).set({ userId: OWNER_UID, liked: false }));
   });
 
   it.each([

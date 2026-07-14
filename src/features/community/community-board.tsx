@@ -17,23 +17,19 @@ import {
   UserRound,
 } from "lucide-react";
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
-  increment,
   limit,
   onSnapshot,
   query,
-  runTransaction,
-  serverTimestamp,
-  updateDoc,
   where,
   type DocumentData,
 } from "firebase/firestore";
-import { communityCommentSchema, communityPostSchema, type CommunityPostInput } from "@/domain/community";
+import { communityCommentSchema, communityPostSchema, type CommunityMutation, type CommunityPostInput } from "@/domain/community";
 import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
+import { requestJsonWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import {
   getE2ELocalCommunityPosts,
@@ -140,7 +136,7 @@ const fallbackPosts: CommunityPost[] = [
 ];
 
 export function CommunityBoard() {
-  const { user, avatarUrl } = useAuth();
+  const { user } = useAuth();
   const interactionsRef = useRef<InteractionMap>({});
   const interactionMutationScopeRef = useRef(createOptimisticMutationScope());
   const [activeView, setActiveView] = useState<CommunityView>("home");
@@ -295,24 +291,6 @@ export function CommunityBoard() {
     setError("");
     setMessage("");
 
-    const parsed = communityPostSchema.safeParse({
-      authorId: user.uid,
-      authorName: user.displayName || user.email?.split("@")[0] || "IroGuide designer",
-      authorAvatarUrl: avatarUrl || user.photoURL || undefined,
-      reviewId: selectedReview.savedDocId,
-      title: title.trim() || getDefaultTitle(selectedReview.review.summary),
-      note: note.trim() || undefined,
-      category: selectedReview.categoryLabel,
-      visibility: "public",
-      review: selectedReview.review,
-      stats: { comments: 0, likes: 0, saves: 0 },
-    });
-
-    if (!parsed.success) {
-      setError("Choose a saved critique and add a clear title before posting.");
-      return;
-    }
-
     if (!consent) {
       setError("Confirm that this selected critique can be visible in Community.");
       return;
@@ -320,10 +298,11 @@ export function CommunityBoard() {
 
     setPublishing(true);
     try {
-      await addDoc(collection(getFirebaseClientFirestore(), "communityPosts"), {
-        ...parsed.data,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      await mutateCommunity(user, {
+        action: "publish",
+        reviewId: selectedReview.savedDocId,
+        ...(title.trim() ? { title: title.trim() } : {}),
+        ...(note.trim() ? { note: note.trim() } : {}),
       });
       setMessage("Posted to Community.");
       setNote("");
@@ -371,7 +350,7 @@ export function CommunityBoard() {
       commit: commitInteractions,
       getState: () => interactionsRef.current,
       isCurrent: () => interactionMutationScopeRef.current.isCurrent(mutationToken),
-      run: () => persistPostInteraction(post.id, user.uid, key, nextValue),
+      run: () => persistPostInteraction(post.id, user, key, nextValue),
     });
 
     if (mutationResult.status === "success") {
@@ -414,7 +393,7 @@ export function CommunityBoard() {
         return { ...current, [post.id]: { ...existing, shared: true } };
       });
       if (user && !isSamplePost(post)) {
-        await persistPostInteraction(post.id, user.uid, "shared", true);
+        await persistPostInteraction(post.id, user, "shared", true);
       }
     } catch {
       setShareMessage("Could not copy this link.");
@@ -807,23 +786,12 @@ function CommunityComments({
         return;
       }
 
-      const db = getFirebaseClientFirestore();
       const result = await runOptimisticMutation<CommunityComment[], { id: string }>({
         apply: (current) => [...current, optimisticComment],
         commit: commitOptimisticComments,
         getState: () => optimisticCommentsRef.current,
         reconcile: ({ id }, current) => current.map((comment) => comment.id === optimisticComment.id ? { ...comment, id } : comment),
-        run: async () => {
-          const commentRef = await addDoc(collection(db, "communityPosts", post.id, "comments"), {
-            ...parsed.data,
-            createdAt: serverTimestamp(),
-          });
-          await updateDoc(doc(db, "communityPosts", post.id), {
-            "stats.comments": increment(1),
-            updatedAt: serverTimestamp(),
-          });
-          return { id: commentRef.id };
-        },
+        run: () => mutateCommunity(user, { action: "comment", postId: post.id, body: commentBody }) as Promise<{ id: string }>,
       });
 
       if (result.status === "error") {
@@ -939,35 +907,28 @@ function toCommunityComment(id: string, data: DocumentData): CommunityComment | 
   };
 }
 
-async function persistPostInteraction(postId: string, userId: string, key: keyof PostInteraction, nextValue: boolean) {
+async function persistPostInteraction(postId: string, user: { getIdToken: () => Promise<string> }, key: keyof PostInteraction, nextValue: boolean) {
   if (isE2ELocalAuthEnabled()) {
     await persistE2ELocalCommunityInteraction(postId, key);
     return;
   }
 
-  const db = getFirebaseClientFirestore();
-  const postRef = doc(db, "communityPosts", postId);
-  const interactionRef = doc(db, "communityPosts", postId, "interactions", userId);
+  await mutateCommunity(user, { action: "interaction", postId, key, value: nextValue });
+}
 
-  await runTransaction(db, async (transaction) => {
-    const interactionSnapshot = await transaction.get(interactionRef);
-    const currentInteraction = toPostInteraction(interactionSnapshot.data());
-    if (currentInteraction[key] === nextValue) return;
-
-    transaction.set(interactionRef, {
-      ...currentInteraction,
-      [key]: nextValue,
-      userId,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-
-    if (key === "liked") {
-      transaction.update(postRef, { "stats.likes": increment(nextValue ? 1 : -1), updatedAt: serverTimestamp() });
-    }
-
-    if (key === "saved") {
-      transaction.update(postRef, { "stats.saves": increment(nextValue ? 1 : -1), updatedAt: serverTimestamp() });
-    }
+async function mutateCommunity(user: { getIdToken: () => Promise<string> }, mutation: CommunityMutation) {
+  return requestJsonWithFallback({
+    path: "/api/community",
+    init: {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await user.getIdToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(mutation),
+    },
+    unavailableMessage: "Community is not available right now.",
+    failureMessage: "Could not update Community.",
   });
 }
 

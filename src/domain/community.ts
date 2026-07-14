@@ -26,5 +26,28 @@ export const communityCommentSchema = z.object({
   body: z.string().trim().min(2).max(500),
 });
 
+const communityDocumentIdSchema = z.string().regex(/^[A-Za-z0-9_.-]+$/).max(320);
+
+export const communityMutationSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("publish"),
+    reviewId: communityDocumentIdSchema,
+    title: z.string().trim().min(3).max(120).optional(),
+    note: z.string().trim().min(1).max(420).optional(),
+  }).strict(),
+  z.object({
+    action: z.literal("comment"),
+    postId: communityDocumentIdSchema,
+    body: z.string().trim().min(2).max(500),
+  }).strict(),
+  z.object({
+    action: z.literal("interaction"),
+    postId: communityDocumentIdSchema,
+    key: z.enum(["liked", "saved", "shared"]),
+    value: z.boolean(),
+  }).strict(),
+]);
+
 export type CommunityPostInput = z.infer<typeof communityPostSchema>;
 export type CommunityCommentInput = z.infer<typeof communityCommentSchema>;
+export type CommunityMutation = z.infer<typeof communityMutationSchema>;
