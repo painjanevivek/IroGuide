@@ -26,6 +26,8 @@ const publicRoutes = [
   "/dashboard",
   "/profile",
   "/review/new",
+  "/.well-known/security.txt",
+  "/security-policy.txt",
 ];
 
 const protectedApiRoutes = [
@@ -240,9 +242,18 @@ async function readJson(response) {
 function getPageHeaderProblems(headers) {
   const problems = [];
   const csp = headers.get("content-security-policy") ?? "";
+  const scriptSrc = getCspDirective(csp, "script-src");
+  const styleSrc = getCspDirective(csp, "style-src");
+  const connectSrc = getCspDirective(csp, "connect-src");
   if (!csp.includes("default-src 'self'")) problems.push("missing strict CSP default-src");
   if (!csp.includes("object-src 'none'")) problems.push("missing CSP object-src block");
   if (!csp.includes("frame-ancestors 'none'")) problems.push("missing CSP frame-ancestors block");
+  if (!/'nonce-[A-Za-z0-9+/_=-]+'/.test(scriptSrc)) problems.push("missing CSP script nonce");
+  if (scriptSrc.includes("'unsafe-inline'")) problems.push("CSP permits unsafe inline scripts");
+  if (scriptSrc.includes("'unsafe-eval'")) problems.push("CSP permits unsafe script evaluation");
+  if (!/'nonce-[A-Za-z0-9+/_=-]+'/.test(styleSrc)) problems.push("missing CSP style nonce");
+  if (styleSrc.includes("'unsafe-inline'")) problems.push("CSP broadly permits unsafe inline styles");
+  if (/https?:\/\/localhost(?::\d+)?/i.test(connectSrc)) problems.push("production CSP permits localhost connections");
   if (new URL(baseUrl).protocol === "https:" && !headers.get("strict-transport-security")) {
     problems.push("missing HSTS");
   }
@@ -253,7 +264,12 @@ function getPageHeaderProblems(headers) {
   if (!headers.get("cross-origin-opener-policy")) problems.push("missing Cross-Origin-Opener-Policy");
   if (!headers.get("cross-origin-resource-policy")) problems.push("missing Cross-Origin-Resource-Policy");
   if (headers.has("x-powered-by")) problems.push("leaks X-Powered-By");
+  if (headers.has("x-matched-path")) problems.push("leaks Next.js matched route");
   return problems;
+}
+
+function getCspDirective(policy, directive) {
+  return policy.split(";").map((value) => value.trim()).find((value) => value.startsWith(`${directive} `)) ?? "";
 }
 
 function getApiHeaderProblems(headers, expectedRequestId = null) {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { LandingPage } from "@/features/marketing/landing-page";
 import { siteConfig } from "@/config/site";
 
@@ -82,10 +83,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <>
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([organizationJsonLd, websiteJsonLd, webApplicationJsonLd, faqJsonLd]).replace(/</g, "\\u003c"),

@@ -11,15 +11,15 @@ import {
   trackPageView,
 } from "@/lib/analytics";
 
-export function AnalyticsTracker() {
+export function AnalyticsTracker({ nonce }: { nonce?: string }) {
   return (
     <Suspense fallback={null}>
-      <AnalyticsTrackerInner />
+      <AnalyticsTrackerInner nonce={nonce} />
     </Suspense>
   );
 }
 
-function AnalyticsTrackerInner() {
+function AnalyticsTrackerInner({ nonce }: { nonce?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const measurementId = getAnalyticsMeasurementId();
@@ -68,8 +68,8 @@ function AnalyticsTrackerInner() {
 
   return (
     <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`} strategy="afterInteractive" onLoad={() => setScriptReady(true)} />
-      <Script id="iroguide-analytics-init" strategy="afterInteractive" onLoad={() => setScriptReady(true)}>
+      <Script nonce={nonce} src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`} strategy="afterInteractive" onLoad={() => setScriptReady(true)} />
+      <Script nonce={nonce} id="iroguide-analytics-init" strategy="afterInteractive" onLoad={() => setScriptReady(true)}>
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}

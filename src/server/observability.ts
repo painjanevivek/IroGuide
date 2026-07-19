@@ -46,15 +46,19 @@ export function logRequestEvent(level: LogLevel, event: string, context: Request
 }
 
 export function jsonHeaders(context: RequestContext, extra: HeadersInit = {}) {
-  return {
-    "Cache-Control": "no-store, max-age=0",
-    "Pragma": "no-cache",
-    "Expires": "0",
-    "Vary": "Authorization",
-    "X-Robots-Tag": "noindex",
-    "x-request-id": context.requestId,
-    ...extra,
-  };
+  const headers = new Headers(extra);
+  headers.delete("Access-Control-Allow-Credentials");
+  headers.delete("Access-Control-Allow-Headers");
+  headers.delete("Access-Control-Allow-Methods");
+  headers.delete("Access-Control-Allow-Origin");
+  headers.set("Cache-Control", "no-store, max-age=0");
+  headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  headers.set("Expires", "0");
+  headers.set("Pragma", "no-cache");
+  headers.set("Vary", mergeVary(headers.get("Vary"), "Authorization", "Origin"));
+  headers.set("X-Robots-Tag", "noindex");
+  headers.set("x-request-id", context.requestId);
+  return headers;
 }
 
 export function toLogSafeUserId(userId: string) {
@@ -67,4 +71,11 @@ function sanitizeLogFields(fields: LogFields): LogFields {
     if (typeof value === "string" && value.length > 500) return [key, `${value.slice(0, 500)}...`];
     return [key, value];
   }));
+}
+
+function mergeVary(current: string | null, ...values: string[]) {
+  return Array.from(new Set([
+    ...(current?.split(",").map((value) => value.trim()).filter(Boolean) ?? []),
+    ...values,
+  ])).join(", ");
 }

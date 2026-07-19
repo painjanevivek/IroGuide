@@ -11,23 +11,7 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 const startedAt = new Date();
 
-const PRODUCTION_SECURITY_CSP = [
-  "default-src 'self'",
-  "img-src 'self' blob: data: https://lh3.googleusercontent.com",
-  "font-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://www.google.com https://www.gstatic.com https://*.gstatic.com https://*.firebaseapp.com https://*.web.app",
-  "connect-src 'self' http://localhost:4000 https://*.vercel.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com",
-  "frame-src 'self' https://accounts.google.com https://apis.google.com https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com https://*.web.app",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
-  "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
-].join("; ");
-
 export const EXPECTED_SECURITY_HEADERS = Object.freeze([
-  { name: "content-security-policy", value: PRODUCTION_SECURITY_CSP },
   { name: "strict-transport-security", value: "max-age=63072000; includeSubDomains; preload" },
   { name: "referrer-policy", value: "strict-origin-when-cross-origin" },
   { name: "x-content-type-options", value: "nosniff" },
@@ -46,7 +30,7 @@ const requireReady = process.env.SMOKE_REQUIRE_READY !== "false";
 const runAuthenticatedReview = process.env.SMOKE_AUTHENTICATED_REVIEW !== "false";
 const runSecurityHeaders = process.env.SMOKE_SECURITY_HEADERS !== "false";
 const runFirebaseRules = process.env.SMOKE_FIREBASE_RULES !== "false";
-const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms"];
+const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms", "/.well-known/security.txt", "/security-policy.txt"];
 const securityHeaderRoutes = getListEnv("SMOKE_SECURITY_HEADER_PATHS", ["/", "/api/readiness"]);
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
 
@@ -120,15 +104,17 @@ async function checkSecurityHeaders(path) {
   const name = `security headers ${path}`;
   try {
     const response = await fetch(`${baseUrl}${path}`, { method: "GET" });
-    const evaluation = evaluateSecurityHeaders(response.headers);
+    const evaluation = evaluateSecurityHeaders(response.headers, { expectCsp: !path.startsWith("/api/") });
     addResult(name, evaluation.ok, `status=${response.status} ${evaluation.detail}`);
   } catch (error) {
     addResult(name, false, getErrorMessage(error));
   }
 }
 
-export function evaluateSecurityHeaders(headers) {
+export function evaluateSecurityHeaders(headers, { expectCsp = true } = {}) {
   const failures = [];
+
+  if (expectCsp) failures.push(...getContentSecurityPolicyFailures(headers.get("content-security-policy") ?? ""));
 
   for (const expected of EXPECTED_SECURITY_HEADERS) {
     const actual = headers.get(expected.name);
@@ -144,8 +130,32 @@ export function evaluateSecurityHeaders(headers) {
 
   return {
     ok: failures.length === 0,
-    detail: failures.length > 0 ? failures.join(", ") : `headers=${EXPECTED_SECURITY_HEADERS.length}`,
+    detail: failures.length > 0 ? failures.join(", ") : `headers=${EXPECTED_SECURITY_HEADERS.length + (expectCsp ? 1 : 0)}`,
   };
+}
+
+function getContentSecurityPolicyFailures(policy) {
+  if (!policy) return ["content-security-policy=missing"];
+
+  const failures = [];
+  const scriptSrc = getCspDirective(policy, "script-src");
+  const styleSrc = getCspDirective(policy, "style-src");
+  const connectSrc = getCspDirective(policy, "connect-src");
+  const requiredDirectives = ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'none'"];
+  for (const directive of requiredDirectives) {
+    if (!policy.includes(directive)) failures.push(`content-security-policy=${directive}-missing`);
+  }
+  if (!/'nonce-[A-Za-z0-9+/_=-]+'/.test(scriptSrc)) failures.push("content-security-policy=script-nonce-missing");
+  if (scriptSrc.includes("'unsafe-inline'")) failures.push("content-security-policy=unsafe-inline-script");
+  if (scriptSrc.includes("'unsafe-eval'")) failures.push("content-security-policy=unsafe-eval-script");
+  if (!/'nonce-[A-Za-z0-9+/_=-]+'/.test(styleSrc)) failures.push("content-security-policy=style-nonce-missing");
+  if (styleSrc.includes("'unsafe-inline'")) failures.push("content-security-policy=unsafe-inline-style");
+  if (/https?:\/\/localhost(?::\d+)?/i.test(connectSrc)) failures.push("content-security-policy=localhost-connect-source");
+  return failures;
+}
+
+function getCspDirective(policy, directive) {
+  return policy.split(";").map((value) => value.trim()).find((value) => value.startsWith(`${directive} `)) ?? "";
 }
 
 async function checkReadiness() {

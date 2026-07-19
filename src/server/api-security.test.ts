@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { enforceSameOriginRequest, requireContentType } from "./api-security";
-import { createRequestContext, logRequestEvent, toLogSafeUserId } from "./observability";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "./observability";
 
 describe("api security logging", () => {
   it("redacts secret-shaped log fields before writing", () => {
@@ -72,5 +72,20 @@ describe("api security logging", () => {
     expect("response" in result ? result.response.status : 200).toBe(415);
     expect("response" in result ? result.response.headers.get("Cache-Control") : null).toBe("no-store, max-age=0");
     warn.mockRestore();
+  });
+
+  it("never emits inherited or caller-supplied CORS permissions on API responses", () => {
+    const request = new Request("https://iroguide.com/api/account");
+    const context = createRequestContext(request, "api.test");
+    const headers = jsonHeaders(context, {
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Origin": "*",
+      Vary: "Accept-Encoding",
+    });
+
+    expect(headers.has("Access-Control-Allow-Credentials")).toBe(false);
+    expect(headers.has("Access-Control-Allow-Origin")).toBe(false);
+    expect(headers.get("Cross-Origin-Resource-Policy")).toBe("same-origin");
+    expect(headers.get("Vary")).toBe("Accept-Encoding, Authorization, Origin");
   });
 });

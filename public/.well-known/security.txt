@@ -1,0 +1,6 @@
+Contact: mailto:support@iroguide.com
+Contact: https://www.iroguide.com/contact
+Expires: 2027-07-19T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.iroguide.com/.well-known/security.txt
+Policy: https://www.iroguide.com/security-policy.txt

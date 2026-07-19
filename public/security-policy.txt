@@ -1,0 +1,8 @@
+IroGuide Vulnerability Disclosure Policy
+
+Please report suspected security vulnerabilities privately to support@iroguide.com.
+Include the affected URL or component, reproduction steps, impact, and any supporting evidence. Do not include secrets or personal data that are not needed to reproduce the issue.
+
+We ask researchers to avoid privacy violations, service disruption, social engineering, denial-of-service testing, automated traffic that degrades the service, and accessing or modifying data that does not belong to them. Stop testing and report the issue if you encounter user data.
+
+We will acknowledge a report as soon as practical, investigate it, and coordinate remediation and disclosure timing with the reporter. We will not pursue legal action against good-faith research that follows this policy.

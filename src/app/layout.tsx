@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
@@ -77,7 +78,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
@@ -86,7 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div id="app-content">
             <BoneyardSiteShell>{children}</BoneyardSiteShell>
           </div>
-          <AnalyticsTracker />
+          <AnalyticsTracker nonce={nonce} />
           <CookieConsent />
           <TargetCursor
             targetSelector=".cursor-target, a[href], button, input, textarea, select, summary, [role='button']"
