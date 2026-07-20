@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { signInWithEmail } from "./auth-helpers";
 
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
 const testEmail = process.env.E2E_EMAIL ?? "designer@iroguide.test";
@@ -50,11 +51,7 @@ test.describe("community optimistic interactions", () => {
 });
 
 async function signIn(page: Page) {
-  await page.goto("/auth/sign-in");
-  await page.getByLabel(/^Email$/i).fill(testEmail);
-  await page.getByLabel(/^Password$/i).fill(testPassword);
-  await page.getByRole("button", { name: /^sign in/i }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await signInWithEmail(page, testEmail, testPassword);
 }
 
 async function resetCommunityState(page: Page) {

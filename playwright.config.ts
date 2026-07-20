@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+const serverPort = new URL(baseURL).port || "3000";
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
 
 export default defineConfig({
@@ -17,8 +18,9 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1",
+    command: `npm run dev -- --hostname 127.0.0.1 --port ${serverPort}`,
     env: {
+      ...process.env,
       ...(useFirebaseFlow ? {} : {
         IROGUIDE_REVIEW_PROVIDER: "demo",
         NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",

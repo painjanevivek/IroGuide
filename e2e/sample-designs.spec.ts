@@ -1,13 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { signInWithEmail } from "./auth-helpers";
 
 test("uses real sample artwork and matching critique context", async ({ page }) => {
-  await page.goto("/auth/sign-in");
-  const email = page.getByLabel(/^Email$/i);
-  await expect(email).toBeVisible();
-  await email.fill("designer@iroguide.test");
-  await page.getByLabel(/^Password$/i).fill("iroguide-e2e-password");
-  await page.getByRole("button", { name: /^sign in/i }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await signInWithEmail(page, "designer@iroguide.test", "iroguide-e2e-password");
   await page.getByRole("button", { name: /dismiss cookie notice/i }).click();
   await page.getByRole("link", { name: /new review/i }).first().click();
 

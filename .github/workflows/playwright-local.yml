@@ -48,11 +48,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run local Playwright suite
-        run: >
-          npm run test:e2e --
-          e2e/review-smoke.spec.ts
-          e2e/email-auth-hardening.spec.ts
-          e2e/community-optimistic.spec.ts
+        run: npm run test:e2e
 
       - name: Upload Playwright report
         if: always()

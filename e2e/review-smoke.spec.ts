@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { Buffer } from "node:buffer";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { signInWithEmail } from "./auth-helpers";
 
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
 const testEmail = process.env.E2E_EMAIL ?? "designer@iroguide.test";
@@ -61,11 +62,7 @@ test("signs in, submits a review, and shows private source-image status on the d
 });
 
 async function signIn(page: Page) {
-  await page.goto("/auth/sign-in");
-  await page.getByLabel(/^Email$/i).fill(testEmail);
-  await page.getByLabel(/^Password$/i).fill(testPassword);
-  await page.getByRole("button", { name: /^sign in/i }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await signInWithEmail(page, testEmail, testPassword);
   await expect(page.getByText(/private signed-in workspace/i)).toBeVisible();
 }
 
