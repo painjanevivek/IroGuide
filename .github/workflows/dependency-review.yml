@@ -23,4 +23,4 @@ jobs:
       # The action fails by default if the pull request adds a dependency with a
       # known vulnerability. Keep the default threshold so no severity is ignored.
       - name: Check new dependencies for known vulnerabilities
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
