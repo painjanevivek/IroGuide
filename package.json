@@ -39,10 +39,10 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.2.9",
-    "firebase-tools": "^15.22.2",
+    "eslint-config-next": "16.2.10",
+    "firebase-tools": "^15.24.0",
     "typescript": "6.0.3",
-    "vitest": "^4.0.0"
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "@opentelemetry/core": "2.8.0",
