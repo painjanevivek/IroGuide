@@ -385,7 +385,11 @@ function MessageIcon({ mode }: { mode: FeedbackMode }) { return <span className=
 function SampleDesignThumbnail({ mode }: { mode: FeedbackMode }) {
   const sample = sampleDesigns.find((item) => item.mode === mode);
   if (!sample) return null;
-  return <Image className="sample-thumb" src={sample.imageSrc} alt={sample.imageAlt} width={1536} height={1024} sizes="(max-width: 760px) 100vw, 280px" />;
+  return (
+    <span className="sample-media">
+      <Image className="sample-thumb" src={sample.imageSrc} alt={sample.imageAlt} width={1536} height={1024} sizes="(max-width: 620px) 78vw, 280px" />
+    </span>
+  );
 }
 
 async function createSampleDesignFile(sample: (typeof sampleDesigns)[number]) {
