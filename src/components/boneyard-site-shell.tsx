@@ -8,8 +8,14 @@ import "@/bones/registry";
 export function BoneyardSiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const skeletonName = getRouteSkeletonName(pathname);
+  const [hydrated, setHydrated] = useState(false);
   const [pendingPathname, setPendingPathname] = useState<string | null>(null);
   const routeLoading = pendingPathname !== null && pendingPathname !== pathname;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setHydrated(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (!routeLoading) return;
@@ -31,6 +37,9 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
     if (nextPath !== currentPath) setPendingPathname(nextUrl.pathname);
   }
 
+  const content = <div onClick={handleClick}>{children}</div>;
+  if (!hydrated) return content;
+
   return (
     <Skeleton
       name={skeletonName}
@@ -39,7 +48,7 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
       fallback={<IroGuideSkeletonScreen />}
       transition={260}
     >
-      <div onClick={handleClick}>{children}</div>
+      {content}
     </Skeleton>
   );
 }

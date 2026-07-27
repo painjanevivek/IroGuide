@@ -40,4 +40,15 @@ describe("bug report request", () => {
 
     expect(parsed.success).toBe(false);
   });
+
+  it("rejects non-HTTP page URLs", () => {
+    const report = {
+      name: "Vivek Painjane",
+      email: "vivek@example.com",
+      problem: "The contact form failed after pressing submit.",
+    };
+
+    expect(bugReportRequestSchema.safeParse({ ...report, pageUrl: "javascript:alert(1)" }).success).toBe(false);
+    expect(bugReportRequestSchema.safeParse({ ...report, pageUrl: "data:text/html,test" }).success).toBe(false);
+  });
 });

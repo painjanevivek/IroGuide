@@ -22,6 +22,7 @@ test("signs in, submits a review, and shows private source-image status on the d
   }
 
   await signIn(page);
+  await page.getByRole("button", { name: /dismiss cookie notice/i }).click();
 
   await page.getByRole("link", { name: /new review/i }).first().click();
   await expect(page.getByRole("heading", { name: /upload your design/i })).toBeVisible();

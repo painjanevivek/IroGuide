@@ -43,6 +43,9 @@ Thumbs.db
 .agents/
 .codex/
 skills-lock.json
+.claude/
+CLAUDE.md
+CLAUDE.local.md
 
 # Firebase local state and private credentials
 **/.firebase/
