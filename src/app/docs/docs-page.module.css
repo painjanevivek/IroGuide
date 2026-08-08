@@ -48,8 +48,20 @@
   margin-top: 2rem;
 }
 
+.docsLayout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  align-items: start;
+  border-top: 1px solid var(--border);
+}
+
+.docsSections {
+  min-width: 0;
+}
+
 .mapPanel {
-  position: relative;
+  position: sticky;
+  top: 1.25rem;
   display: grid;
   gap: .7rem;
   padding: clamp(1.2rem, 3vw, 2rem);
@@ -96,11 +108,32 @@
   color: white;
 }
 
+.mapPanel a:focus-visible {
+  border-color: var(--lime);
+  color: white;
+  outline-offset: 3px;
+}
+
+.docsLayout:has(#quick-start:target) .mapPanel a[href="#quick-start"],
+.docsLayout:has(#paths:target) .mapPanel a[href="#paths"],
+.docsLayout:has(#concepts:target) .mapPanel a[href="#concepts"],
+.docsLayout:has(#advanced:target) .mapPanel a[href="#advanced"] {
+  border-color: var(--lime);
+  color: white;
+}
+
 .quickStart,
 .learningPaths,
 .concepts,
 .reference {
   padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+}
+
+.quickStart,
+.learningPaths,
+.concepts,
+.advanced {
+  scroll-margin-top: 96px;
 }
 
 .sectionLead {
@@ -363,6 +396,25 @@
   .stepGrid,
   .conceptGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .docsLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapPanel {
+    position: relative;
+    top: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1rem var(--gutter) 0;
+  }
+
+  .mapPanel :global(.mono-label) {
+    grid-column: 1 / -1;
+  }
+
+  .mapPanel a {
+    min-height: 44px;
   }
 }
 

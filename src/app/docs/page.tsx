@@ -145,15 +145,18 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <aside className={styles.mapPanel} aria-label="Documentation contents">
+        </section>
+
+        <div className={styles.docsLayout}>
+          <nav className={styles.mapPanel} aria-label="Documentation contents">
             <span className="mono-label">Docs map</span>
             <a href="#quick-start">01 Quick start</a>
             <a href="#paths">02 Learning paths</a>
             <a href="#concepts">03 Core concepts</a>
             <a href="#advanced">04 Advanced practice</a>
-          </aside>
-        </section>
+          </nav>
 
+          <div className={styles.docsSections}>
         <section id="quick-start" className={styles.quickStart} aria-labelledby="quick-start-title">
           <div className={styles.sectionLead}>
             <p className="eyebrow">First review</p>
@@ -264,6 +267,8 @@ export default function DocsPage() {
             </Link>
           </div>
         </section>
+          </div>
+        </div>
       </main>
     </div>
   );
