@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/beta",
   },
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
   openGraph: {
     title: "IroGuide Beta Readiness - AI Design Critique Status",
     description: "Check IroGuide beta readiness, Firebase account storage, live vision critique configuration, and deployment diagnostics.",

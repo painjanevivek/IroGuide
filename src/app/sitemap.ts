@@ -9,7 +9,6 @@ const routes = [
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
   { path: "/community", priority: 0.7, changeFrequency: "monthly" },
   { path: "/portfolio", priority: 0.65, changeFrequency: "monthly" },
-  { path: "/beta", priority: 0.6, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.4, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.4, changeFrequency: "yearly" },
@@ -20,11 +19,8 @@ const routes = [
 }>;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   return routes.map((route) => ({
     url: `${siteConfig.url}${route.path}`,
-    lastModified: now,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));
