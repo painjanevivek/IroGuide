@@ -33,6 +33,9 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
     let observer: Observer | null = null;
 
     document.documentElement.dataset.motionEnhanced = motionDisabled ? "basic" : "smooth";
+    const heroIdleTimer = window.setTimeout(() => {
+      document.documentElement.dataset.heroMotion = "idle";
+    }, 1400);
 
     if (!motionDisabled) {
       smoother = ScrollSmoother.create({
@@ -88,11 +91,13 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
 
     return () => {
       document.removeEventListener("click", handleAnchorClick);
+      window.clearTimeout(heroIdleTimer);
       observer?.kill();
       smoother?.kill();
       delete document.documentElement.dataset.gsapSmoother;
       delete document.documentElement.dataset.motionEnhanced;
       delete document.documentElement.dataset.gestureActive;
+      delete document.documentElement.dataset.heroMotion;
     };
   }, { dependencies: [reducedMotion], scope: wrapperRef });
 

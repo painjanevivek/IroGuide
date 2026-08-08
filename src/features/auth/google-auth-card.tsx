@@ -55,6 +55,12 @@ export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", se
           {isSignUp ? "Sign up manually with email" : "Sign in manually with email"}
         </Link>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>
+        <ol className="auth-review-steps" aria-label="What happens after sign in">
+          <li><span>01</span> Upload your design</li>
+          <li><span>02</span> Add the brief</li>
+          <li><span>03</span> Pick feedback mode</li>
+          <li><span>04</span> Get your critique</li>
+        </ol>
       </div>
     </>
   );

@@ -53,10 +53,12 @@ export function AnimatedCritiqueLab() {
   const routeRef = useRef<SVGPathElement>(null);
   const orbRef = useRef<SVGCircleElement>(null);
   const glyphRef = useRef<SVGPathElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const readoutRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLButtonElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLParagraphElement>(null);
   const activeIndexRef = useRef(0);
+  const hasSelectedBeatRef = useRef(false);
   const flipStateRef = useRef<Flip.FlipState | null>(null);
 
   const selectBeat = useCallback((nextIndex: number) => {
@@ -86,7 +88,6 @@ export function AnimatedCritiqueLab() {
     const orb = orbRef.current;
     const knob = knobRef.current;
     const track = trackRef.current;
-    const status = statusRef.current;
     const draggers: Draggable[] = [];
     let observer: Observer | undefined;
     let split: SplitText | null = null;
@@ -128,19 +129,6 @@ export function AnimatedCritiqueLab() {
       timeline
         .from(".gsap-lab-hotspot", { scale: 0.72, opacity: 0, stagger: 0.1, duration: 0.45 }, 0.45)
         .from(".gsap-lab-glyph", { scale: 0.82, rotate: -10, opacity: 0, stagger: 0.06, duration: 0.4 }, 0.5);
-
-      if (status) {
-        gsap.to(status, {
-          scrambleText: { text: "Drag, wheel, or swipe the priority control to preview each review layer.", chars: "IroGuide0123456789", speed: 0.38 },
-          duration: 1.4,
-          ease: "none",
-          scrollTrigger: {
-            trigger: root,
-            start: "top 58%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
 
       if (knob && track) {
         draggers.push(...Draggable.create(knob, {
@@ -190,38 +178,38 @@ export function AnimatedCritiqueLab() {
 
     const activeBeat = critiqueBeats[activeIndex];
     const max = Math.max(0, trackRef.current.clientWidth - knobRef.current.offsetWidth);
+    const root = rootRef.current;
+    if (!root) return;
 
-    if (flipStateRef.current) {
-      Flip.from(flipStateRef.current, {
-        duration: 0.24,
+    const context = gsap.context(() => {
+      if (flipStateRef.current) {
+        Flip.from(flipStateRef.current, {
+          duration: 0.24,
+          ease: "power3.out",
+          absolute: true,
+          scale: true,
+        });
+        flipStateRef.current = null;
+      }
+
+      gsap.to(knobRef.current, {
+        x: (max / (critiqueBeats.length - 1)) * activeIndex,
+        duration: 0.28,
         ease: "power3.out",
-        absolute: true,
-        scale: true,
+        overwrite: true,
       });
-      flipStateRef.current = null;
-    }
+      gsap.to(glyphRef.current, { morphSVG: activeBeat.glyph, duration: 0.34, ease: "power3.inOut" });
 
-    gsap.to(knobRef.current, {
-      x: (max / (critiqueBeats.length - 1)) * activeIndex,
-      duration: 0.28,
-      ease: "power3.out",
-      overwrite: true,
-    });
-
-    gsap.to(glyphRef.current, {
-      morphSVG: activeBeat.glyph,
-      duration: 0.34,
-      ease: "power3.inOut",
-    });
-
-    gsap.fromTo(".gsap-lab-readout > *", { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.24, stagger: 0.035, ease: "power3.out" });
-
-    gsap.to(statusRef.current, {
-      scrambleText: { text: `${activeBeat.label}: ${activeBeat.title}`, chars: "IroGuide0123456789", speed: 0.42 },
-      duration: 0.34,
-      ease: "none",
-      overwrite: true,
-    });
+      const panel = panelRef.current;
+      const readout = readoutRef.current;
+      if (panel) gsap.fromTo(panel, { y: 4 }, { y: 0, duration: 0.34, ease: "power3.out", overwrite: true });
+      if (readout) gsap.fromTo(readout.children, { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.24, stagger: 0.035, ease: "power3.out", overwrite: true });
+      if (hasSelectedBeatRef.current && routeRef.current) {
+        gsap.fromTo(routeRef.current, { drawSVG: "0% 65%" }, { drawSVG: "0% 100%", duration: 0.42, ease: "power3.out", overwrite: true });
+      }
+    }, root);
+    hasSelectedBeatRef.current = true;
+    return () => context.revert();
   }, [activeIndex, reducedMotion]);
 
   const activeBeat = critiqueBeats[activeIndex];
@@ -234,13 +222,13 @@ export function AnimatedCritiqueLab() {
         <p>
           Scroll through the lab to watch IroGuide connect evidence, diagnosis, and next steps. The SVG path is animated with GSAP, while the priority control stays interactive for hands-on exploration.
         </p>
-        <p className="gsap-lab-status" ref={statusRef}>Scroll the lab into view to activate the critique path.</p>
+        <p className="gsap-lab-status" aria-live="polite">{activeBeat.label}: {activeBeat.title}. Tap a layer to preview its critique stage.</p>
         <Link className="button button-lime" href="/review/new" prefetch={false} data-analytics-event="gsap_lab_review_click">
           Try the live workflow <ArrowRight size={18} />
         </Link>
       </div>
 
-      <div className="gsap-lab-panel" aria-label="Interactive critique path preview">
+      <div className="gsap-lab-panel" aria-label="Interactive critique path preview" ref={panelRef}>
         <div className="gsap-lab-stage" ref={stageRef}>
           <svg className="gsap-lab-svg" viewBox="0 0 720 460" role="img" aria-labelledby="gsap-lab-svg-title gsap-lab-svg-desc">
             <title id="gsap-lab-svg-title">Animated IroGuide critique path</title>
@@ -281,7 +269,7 @@ export function AnimatedCritiqueLab() {
             </g>
           </svg>
 
-          <div className="gsap-lab-readout" aria-live="polite">
+          <div className="gsap-lab-readout" aria-live="polite" id="gsap-lab-readout" ref={readoutRef}>
             <span className="mono-label">{activeBeat.label}</span>
             <h3>{activeBeat.title}</h3>
             <p>{activeBeat.copy}</p>
@@ -290,7 +278,8 @@ export function AnimatedCritiqueLab() {
         </div>
 
         <div className="gsap-lab-controls">
-          <div className="gsap-lab-control-row" role="list" aria-label="Critique layers">
+          <p className="gsap-lab-touch-hint">Tap a layer to preview that stage of the critique.</p>
+          <div className="gsap-lab-control-row" role="group" aria-label="Critique layers">
             {critiqueBeats.map((beat, index) => (
               <button
                 aria-pressed={activeIndex === index}
@@ -307,8 +296,8 @@ export function AnimatedCritiqueLab() {
           </div>
           <div className="gsap-lab-scrubber">
             <Route size={18} aria-hidden="true" />
-            <div className="gsap-lab-scrubber-track" ref={trackRef}>
-              <button className="gsap-lab-scrubber-knob" ref={knobRef} type="button" aria-label="Drag to preview critique layers">
+            <div className="gsap-lab-scrubber-track" ref={trackRef} aria-hidden="true">
+              <button className="gsap-lab-scrubber-knob" ref={knobRef} tabIndex={-1} type="button" aria-label="Drag to preview critique layers">
                 <MousePointer2 size={16} fill="currentColor" />
               </button>
             </div>
