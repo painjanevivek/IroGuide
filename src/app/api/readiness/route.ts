@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { createPublicRequestContext, enforceRateLimit } from "@/server/api-security";
 import { isBugReportEmailConfigured } from "@/server/bug-report-email";
-import { getFirebaseAdminProjectId, isFirebaseAdminConfigured } from "@/server/firebase-admin";
+import { getFirebaseAdminProjectId, isFirebaseAdminConfigured, isFirebaseAdminStorageConfigured } from "@/server/firebase-admin";
+import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
+import { buildReadiness } from "@/server/readiness";
 import { getReviewProviderStatus } from "@/server/review-provider";
 
 const READINESS_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
@@ -22,6 +24,7 @@ export function GET(request: Request) {
   if ("response" in rateLimit) return rateLimit.response;
 
   const reviewProvider = getReviewProviderStatus();
+  const capabilities = getServerLaunchCapabilities();
   const accountStorageProjectId = getFirebaseAdminProjectId();
   const publicFirebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || null;
   const checks = {
@@ -29,19 +32,20 @@ export function GET(request: Request) {
     bugReportEmail: isBugReportEmailConfigured(),
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
+    sourceImageStorage: isFirebaseAdminStorageConfigured(),
   };
-  const ready = checks.accountStorage && checks.bugReportEmail && checks.firebaseProjectMatch && checks.liveVision;
+  const readiness = buildReadiness({ capabilities, checks });
   logRequestEvent("info", "readiness.checked", context, {
-    ready,
+    ready: readiness.ok,
+    profile: capabilities.profile,
     bugReportEmail: checks.bugReportEmail,
     liveVision: checks.liveVision,
   });
 
   return NextResponse.json({
-    ok: ready,
-    checks,
+    ...readiness,
     reviewProvider,
-  }, { status: ready ? 200 : 503, headers: jsonHeaders(context, getRateHeaders(rateLimit)) });
+  }, { status: readiness.ok ? 200 : 503, headers: jsonHeaders(context, getRateHeaders(rateLimit)) });
 }
 
 function getRateHeaders(rateLimit: ReturnType<typeof enforceRateLimit>): HeadersInit {

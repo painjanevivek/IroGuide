@@ -12,7 +12,7 @@ type BugReportInboxItem = {
   pageUrl?: string;
   status: "new";
   source: "contact";
-  emailStatus: "pending" | "sent" | "not_configured" | "failed";
+  emailStatus: "pending" | "disabled" | "sent" | "not_configured" | "failed";
   emailProviderMessageId?: string;
   requestId: string;
   userAgent?: string;

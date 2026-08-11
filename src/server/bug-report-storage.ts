@@ -109,7 +109,7 @@ function toBugReportInboxItem(documentId: string, data: unknown): BugReportInbox
 }
 
 function getEmailStatus(value: unknown): BugReportEmailStatus | null {
-  return value === "pending" || value === "sent" || value === "not_configured" || value === "failed" ? value : null;
+  return value === "pending" || value === "disabled" || value === "sent" || value === "not_configured" || value === "failed" ? value : null;
 }
 
 function getString(value: unknown) {
