@@ -16,6 +16,7 @@ import { getFixFirstAction } from "@/domain/review-priority";
 import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
 import type { ReviewTrustState } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { postFormDataWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
@@ -26,6 +27,7 @@ import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
 import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
+import { ReviewUnavailable } from "./review-unavailable";
 
 const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -113,6 +115,11 @@ function getSourcePreviewCaption(preview: string | null, sourceImage: ReviewSour
 }
 
 export function ReviewStudio() {
+  const { aiCritique } = useLaunchCapabilities();
+  return aiCritique ? <ReviewStudioFlow /> : <ReviewUnavailable />;
+}
+
+function ReviewStudioFlow() {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);

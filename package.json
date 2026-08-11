@@ -11,6 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:free": "playwright test --config playwright.free.config.ts",
     "test:e2e:install": "playwright install chromium",
     "test:rules": "firebase emulators:exec --project demo-iroguide-rules --only firestore,storage \"vitest run --config vitest.rules.config.ts\"",
     "dast:prelaunch": "node scripts/prelaunch-dast.mjs",

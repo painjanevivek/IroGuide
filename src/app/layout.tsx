@@ -7,6 +7,8 @@ import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TargetCursor } from "@/components/motion/target-cursor";
 import { AuthProvider } from "@/features/auth/auth-provider";
+import { LaunchCapabilitiesProvider } from "@/features/capabilities/launch-capabilities-provider";
+import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 import "./globals.css";
 import "./target-cursor.css";
 
@@ -80,24 +82,27 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const launchCapabilities = getServerLaunchCapabilities();
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <a className="skip-link" href="#app-content">Skip to main content</a>
-        <AuthProvider>
-          <div id="app-content">
-            <BoneyardSiteShell>{children}</BoneyardSiteShell>
-          </div>
-          <AnalyticsTracker nonce={nonce} />
-          <CookieConsent />
-          <TargetCursor
-            targetSelector=".cursor-target, a[href], button, input, textarea, select, summary, [role='button']"
-            hideDefaultCursor={false}
-            hoverDuration={0.28}
-            cursorColorOnTarget="#c8f45d"
-          />
-        </AuthProvider>
+        <LaunchCapabilitiesProvider capabilities={launchCapabilities}>
+          <AuthProvider>
+            <div id="app-content">
+              <BoneyardSiteShell>{children}</BoneyardSiteShell>
+            </div>
+            <AnalyticsTracker nonce={nonce} />
+            <CookieConsent />
+            <TargetCursor
+              targetSelector=".cursor-target, a[href], button, input, textarea, select, summary, [role='button']"
+              hideDefaultCursor={false}
+              hoverDuration={0.28}
+              cursorColorOnTarget="#c8f45d"
+            />
+          </AuthProvider>
+        </LaunchCapabilitiesProvider>
       </body>
     </html>
   );
