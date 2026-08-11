@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EXPECTED_SECURITY_HEADERS,
   evaluateSecurityHeaders,
+  getSmokeExpectations,
   getServiceAccount,
   normalizeBaseUrl,
   parseServiceAccount,
@@ -99,5 +100,46 @@ describe("production smoke helpers", () => {
 
   it("normalizes the smoke base URL without altering the origin", () => {
     expect(normalizeBaseUrl("https://preview.example.com///")).toBe("https://preview.example.com");
+  });
+
+  it("derives free-mode smoke behavior without paid service operations", () => {
+    expect(getSmokeExpectations({
+      capabilities: {
+        profile: "free",
+        aiCritique: false,
+        bugReportEmail: false,
+        sourceImageStorage: false,
+      },
+    })).toEqual({
+      ok: true,
+      profile: "free",
+      authenticatedReviewStatus: 403,
+      requireStorage: false,
+    });
+  });
+
+  it("derives full-mode smoke behavior with entitlement and storage", () => {
+    expect(getSmokeExpectations({
+      capabilities: {
+        profile: "full",
+        aiCritique: true,
+        bugReportEmail: true,
+        sourceImageStorage: true,
+      },
+    })).toEqual({
+      ok: true,
+      profile: "full",
+      authenticatedReviewStatus: 200,
+      requireStorage: true,
+    });
+  });
+
+  it.each([
+    undefined,
+    { capabilities: { profile: "development", aiCritique: true, bugReportEmail: false, sourceImageStorage: false } },
+    { capabilities: { profile: "free", aiCritique: true, bugReportEmail: false, sourceImageStorage: false } },
+    { capabilities: { profile: "full", aiCritique: true, bugReportEmail: true, sourceImageStorage: false } },
+  ])("rejects missing or contradictory production capability state", (payload) => {
+    expect(getSmokeExpectations(payload)).toMatchObject({ ok: false });
   });
 });
