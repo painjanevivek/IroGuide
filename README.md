@@ -111,6 +111,26 @@ Configure the Firebase web and Admin values used by the smoke:
 - one Admin credential format: `secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64`, `secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON`, or split `vars.FIREBASE_ADMIN_PROJECT_ID`/`secrets.FIREBASE_ADMIN_PROJECT_ID`, `secrets.FIREBASE_ADMIN_CLIENT_EMAIL`, and `secrets.FIREBASE_ADMIN_PRIVATE_KEY`
 - optional bucket override: `vars.FIREBASE_ADMIN_STORAGE_BUCKET` or `secrets.FIREBASE_ADMIN_STORAGE_BUCKET`
 
+## Launch capability profile
+
+Production uses one server-owned switch for paid or externally billed capabilities:
+
+```powershell
+IROGUIDE_LAUNCH_PROFILE=free
+```
+
+`free` disables new AI critiques, Firebase source-image operations, and Resend delivery while preserving Firebase authentication, Firestore text history/drafts, bug-report storage, profile controls, documentation, and readable Community content. Missing or invalid production values fail closed to `free`; credentials never enable a capability by themselves.
+
+Do not set `full` until all of these are ready and explicitly approved:
+
+- a live review provider with cost and abuse controls;
+- verified-email plus signed review-entitlement issuance;
+- an active Firebase Storage bucket with deployed owner-only rules;
+- verified Resend sender/recipient configuration;
+- green enabled-path Playwright, security smoke, and capability-driven production smoke results.
+
+The production smoke reads `/api/readiness` once and treats its capability object as the oracle. Free mode positively verifies a `403` generation denial and Firestore isolation without contacting paid services; full mode verifies an entitled successful review plus Storage isolation.
+
 ## Live vision setup
 
 Local development may use demo mode. Production review requests fail clearly
@@ -166,13 +186,21 @@ Install the Chromium browser once before the first Playwright run:
 npm run test:e2e:install
 ```
 
-By default, `npm run test:e2e` starts the app with `NEXT_PUBLIC_E2E_LOCAL_AUTH=true`.
+By default, `npm run test:e2e` starts the app with `NEXT_PUBLIC_E2E_LOCAL_AUTH=true` and an explicit mocked `full` profile.
 That local fallback signs in through the manual email UI, mocks only the review
 creation API, and verifies that the dashboard recognizes a saved critique with a
 private source image. The local storage mock serves reopened source previews from
 `/__e2e__/private-storage/users/{uid}/reviews/{documentId}/source.png` so the
 browser smoke can prove the saved private image actually renders. It is meant for
 laptops and CI jobs that should not depend on a live Firebase project.
+
+Run the separate fail-closed browser contract with:
+
+```powershell
+npm run test:e2e:free
+```
+
+That suite starts a dedicated free-profile server, proves every review entry point is relabeled, preserves saved critique text, suppresses follow-up/comparison/improvement controls, and verifies that the generation endpoint is never requested.
 
 To exercise the Firebase-backed path instead, provide a dedicated email/password
 test account plus the normal Firebase web and admin environment variables:

@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-11
 
-**Status:** Approved concept; written specification awaiting review
+**Status:** Approved; implementation verified locally on `codex/review-capability-foundation`, deployment verification pending
 
 **Scope:** Production capability gating, readiness, smoke verification, and unavailable-feature UX
 

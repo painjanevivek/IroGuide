@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Check, Eye, FileText, LoaderCircle, LockKeyhole, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import type { AccountStoredReview } from "@/lib/account-reviews";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 
@@ -129,7 +130,7 @@ function SourceReviewCard({
         <h3>{loadError ? "Could not load reviews" : "Start with evidence"}</h3>
         <p>{loadError || <>Complete a critique first. IroGuide will use its issues and strengths to seed a private case-study outline. <Link href="/docs">Read the docs</Link> for what to submit.</>}</p>
       </div>
-      <Link className="button button-dark" href="/review/new">Review a design <ArrowRight /></Link>
+      <ReviewLaunchLink className="button button-dark" enabledLabel="Review a design" />
     </div>
   );
 }

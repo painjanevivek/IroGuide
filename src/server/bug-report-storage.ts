@@ -4,7 +4,7 @@ import { getFirebaseAdminFirestore } from "./firebase-admin";
 
 const BUG_REPORTS_COLLECTION = "bugReports";
 
-export type BugReportEmailStatus = "pending" | "sent" | "not_configured" | "failed";
+export type BugReportEmailStatus = "pending" | "disabled" | "sent" | "not_configured" | "failed";
 
 export type StoredBugReport = {
   id: string;
@@ -109,7 +109,7 @@ function toBugReportInboxItem(documentId: string, data: unknown): BugReportInbox
 }
 
 function getEmailStatus(value: unknown): BugReportEmailStatus | null {
-  return value === "pending" || value === "sent" || value === "not_configured" || value === "failed" ? value : null;
+  return value === "pending" || value === "disabled" || value === "sent" || value === "not_configured" || value === "failed" ? value : null;
 }
 
 function getString(value: unknown) {

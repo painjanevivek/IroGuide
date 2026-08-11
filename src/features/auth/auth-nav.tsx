@@ -5,6 +5,7 @@ import { ArrowRight, Upload } from "lucide-react";
 import { AuthTransitionLink } from "./auth-transition-link";
 import { useAuth } from "./auth-provider";
 import { UserMenu } from "./user-menu";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 export function LandingHeaderActions() {
   const { user, loading } = useAuth();
@@ -80,7 +81,7 @@ export function LandingFinalAuthActions() {
   if (user) {
     return (
       <div className="final-cta-actions">
-        <Link className="button button-lime button-large" href="/review/new" prefetch={false} data-analytics-event="final_new_review_click">New review <ArrowRight size={19} /></Link>
+        <ReviewLaunchLink className="button button-lime button-large" enabledLabel="New review" eventName="final_new_review_click" />
         <Link className="button-quiet beta-link" href="/profile" prefetch={false}>Profile <Upload size={19} /></Link>
       </div>
     );

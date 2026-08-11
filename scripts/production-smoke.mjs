@@ -33,6 +33,7 @@ const runFirebaseRules = process.env.SMOKE_FIREBASE_RULES !== "false";
 const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms", "/.well-known/security.txt", "/security-policy.txt"];
 const securityHeaderRoutes = getListEnv("SMOKE_SECURITY_HEADER_PATHS", ["/", "/api/readiness"]);
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
+const FREE_LAUNCH_REVIEW_MESSAGE = "AI critique is unavailable during IroGuide's free launch.";
 
 const results = [];
 
@@ -51,14 +52,14 @@ async function main() {
 
   await expectStatus("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }, 401);
   await expectStatus("/api/reviews/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{\"documents\":[]}" }, 401);
-  await checkReadiness();
+  const smokeExpectations = await checkReadiness();
 
   if (runFirebaseRules) {
-    await firebaseRulesSmoke();
+    await firebaseRulesSmoke(smokeExpectations);
   }
 
   if (runAuthenticatedReview) {
-    await authenticatedReviewSmoke();
+    await authenticatedReviewSmoke(smokeExpectations);
   }
 
   const failed = results.filter((result) => !result.ok);
@@ -163,15 +164,23 @@ async function checkReadiness() {
   try {
     const response = await fetch(`${baseUrl}/api/readiness`);
     const payload = await response.json();
-    const ok = requireReady ? response.ok && payload.ok === true : response.status === 200 || response.status === 503;
-    addResult(name, ok, `status=${response.status} accountStorage=${Boolean(payload.checks?.accountStorage)} bugReportEmail=${Boolean(payload.checks?.bugReportEmail)} liveVision=${Boolean(payload.checks?.liveVision)} provider=${payload.reviewProvider?.activeProvider ?? "unknown"}`);
+    const expectations = getSmokeExpectations(payload);
+    const httpReady = requireReady ? response.ok && payload.ok === true : response.status === 200 || response.status === 503;
+    const ok = httpReady && expectations.ok;
+    addResult(name, ok, `status=${response.status} profile=${payload.capabilities?.profile ?? "unknown"} accountStorage=${Boolean(payload.checks?.accountStorage)} bugReportEmail=${Boolean(payload.checks?.bugReportEmail)} liveVision=${Boolean(payload.checks?.liveVision)} sourceImageStorage=${Boolean(payload.checks?.sourceImageStorage)} provider=${payload.reviewProvider?.activeProvider ?? "unknown"}${expectations.ok ? "" : ` contract=${expectations.detail}`}`);
+    return expectations.ok ? expectations : null;
   } catch (error) {
     addResult(name, false, getErrorMessage(error));
+    return null;
   }
 }
 
-async function firebaseRulesSmoke() {
-  const settings = getFirebaseSmokeSettings();
+async function firebaseRulesSmoke(expectations) {
+  if (!expectations) {
+    addResult("Firebase cross-user rules smoke", false, "readiness capability contract unavailable");
+    return;
+  }
+  const settings = getFirebaseSmokeSettings(process.env, { requireStorage: expectations.requireStorage });
   if (settings.missing.length > 0) {
     addResult("Firebase cross-user rules smoke", false, `missing ${settings.missing.join(", ")}`);
     return;
@@ -181,11 +190,11 @@ async function firebaseRulesSmoke() {
   const app = initializeAdminApp({
     credential: cert(serviceAccount),
     projectId,
-    storageBucket,
+    ...(expectations.requireStorage && storageBucket ? { storageBucket } : {}),
   }, `iroguide-prod-rules-smoke-${Date.now()}`);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const bucket = getAdminStorage(app).bucket(storageBucket);
+  const bucket = expectations.requireStorage && storageBucket ? getAdminStorage(app).bucket(storageBucket) : null;
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ownerUid = `smoke-owner-${stamp}`;
   const otherUid = `smoke-other-${stamp}`;
@@ -210,30 +219,35 @@ async function firebaseRulesSmoke() {
       sourceImagePath: storagePath,
       smoke: true,
     });
-    await bucket.file(storagePath).save(png, {
-      resumable: false,
-      metadata: {
-        cacheControl: "private, max-age=0, no-transform",
-        contentType: "image/png",
-        metadata: { smoke: "true" },
-      },
-    });
+    if (bucket) {
+      await bucket.file(storagePath).save(png, {
+        resumable: false,
+        metadata: {
+          cacheControl: "private, max-age=0, no-transform",
+          contentType: "image/png",
+          metadata: { smoke: "true" },
+        },
+      });
+    }
 
-    const [ownerReview, otherReview, ownerStorage, otherStorage] = await Promise.all([
+    const [ownerReview, otherReview] = await Promise.all([
       fetchFirestoreDocument({ projectId, documentPath: `reviews/${reviewId}`, idToken: ownerIdToken }),
       fetchFirestoreDocument({ projectId, documentPath: `reviews/${reviewId}`, idToken: otherIdToken }),
-      fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: ownerIdToken }),
-      fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: otherIdToken }),
     ]);
+    const [ownerStorage, otherStorage] = bucket && storageBucket
+      ? await Promise.all([
+          fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: ownerIdToken }),
+          fetchStorageMetadata({ bucketName: storageBucket, storagePath, idToken: otherIdToken }),
+        ])
+      : [null, null];
 
     const ok = ownerReview.ok
       && isDeniedStatus(otherReview.status)
-      && ownerStorage.ok
-      && isDeniedStatus(otherStorage.status);
+      && (!expectations.requireStorage || Boolean(ownerStorage?.ok && otherStorage && isDeniedStatus(otherStorage.status)));
     addResult(
       "Firebase cross-user rules smoke",
       ok,
-      `reviewOwner=${ownerReview.status} reviewOther=${otherReview.status} storageOwner=${ownerStorage.status} storageOther=${otherStorage.status}`,
+      `reviewOwner=${ownerReview.status} reviewOther=${otherReview.status} storage=${expectations.requireStorage ? `owner=${ownerStorage?.status} other=${otherStorage?.status}` : "intentionally-disabled"}`,
     );
   } catch (error) {
     addResult("Firebase cross-user rules smoke", false, getErrorMessage(error));
@@ -243,7 +257,11 @@ async function firebaseRulesSmoke() {
   }
 }
 
-async function authenticatedReviewSmoke() {
+async function authenticatedReviewSmoke(expectations) {
+  if (!expectations) {
+    addResult("authenticated review smoke", false, "readiness capability contract unavailable");
+    return;
+  }
   const serviceAccount = getServiceAccount();
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!serviceAccount || !apiKey) {
@@ -257,12 +275,28 @@ async function authenticatedReviewSmoke() {
   const uid = `iroguide-prod-smoke-${Date.now()}`;
 
   try {
+    await auth.createUser({
+      uid,
+      email: `${uid}@iroguide.test`,
+      emailVerified: true,
+    });
+    if (expectations.profile === "full") {
+      await auth.setCustomUserClaims(uid, { iroguide_review_entitled: true });
+    }
     const customToken = await auth.createCustomToken(uid);
     const idToken = await exchangeCustomToken(apiKey, customToken);
     const response = await submitReview(idToken);
     const payload = await response.json();
-    if (!response.ok) {
+    if (response.status !== expectations.authenticatedReviewStatus) {
       addResult("authenticated review smoke", false, `status=${response.status} error=${payload.error ?? "unknown"}`);
+      return;
+    }
+    if (expectations.profile === "free") {
+      addResult(
+        "authenticated review smoke",
+        payload.error === FREE_LAUNCH_REVIEW_MESSAGE,
+        `status=${response.status} paidGeneration=intentionally-disabled`,
+      );
       return;
     }
     if (payload.persistence?.savedToAccount !== true || !payload.review?.id) {
@@ -324,7 +358,7 @@ async function fetchStorageMetadata({ bucketName, storagePath, idToken }) {
 async function cleanupRulesSmoke({ auth, db, bucket, ownerUid, otherUid, reviewId, storagePath }) {
   await Promise.allSettled([
     db.collection("reviews").doc(reviewId).delete(),
-    bucket.file(storagePath).delete({ ignoreNotFound: true }),
+    ...(bucket ? [bucket.file(storagePath).delete({ ignoreNotFound: true })] : []),
     auth.deleteUser(ownerUid),
     auth.deleteUser(otherUid),
   ]);
@@ -341,7 +375,7 @@ async function cleanupSmokeUser({ auth, db, uid }) {
   } catch {}
 }
 
-function getFirebaseSmokeSettings(env = process.env) {
+function getFirebaseSmokeSettings(env = process.env, { requireStorage = true } = {}) {
   const serviceAccount = getServiceAccount(env);
   const projectId = serviceAccount?.projectId ?? getEnvValue(env, "FIREBASE_ADMIN_PROJECT_ID") ?? getEnvValue(env, "NEXT_PUBLIC_FIREBASE_PROJECT_ID");
   const apiKey = getEnvValue(env, "NEXT_PUBLIC_FIREBASE_API_KEY");
@@ -353,7 +387,7 @@ function getFirebaseSmokeSettings(env = process.env) {
   if (!serviceAccount) missing.push("Firebase Admin credentials");
   if (!apiKey) missing.push("NEXT_PUBLIC_FIREBASE_API_KEY");
   if (!projectId) missing.push("Firebase project id");
-  if (!storageBucket) missing.push("Firebase storage bucket");
+  if (requireStorage && !storageBucket) missing.push("Firebase storage bucket");
 
   return { apiKey, missing, projectId, serviceAccount, storageBucket };
 }
@@ -421,6 +455,29 @@ async function writeReport(report) {
 
 export function normalizeBaseUrl(value) {
   return value.replace(/\/+$/, "");
+}
+
+export function getSmokeExpectations(payload) {
+  const capabilities = payload?.capabilities;
+  if (!capabilities || (capabilities.profile !== "free" && capabilities.profile !== "full")) {
+    return { ok: false, detail: "missing or unsupported production launch profile" };
+  }
+
+  if (capabilities.profile === "free") {
+    const coherent = capabilities.aiCritique === false
+      && capabilities.bugReportEmail === false
+      && capabilities.sourceImageStorage === false;
+    return coherent
+      ? { ok: true, profile: "free", authenticatedReviewStatus: 403, requireStorage: false }
+      : { ok: false, detail: "free profile exposes an enabled paid capability" };
+  }
+
+  const coherent = capabilities.aiCritique === true
+    && capabilities.bugReportEmail === true
+    && capabilities.sourceImageStorage === true;
+  return coherent
+    ? { ok: true, profile: "full", authenticatedReviewStatus: 200, requireStorage: true }
+    : { ok: false, detail: "full profile has a disabled required capability" };
 }
 
 function getListEnv(name, fallback) {

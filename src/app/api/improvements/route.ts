@@ -4,6 +4,7 @@ import { createDemoImprovementPlan } from "@/domain/demo-review";
 import { improvementRequestSchema } from "@/domain/improvement";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
+import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 
 const IMPROVEMENT_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 };
 
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     missing: "Sign in again before generating an improvement plan.",
   });
   if ("response" in auth) return auth.response;
+  const policy = enforceReviewGenerationPolicy({ context, eventPrefix: "improvement", user: auth.user });
+  if (!policy.allowed) return policy.response;
 
   const rateLimit = enforceRateLimit({
     context,

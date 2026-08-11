@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isBugReportEmailConfigured, sendBugReportEmail } from "./bug-report-email";
 import { listBugReports, saveBugReport, updateBugReportEmailStatus } from "./bug-report-storage";
 
@@ -28,6 +28,7 @@ vi.mock("firebase-admin/firestore", () => ({
 
 describe("bug report storage", () => {
   beforeEach(() => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "full");
     delete process.env.RESEND_API_KEY;
     delete process.env.BUG_REPORT_TO_EMAIL;
     delete process.env.BUG_REPORT_FROM_EMAIL;
@@ -38,6 +39,11 @@ describe("bug report storage", () => {
     firestoreMock.orderBy.mockClear();
     firestoreMock.serverTimestamp.mockClear();
     firestoreMock.set.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it("stores public bug reports in the server-only collection", async () => {
@@ -139,6 +145,30 @@ describe("bug report storage", () => {
     });
 
     expect(result).toEqual({ status: "not_configured" });
+  });
+
+  it("records disabled delivery without contacting Resend in free mode", async () => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    process.env.RESEND_API_KEY = "configured-but-disabled";
+    process.env.BUG_REPORT_TO_EMAIL = "bugs@example.com";
+    process.env.BUG_REPORT_FROM_EMAIL = "IroGuide <bugs@iroguide.com>";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await sendBugReportEmail({
+      id: "report-1",
+      name: "Vivek Painjane",
+      email: "vivek@example.com",
+      problem: "The contact form submit button did not work.",
+      status: "new",
+      source: "contact",
+      emailStatus: "pending",
+      requestId: "request-1",
+      createdAtIso: new Date().toISOString(),
+    });
+
+    expect(result).toEqual({ status: "disabled" });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("reports bug report email readiness only when all delivery settings exist", () => {

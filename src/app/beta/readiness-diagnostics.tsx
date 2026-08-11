@@ -18,11 +18,18 @@ import {
 
 type ReadinessPayload = {
   ok: boolean;
+  capabilities: {
+    profile: "free" | "full" | "development";
+    aiCritique: boolean;
+    bugReportEmail: boolean;
+    sourceImageStorage: boolean;
+  };
   checks: {
     accountStorage: boolean;
     bugReportEmail: boolean;
     firebaseProjectMatch: boolean;
     liveVision: boolean;
+    sourceImageStorage: boolean;
   };
   reviewProvider: {
     activeProvider: string;
@@ -296,6 +303,9 @@ function DiagnosticGroup({
 }
 
 function buildDiagnostics(payload: ReadinessPayload) {
+  const critiqueDisabled = !payload.capabilities.aiCritique;
+  const emailDisabled = !payload.capabilities.bugReportEmail;
+  const storageDisabled = !payload.capabilities.sourceImageStorage;
   const firebaseChecks: DiagnosticItem[] = [
     {
       id: "account-storage",
@@ -315,6 +325,19 @@ function buildDiagnostics(payload: ReadinessPayload) {
         : "Browser Firebase config and server Admin credentials do not appear to point at the same project.",
       fix: "Make NEXT_PUBLIC_FIREBASE_PROJECT_ID match the Firebase Admin service account project, then redeploy the frontend and API together.",
     },
+    {
+      id: "source-image-storage",
+      label: "Private source-image storage",
+      passed: storageDisabled || payload.checks.sourceImageStorage,
+      detail: storageDisabled
+        ? "Source-image cloud storage is intentionally disabled for this launch profile."
+        : payload.checks.sourceImageStorage
+          ? "A private source-image bucket is configured."
+          : "The enabled source-image storage capability has no configured bucket.",
+      fix: storageDisabled
+        ? "No action is required until the full launch profile is approved."
+        : "Configure the Firebase Storage bucket and verify private owner-only rules.",
+    },
   ];
 
   const hasLiveCredential = payload.reviewProvider.openRouterConfigured || payload.reviewProvider.endpointConfigured;
@@ -322,29 +345,35 @@ function buildDiagnostics(payload: ReadinessPayload) {
     {
       id: "live-provider",
       label: "Live provider selected",
-      passed: payload.reviewProvider.activeProvider === "live",
-      detail: payload.reviewProvider.activeProvider === "live"
+      passed: critiqueDisabled || payload.reviewProvider.activeProvider === "live",
+      detail: critiqueDisabled
+        ? "AI critique is intentionally disabled for this launch profile."
+        : payload.reviewProvider.activeProvider === "live"
         ? "Live provider is active in " + payload.reviewProvider.configuredMode + " mode."
         : "Current provider is " + payload.reviewProvider.activeProvider + "; production reviews will remain unavailable until live vision is configured.",
-      fix: "Set IROGUIDE_REVIEW_PROVIDER to openrouter, vision, live, or endpoint, or provide OPENROUTER_API_KEY so auto mode selects live review.",
+      fix: critiqueDisabled ? "No action is required until the full launch profile is approved." : "Set IROGUIDE_REVIEW_PROVIDER to openrouter, vision, live, or endpoint, or provide OPENROUTER_API_KEY so auto mode selects live review.",
     },
     {
       id: "live-credential",
       label: "Live review credential",
-      passed: hasLiveCredential,
-      detail: hasLiveCredential
+      passed: critiqueDisabled || hasLiveCredential,
+      detail: critiqueDisabled
+        ? "Paid review credentials are not required in the free launch profile."
+        : hasLiveCredential
         ? getLiveCredentialDetail(payload)
         : "No OpenRouter API key or custom vision endpoint is configured.",
-      fix: "Set OPENROUTER_API_KEY for OpenRouter or IROGUIDE_VISION_REVIEW_ENDPOINT for a compatible review service.",
+      fix: critiqueDisabled ? "No action is required until the full launch profile is approved." : "Set OPENROUTER_API_KEY for OpenRouter or IROGUIDE_VISION_REVIEW_ENDPOINT for a compatible review service.",
     },
     {
       id: "live-vision",
       label: "Live vision readiness",
-      passed: payload.checks.liveVision,
-      detail: payload.checks.liveVision
+      passed: critiqueDisabled || payload.checks.liveVision,
+      detail: critiqueDisabled
+        ? "Live vision is intentionally disabled for this launch profile."
+        : payload.checks.liveVision
         ? "Live pixel analysis is ready with the configured provider."
         : "The review route is not ready to analyze uploaded pixels in this environment.",
-      fix: "Confirm the live provider mode and credential variables are present in the deployed server environment, then redeploy.",
+      fix: critiqueDisabled ? "No action is required until the full launch profile is approved." : "Confirm the live provider mode and credential variables are present in the deployed server environment, then redeploy.",
     },
   ];
 
@@ -352,11 +381,13 @@ function buildDiagnostics(payload: ReadinessPayload) {
     {
       id: "bug-report-email",
       label: "Bug report email delivery",
-      passed: payload.checks.bugReportEmail,
-      detail: payload.checks.bugReportEmail
+      passed: emailDisabled || payload.checks.bugReportEmail,
+      detail: emailDisabled
+        ? "Bug report email is intentionally disabled; reports remain stored in Firestore."
+        : payload.checks.bugReportEmail
         ? "Bug report notification email is configured for the contact form."
         : "Bug reports can be stored, but email delivery to the developer inbox is not configured.",
-      fix: "Set RESEND_API_KEY, BUG_REPORT_TO_EMAIL, and BUG_REPORT_FROM_EMAIL in the server environment, then redeploy.",
+      fix: emailDisabled ? "No action is required until the full launch profile is approved." : "Set RESEND_API_KEY, BUG_REPORT_TO_EMAIL, and BUG_REPORT_FROM_EMAIL in the server environment, then redeploy.",
     },
   ];
 
@@ -410,15 +441,20 @@ function formatCheckedAt(date: Date) {
 }
 
 function isReadinessPayload(value: unknown): value is ReadinessPayload {
-  if (!isRecord(value) || !isRecord(value.checks) || !isRecord(value.reviewProvider)) {
+  if (!isRecord(value) || !isRecord(value.capabilities) || !isRecord(value.checks) || !isRecord(value.reviewProvider)) {
     return false;
   }
 
   return typeof value.ok === "boolean"
+    && (value.capabilities.profile === "free" || value.capabilities.profile === "full" || value.capabilities.profile === "development")
+    && typeof value.capabilities.aiCritique === "boolean"
+    && typeof value.capabilities.bugReportEmail === "boolean"
+    && typeof value.capabilities.sourceImageStorage === "boolean"
     && typeof value.checks.accountStorage === "boolean"
     && typeof value.checks.bugReportEmail === "boolean"
     && typeof value.checks.firebaseProjectMatch === "boolean"
     && typeof value.checks.liveVision === "boolean"
+    && typeof value.checks.sourceImageStorage === "boolean"
     && typeof value.reviewProvider.activeProvider === "string"
     && typeof value.reviewProvider.configuredMode === "string"
     && typeof value.reviewProvider.endpointConfigured === "boolean"

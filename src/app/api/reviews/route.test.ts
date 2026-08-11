@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/server/firebase-admin", () => ({
   FirebaseAdminUnavailableError: class FirebaseAdminUnavailableError extends Error {},
@@ -128,6 +128,30 @@ describe("review generation authorization", () => {
         savedToAccount: true,
       },
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("stops a free-launch request before provider use even for an entitled account", async () => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
+      uid: "approved-account",
+      sub: "approved-account",
+      iat: 1,
+      email_verified: true,
+      iroguide_review_entitled: true,
+    });
+
+    const response = await POST(createRequest());
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "AI critique is unavailable during IroGuide's free launch.",
+    });
+    expect(createReview).not.toHaveBeenCalled();
+    expect(saveReviewForUser).not.toHaveBeenCalled();
   });
 });
 

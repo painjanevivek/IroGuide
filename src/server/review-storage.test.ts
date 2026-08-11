@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import { createImportedReviewDocument } from "@/domain/review-storage";
 import type { ReviewRequest } from "@/domain/review";
@@ -18,6 +18,10 @@ const firestoreMock = vi.hoisted(() => {
 
   return { batch, batchDelete, collection, commit, doc, get, set, where };
 });
+
+const firestoreFieldValueMock = vi.hoisted(() => ({
+  serverTimestamp: vi.fn(() => ({ __type: "serverTimestamp" })),
+}));
 
 const storageMock = vi.hoisted(() => {
   const save = vi.fn();
@@ -39,6 +43,10 @@ vi.mock("./firebase-admin", () => ({
   }),
 }));
 
+vi.mock("firebase-admin/firestore", () => ({
+  FieldValue: firestoreFieldValueMock,
+}));
+
 const request: ReviewRequest = {
   category: "logo",
   mode: "mentor",
@@ -54,6 +62,7 @@ const request: ReviewRequest = {
 
 describe("review storage", () => {
   beforeEach(() => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "full");
     firestoreMock.collection.mockClear();
     firestoreMock.batch.mockClear();
     firestoreMock.batchDelete.mockClear();
@@ -62,12 +71,17 @@ describe("review storage", () => {
     firestoreMock.get.mockReset();
     firestoreMock.set.mockClear();
     firestoreMock.where.mockClear();
+    firestoreFieldValueMock.serverTimestamp.mockClear();
     firestoreMock.get.mockResolvedValue({ docs: [], empty: true });
     storageMock.file.mockClear();
     storageMock.fileDelete.mockClear();
     storageMock.getFiles.mockReset();
     storageMock.getFiles.mockResolvedValue([[]]);
     storageMock.save.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("saves a completed review under the verified user", async () => {
@@ -147,6 +161,37 @@ describe("review storage", () => {
         storagePath: `users/verified-user/reviews/${document.id}/source.png`,
       }),
     }), { merge: true });
+  });
+
+  it("writes review text without contacting Storage in free mode", async () => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    const review = createDemoReview(request);
+
+    const document = await saveReviewForUser({
+      userId: "verified-user",
+      review,
+      category: "logo",
+      sourceImage: {
+        file: request.file,
+        image: { mimeType: "image/png", dataBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB" },
+      },
+    });
+
+    expect(document).not.toHaveProperty("sourceImage");
+    expect(storageMock.file).not.toHaveBeenCalled();
+    expect(storageMock.save).not.toHaveBeenCalled();
+    expect(firestoreMock.set).toHaveBeenCalledWith(expect.not.objectContaining({
+      sourceImage: expect.anything(),
+    }), { merge: true });
+  });
+
+  it("deletes Firestore account data without contacting Storage in free mode", async () => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+
+    const result = await deleteReviewDataForUser("verified-user");
+
+    expect(storageMock.getFiles).not.toHaveBeenCalled();
+    expect(result.sourceImagesDeleted).toBe(0);
   });
 
   it("deletes stored reviews and drafts for the verified user", async () => {

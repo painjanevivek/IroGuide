@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { LoaderCircle, LayoutDashboard } from "lucide-react";
 import { getReviewTrustState, storedReviewDocumentSchema, type StoredReviewDocument } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { ReviewResult } from "@/features/review/review-studio";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
@@ -15,6 +16,7 @@ import { getCachedLocalReviewSourceImage } from "@/lib/review-source-image-cache
 
 export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   const { user } = useAuth();
+  const { sourceImageStorage } = useLaunchCapabilities();
   const router = useRouter();
   const [document, setDocument] = useState<StoredReviewDocument | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
     let localObjectUrl: string | null = null;
 
     async function loadPreview() {
-      if (currentDocument.sourceImage) {
+      if (sourceImageStorage && currentDocument.sourceImage) {
         try {
           const cloudUrl = await getReviewSourceImageDownloadUrl(currentDocument.sourceImage, currentUser.uid);
           if (active) setPreviewUrl(cloudUrl);
@@ -117,14 +119,14 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
       active = false;
       if (localObjectUrl) URL.revokeObjectURL(localObjectUrl);
     };
-  }, [document, user]);
+  }, [document, sourceImageStorage, user]);
 
   if (document) {
     return (
       <ReviewResult
         initialSaveError=""
         initialSaveState={document.syncState === "cloud" ? "saved" : "local"}
-        initialSourceImage={document.sourceImage ?? null}
+        initialSourceImage={sourceImageStorage ? document.sourceImage ?? null : null}
         onRestart={() => router.push("/review/new")}
         preview={previewUrl}
         review={document.review}

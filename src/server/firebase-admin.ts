@@ -123,6 +123,10 @@ export function getFirebaseAdminProjectId() {
     ?? null;
 }
 
+export function isFirebaseAdminStorageConfigured() {
+  return Boolean(getFirebaseAdminStorageBucketName());
+}
+
 function isFirebaseAdminUnavailableError(error: unknown): error is FirebaseAdminUnavailableError {
   return error instanceof FirebaseAdminUnavailableError
     || (error instanceof Error && error.name === "FirebaseAdminUnavailableError");

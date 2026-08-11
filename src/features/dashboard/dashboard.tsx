@@ -14,6 +14,7 @@ import { calculateProgress } from "@/domain/progress";
 import { reviewDraftSchema, type ReviewDraft } from "@/domain/review-draft";
 import { categoryLabels } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
@@ -26,6 +27,7 @@ type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { aiCritique, sourceImageStorage } = useLaunchCapabilities();
   const {
     cachedReviews,
     cloudReviews,
@@ -38,7 +40,7 @@ export function Dashboard() {
   const [reviewImageUrls, setReviewImageUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !sourceImageStorage) {
       queueMicrotask(() => setReviewImageUrls({}));
       return;
     }
@@ -69,7 +71,7 @@ export function Dashboard() {
     return () => {
       active = false;
     };
-  }, [cachedReviews, cloudReviews, user]);
+  }, [cachedReviews, cloudReviews, sourceImageStorage, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -108,7 +110,7 @@ export function Dashboard() {
             <p className="eyebrow">Your design practice</p>
             <h1>Progress,<br />not perfection.</h1>
           </div>
-          <Link className="button" href="/review/new">New review <ArrowRight /></Link>
+          <Link className="button" href="/review/new">{aiCritique ? "New review" : "Review availability"} <ArrowRight /></Link>
         </div>
       </Reveal>
       <Reveal delay={0.05}>
@@ -116,7 +118,7 @@ export function Dashboard() {
           <ShieldCheck />
           <div>
             <strong>Private signed-in workspace</strong>
-            <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected. {hasPrivateSourceImages ? "Saved source images are loaded from private account storage." : "New saved critiques will keep their source image in account storage."}</span>
+            <span>{user.email ?? user.displayName ?? "Your Firebase account"} is connected. {!sourceImageStorage ? "Critique text remains available; source-image cloud access is paused during the free launch." : hasPrivateSourceImages ? "Saved source images are loaded from private account storage." : "New saved critiques will keep their source image in account storage."}</span>
           </div>
         </div>
       </Reveal>
@@ -131,9 +133,9 @@ export function Dashboard() {
                   <FileText />
                   <span>{categoryLabels[draft.category]}</span>
                   <h3>{getDraftTitle(draft)}</h3>
-                  <p>{draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique."}</p>
+                  <p>{aiCritique ? draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique." : "Draft context remains saved while new critiques are unavailable."}</p>
                   <div><small>Step {draft.step} / 4</small>{draft.updatedAtMs && <time>{new Date(draft.updatedAtMs).toLocaleDateString()}</time>}</div>
-                  <Link className="button button-dark button-small" href="/review/new">Continue draft <ArrowRight /></Link>
+                  <Link className="button button-dark button-small" href="/review/new">{aiCritique ? "Continue draft" : "Review availability"} <ArrowRight /></Link>
                 </article>
               ))}
             </div>
@@ -156,7 +158,7 @@ export function Dashboard() {
       ) : reviews.length === 0 ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-empty">
-            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>Your dashboard becomes useful after the first critique. New to the workflow? <Link href="/docs">Read the docs</Link>.</p><Link className="button button-dark" href="/review/new">Review a design <Sparkles /></Link></div>
+            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>{aiCritique ? <>Your dashboard becomes useful after the first critique. New to the workflow? <Link href="/docs">Read the docs</Link>.</> : <>New critiques are paused during the free launch. You can still <Link href="/docs">read the docs</Link> and return when review access is available.</>}</p><Link className="button button-dark" href="/review/new">{aiCritique ? "Review a design" : "Review availability"} <Sparkles /></Link></div>
           </div>
         </Reveal>
       ) : (
@@ -182,7 +184,7 @@ export function Dashboard() {
             </Stagger>
           </section>
           <Reveal delay={0.12}>
-            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">Practice with a new design <ArrowRight /></Link></section>
+            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">{aiCritique ? "Practice with a new design" : "Review availability"} <ArrowRight /></Link></section>
           </Reveal>
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>

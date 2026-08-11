@@ -12,7 +12,7 @@ type BugReportInboxItem = {
   pageUrl?: string;
   status: "new";
   source: "contact";
-  emailStatus: "pending" | "sent" | "not_configured" | "failed";
+  emailStatus: "pending" | "disabled" | "sent" | "not_configured" | "failed";
   emailProviderMessageId?: string;
   requestId: string;
   userAgent?: string;
@@ -130,6 +130,7 @@ function CopyButton({ label, value }: { label: string; value: string }) {
 }
 
 function formatEmailStatus(status: BugReportInboxItem["emailStatus"]) {
+  if (status === "disabled") return "Email intentionally disabled";
   if (status === "not_configured") return "Email not configured";
   return `Email ${status.replace("_", " ")}`;
 }

@@ -6,6 +6,7 @@ import {
   type TrustedStoredReviewDocument,
 } from "@/domain/review-storage";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
+import { getServerLaunchCapabilities } from "./launch-capabilities";
 import { createTrustedReviewDocument } from "./review-provenance";
 
 const REVIEWS_COLLECTION = "reviews";
@@ -35,8 +36,9 @@ export async function saveReviewForUser({
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
+  const capabilities = getServerLaunchCapabilities();
   const baseDocument = createTrustedReviewDocument({ userId, review, category });
-  const persistedSourceImage = sourceImage
+  const persistedSourceImage = sourceImage && capabilities.sourceImageStorage
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
     : undefined;
   const document = persistedSourceImage ? { ...baseDocument, sourceImage: persistedSourceImage } : baseDocument;
@@ -45,6 +47,7 @@ export async function saveReviewForUser({
 }
 
 export async function syncReviewDocumentsForUser(userId: string, documents: ReviewSyncDocumentInput[]): Promise<ReviewSaveResult> {
+  const capabilities = getServerLaunchCapabilities();
   const results = await Promise.allSettled(documents.map(async (input) => {
     const { document, sourceImage } = normalizeSyncDocumentInput(input);
     const normalizedDocument = createImportedReviewDocument({
@@ -54,7 +57,7 @@ export async function syncReviewDocumentsForUser(userId: string, documents: Revi
       savedAt: document.savedAt,
       syncState: "cloud",
     });
-    const persistedSourceImage = sourceImage
+    const persistedSourceImage = sourceImage && capabilities.sourceImageStorage
       ? await uploadReviewSourceImage({ documentId: normalizedDocument.id, sourceImage, userId })
       : undefined;
     const documentToWrite = persistedSourceImage
@@ -90,10 +93,11 @@ type ReviewSyncDocumentInput = ImportedReviewDocument | {
 
 export async function deleteReviewDataForUser(userId: string): Promise<ReviewDeleteResult> {
   const db = await getFirebaseAdminFirestore();
+  const capabilities = getServerLaunchCapabilities();
   const [reviewsDeleted, draftsDeleted, sourceImagesDeleted] = await Promise.all([
     deleteDocumentsForUser(db, REVIEWS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_DRAFTS_COLLECTION, userId),
-    deleteReviewSourceImagesForUser(userId),
+    capabilities.sourceImageStorage ? deleteReviewSourceImagesForUser(userId) : Promise.resolve(0),
   ]);
 
   return { draftsDeleted, reviewsDeleted, sourceImagesDeleted };

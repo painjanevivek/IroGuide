@@ -1,4 +1,5 @@
 import type { StoredBugReport } from "./bug-report-storage";
+import { getServerLaunchCapabilities } from "./launch-capabilities";
 
 const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
 
@@ -6,10 +7,12 @@ type BugReportEmailResult = {
   status: "sent";
   providerMessageId?: string;
 } | {
-  status: "not_configured" | "failed";
+  status: "disabled" | "not_configured" | "failed";
 };
 
 export async function sendBugReportEmail(report: StoredBugReport): Promise<BugReportEmailResult> {
+  if (!getServerLaunchCapabilities().bugReportEmail) return { status: "disabled" };
+
   const apiKey = getEnv("RESEND_API_KEY");
   const toEmail = getEnv("BUG_REPORT_TO_EMAIL");
   const fromEmail = getEnv("BUG_REPORT_FROM_EMAIL");
