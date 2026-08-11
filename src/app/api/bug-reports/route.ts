@@ -17,13 +17,13 @@ export async function POST(request: Request) {
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "bug_report");
   if ("response" in contentTypeCheck) return contentTypeCheck.response;
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "bug_report",
-    key: "bug-report",
     limit: BUG_REPORT_RATE_LIMIT.limit,
     message: "Too many bug reports. Please try again shortly.",
     request,
+    scope: "bug-report",
     windowMs: BUG_REPORT_RATE_LIMIT.windowMs,
   });
   if ("response" in rateLimit) return rateLimit.response;

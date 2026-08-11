@@ -19,12 +19,6 @@ export function createRequestContext(request: Request, route: string): RequestCo
   };
 }
 
-export function getClientKey(request: Request, fallback: string) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? request.headers.get("x-real-ip")
-    ?? fallback;
-}
-
 export function logRequestEvent(level: LogLevel, event: string, context: RequestContext, fields: LogFields = {}) {
   const payload = {
     level,

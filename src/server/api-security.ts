@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId, type RequestContext } from "@/server/observability";
-import { checkRateLimit, getRateLimitHeaders, type RateLimitResult } from "@/server/rate-limit";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId, type RequestContext } from "@/server/observability";
+import { checkRateLimit, getRateLimitHeaders, getRateLimitIdentity, type RateLimitResult } from "@/server/rate-limit";
 
 type VerifiedFirebaseUser = Awaited<ReturnType<typeof verifyFirebaseIdToken>>;
 
@@ -20,10 +20,12 @@ type AuthResult = {
 type RateLimitOptions = {
   context: RequestContext;
   eventPrefix: string;
-  key: string;
+  globalLimit?: number;
   limit: number;
   message: string;
   request: Request;
+  scope: string;
+  userId?: string;
   windowMs: number;
 };
 
@@ -127,20 +129,37 @@ export async function requireVerifiedFirebaseUser(
   }
 }
 
-export function enforceRateLimit({
+const DEFAULT_GLOBAL_RATE_LIMIT_MULTIPLIER = 100;
+
+export async function enforceRateLimit({
   context,
   eventPrefix,
-  key,
+  globalLimit,
   limit,
   message,
   request,
+  scope,
+  userId,
   windowMs,
-}: RateLimitOptions): RateLimitCheck {
-  const result = checkRateLimit({
-    key: `${key}:${getClientKey(request, "unknown")}`,
-    limit,
-    windowMs,
-  });
+}: RateLimitOptions): Promise<RateLimitCheck> {
+  let result: RateLimitResult;
+  try {
+    result = await checkRateLimit({
+      globalKey: `${scope}:global`,
+      globalLimit: globalLimit ?? limit * DEFAULT_GLOBAL_RATE_LIMIT_MULTIPLIER,
+      key: getRateLimitIdentity({ request, scope, userId }),
+      limit,
+      windowMs,
+    });
+  } catch {
+    logRequestEvent("error", `${eventPrefix}.rate_limit_unavailable`, context);
+    return {
+      response: NextResponse.json(
+        { error: "Request protection is not available right now." },
+        { status: 503, headers: jsonHeaders(context) },
+      ),
+    };
+  }
 
   if (result.allowed) return { result };
 

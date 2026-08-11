@@ -3,10 +3,10 @@ import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
 import { storedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceRateLimit, enforceSameOriginRequest, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
-import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { getRateLimitHeaders } from "@/server/rate-limit";
 import { syncReviewDocumentsForUser } from "@/server/review-storage";
 
 const syncRequestSchema = z.object({
@@ -33,16 +33,18 @@ export async function POST(request: Request) {
 
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
-    const rateLimit = checkRateLimit({
-      key: `review-sync:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+    const rateLimit = await enforceRateLimit({
+      context,
+      eventPrefix: "review_sync",
+      message: "Too many sync requests. Please try again shortly.",
+      request,
+      scope: "review-sync",
+      userId: decodedToken.uid,
       ...SYNC_RATE_LIMIT,
     });
-    if (!rateLimit.allowed) {
+    if ("response" in rateLimit) {
       logRequestEvent("warn", "review_sync.rate_limited", context, { user: toLogSafeUserId(decodedToken.uid) });
-      return NextResponse.json(
-        { error: "Too many sync requests. Please try again shortly." },
-        { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
-      );
+      return rateLimit.response;
     }
     const parsed = await parseSyncRequest(request);
     const result = await syncReviewDocumentsForUser(decodedToken.uid, parsed.documents);
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
       user: toLogSafeUserId(decodedToken.uid),
     });
 
-    return NextResponse.json(result, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
+    return NextResponse.json(result, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit.result)) });
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "review_sync.admin_unavailable", context);

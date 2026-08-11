@@ -21,12 +21,13 @@ export async function POST(request: Request) {
   });
   if ("response" in auth) return auth.response;
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "follow_up",
-    key: `follow-up:${auth.user.uid}`,
     message: "Too many follow-up requests. Please try again shortly.",
     request,
+    scope: "follow-up",
+    userId: auth.user.uid,
     ...FOLLOW_UP_RATE_LIMIT,
   });
   if ("response" in rateLimit) return rateLimit.response;

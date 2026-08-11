@@ -21,12 +21,13 @@ export async function POST(request: Request) {
   });
   if ("response" in auth) return auth.response;
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "comparison",
-    key: `comparison:${auth.user.uid}`,
     message: "Too many comparison requests. Please try again shortly.",
     request,
+    scope: "comparison",
+    userId: auth.user.uid,
     ...COMPARISON_RATE_LIMIT,
   });
   if ("response" in rateLimit) return rateLimit.response;

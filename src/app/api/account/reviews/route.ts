@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { enforceSameOriginRequest } from "@/server/api-security";
+import { enforceRateLimit, enforceSameOriginRequest } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyRecentFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
-import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser } from "@/server/review-storage";
 
 const REVIEW_PURGE_RATE_LIMIT = { limit: 6, windowMs: 10 * 60 * 1000 };
@@ -22,16 +22,18 @@ export async function DELETE(request: Request) {
 
   try {
     const decodedToken = await verifyRecentFirebaseIdToken(authorization.slice("Bearer ".length).trim());
-    const rateLimit = checkRateLimit({
-      key: `account-reviews-delete:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+    const rateLimit = await enforceRateLimit({
+      context,
+      eventPrefix: "account_reviews_delete",
+      message: "Too many deletion requests. Please try again shortly.",
+      request,
+      scope: "account-reviews-delete",
+      userId: decodedToken.uid,
       ...REVIEW_PURGE_RATE_LIMIT,
     });
-    if (!rateLimit.allowed) {
+    if ("response" in rateLimit) {
       logRequestEvent("warn", "account_reviews_delete.rate_limited", context, { user: toLogSafeUserId(decodedToken.uid) });
-      return NextResponse.json(
-        { error: "Too many deletion requests. Please try again shortly." },
-        { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
-      );
+      return rateLimit.response;
     }
 
     const result = await deleteReviewDataForUser(decodedToken.uid);
@@ -42,7 +44,7 @@ export async function DELETE(request: Request) {
       user: toLogSafeUserId(decodedToken.uid),
     });
 
-    return NextResponse.json({ deleted: true, ...result }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
+    return NextResponse.json({ deleted: true, ...result }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit.result)) });
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "account_reviews_delete.admin_unavailable", context);

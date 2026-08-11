@@ -25,13 +25,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "This account cannot view bug reports." }, { status: 403, headers: jsonHeaders(context) });
   }
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "admin_bug_reports",
-    key: `admin-bug-reports:${auth.user.uid}`,
     limit: BUG_REPORT_INBOX_RATE_LIMIT.limit,
     message: "Too many inbox refreshes. Please try again shortly.",
     request,
+    scope: "admin-bug-reports",
+    userId: auth.user.uid,
     windowMs: BUG_REPORT_INBOX_RATE_LIMIT.windowMs,
   });
   if ("response" in rateLimit) return rateLimit.response;

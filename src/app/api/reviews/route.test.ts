@@ -15,6 +15,20 @@ vi.mock("@/server/review-storage", () => ({
   saveReviewForUser: vi.fn(),
 }));
 
+vi.mock("@/server/rate-limit", () => ({
+  checkRateLimit: vi.fn(async () => ({
+    allowed: true,
+    limit: 12,
+    remaining: 11,
+    resetAt: Date.now() + 60_000,
+    retryAfterSeconds: 60,
+  })),
+  getRateLimitHeaders: vi.fn(() => ({})),
+  getRateLimitIdentity: vi.fn(({ scope, userId }: { scope: string; userId?: string }) => (
+    userId ? `${scope}:user:${userId}` : `${scope}:client:shared`
+  )),
+}));
+
 import { verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createReview } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";

@@ -2,10 +2,10 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceRateLimit, enforceSameOriginRequest, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
-import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { getRateLimitHeaders } from "@/server/rate-limit";
 import { hasReviewGenerationAccess } from "@/server/review-access";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
@@ -38,16 +38,18 @@ export async function POST(request: Request) {
         { status: 403, headers: jsonHeaders(context) },
       );
     }
-    const rateLimit = checkRateLimit({
-      key: `review:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+    const rateLimit = await enforceRateLimit({
+      context,
+      eventPrefix: "review",
+      message: "Too many review requests. Please try again shortly.",
+      request,
+      scope: "review",
+      userId: decodedToken.uid,
       ...REVIEW_RATE_LIMIT,
     });
-    if (!rateLimit.allowed) {
+    if ("response" in rateLimit) {
       logRequestEvent("warn", "review.rate_limited", context, { user: toLogSafeUserId(decodedToken.uid) });
-      return NextResponse.json(
-        { error: "Too many review requests. Please try again shortly." },
-        { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) },
-      );
+      return rateLimit.response;
     }
     const parsed = await parseReviewRequest(request);
     const review = await createReview(parsed);
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       review,
       persistence,
-    }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
+    }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit.result)) });
   } catch (error) {
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "review.admin_unavailable", context);

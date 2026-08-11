@@ -21,12 +21,13 @@ export async function POST(request: Request) {
   });
   if ("response" in auth) return auth.response;
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "improvement",
-    key: `improvement:${auth.user.uid}`,
     message: "Too many improvement requests. Please try again shortly.",
     request,
+    scope: "improvement",
+    userId: auth.user.uid,
     ...IMPROVEMENT_RATE_LIMIT,
   });
   if ("response" in rateLimit) return rateLimit.response;
