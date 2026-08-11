@@ -14,6 +14,7 @@ import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
 import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
+import type { ReviewTrustState } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postFormDataWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
@@ -336,7 +337,7 @@ export function ReviewStudio() {
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} trustState={resultSaveState === "saved" ? "server-verified" : "legacy-unverified"} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
@@ -406,6 +407,7 @@ export function ReviewResult({
   initialSaveError,
   initialSourceImage,
   onRestart,
+  trustState,
 }: {
   review: ReviewOutput;
   preview: string | null;
@@ -413,6 +415,7 @@ export function ReviewResult({
   initialSaveError: string;
   initialSourceImage: ReviewSourceImage | null;
   onRestart: () => void;
+  trustState: ReviewTrustState;
 }) {
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
@@ -420,14 +423,16 @@ export function ReviewResult({
   const saveError = initialSaveError;
   const sourceImage = initialSourceImage;
   const fixFirst = getFixFirstAction(review);
-  const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
+  const providerLabel = trustState === "server-verified"
+    ? review.provider === "live" ? "Verified live critique" : "Verified structured critique"
+    : "Unverified private copy";
 
   return (
     <main className="result-shell">
       <header className="studio-header dark">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
         <div className="result-header-actions">
-          <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
+          <span className={`review-provider-badge is-${trustState === "server-verified" ? review.provider : "unverified"}`}>{providerLabel}</span>
           <button type="button" className="button button-lime button-small header-save-button" onClick={saveState === "saved" ? undefined : onRestart} disabled={saveState === "saving" || saveState === "saved"}>
             {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><RotateCcw size={14} /> Rerun to save securely</> : saveState === "saving" ? <>Saving...</> : <><RotateCcw size={14} /> Start again</>}
           </button>
@@ -465,7 +470,9 @@ export function ReviewResult({
             </div>
           </Reveal>
           <Reveal delay={0.05}>
-            {review.provider === "live" ? (
+            {trustState !== "server-verified" ? (
+              <div className="demo-warning"><AlertCircle /><p><strong>Unverified private copy:</strong> this critique remains readable, but it cannot be published as trusted. Rerun it to create a server-verified copy.</p></div>
+            ) : review.provider === "live" ? (
               <div className="demo-warning live-warning"><Check /><p><strong>Live vision critique:</strong> this result came from the configured vision provider.</p></div>
             ) : (
               <div className="demo-warning"><AlertCircle /><p><strong>Preview critique mode:</strong> this structured critique is deterministic until live vision analysis is enabled.</p></div>

@@ -80,6 +80,10 @@ export function hasCachedOnlyAccountReviews(cloudReviews: AccountStoredReview[],
   );
 }
 
+export function isAccountReviewPublishable(review: AccountStoredReview) {
+  return review.trustState === "server-verified";
+}
+
 function sortReviewsNewestFirst(left: AccountStoredReview, right: AccountStoredReview) {
   return Date.parse(right.createdAt) - Date.parse(left.createdAt);
 }

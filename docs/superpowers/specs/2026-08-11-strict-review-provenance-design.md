@@ -186,6 +186,13 @@ Run focused Vitest files first, then `npm test`, `npm run test:rules`, `npm run 
 - Document the intentional legacy-publication restriction in release notes.
 - Rollback may restore private legacy display behavior, but must not restore client authority to create trusted reviews.
 
+### Implemented disclosure behavior
+
+- Private dashboard history shows a compact Verified or Unverified import badge.
+- Unverified review detail pages explain the restriction only where it affects interpretation or publishing.
+- Community publishing lists only server-verified reviews; when only legacy content exists, the composer keeps it private and directs the owner to rerun the critique.
+- A failed server save remains available as an unverified local copy and is never retried through the import endpoint as trusted output.
+
 ## Remaining security program
 
 This design closes the trusted-review provenance finding. The remaining Deep Security Scan findings—shared durable rate limiting, request-body limits, outbound deadlines, image decoding bounds, identity revocation, lifecycle races, pagination, analytics minimization, CI trust, URL validation, idempotency, and orphan cleanup—remain scheduled as independent remediation phases so each can be proven with its own regression tests and compatibility review.
