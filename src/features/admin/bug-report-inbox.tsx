@@ -130,6 +130,7 @@ function CopyButton({ label, value }: { label: string; value: string }) {
 }
 
 function formatEmailStatus(status: BugReportInboxItem["emailStatus"]) {
+  if (status === "disabled") return "Email intentionally disabled";
   if (status === "not_configured") return "Email not configured";
   return `Email ${status.replace("_", " ")}`;
 }

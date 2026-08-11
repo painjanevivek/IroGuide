@@ -4,7 +4,7 @@ import { getFirebaseAdminFirestore } from "./firebase-admin";
 
 const BUG_REPORTS_COLLECTION = "bugReports";
 
-export type BugReportEmailStatus = "pending" | "sent" | "not_configured" | "failed";
+export type BugReportEmailStatus = "pending" | "disabled" | "sent" | "not_configured" | "failed";
 
 export type StoredBugReport = {
   id: string;
