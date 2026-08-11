@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
-import { storedReviewDocumentSchema } from "@/domain/review-storage";
+import { importedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
 import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
@@ -9,8 +9,8 @@ import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLog
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { syncReviewDocumentsForUser } from "@/server/review-storage";
 
-const syncRequestSchema = z.object({
-  documents: z.array(storedReviewDocumentSchema).max(30),
+const syncRequestSchema = z.strictObject({
+  documents: z.array(importedReviewDocumentSchema).max(30),
 });
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -20,6 +20,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createRequestContext(request, "api.reviews.sync");
+  let verifiedUserId: string | undefined;
   const originCheck = enforceSameOriginRequest(request, context, "review_sync");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "review_sync", ["application/json", "multipart/form-data"]);
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
 
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+    verifiedUserId = decodedToken.uid;
     const rateLimit = checkRateLimit({
       key: `review-sync:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...SYNC_RATE_LIMIT,
@@ -71,6 +73,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof ZodError) {
+      logRequestEvent("warn", "review_sync.provenance_rejected", context, {
+        ...(verifiedUserId ? { user: toLogSafeUserId(verifiedUserId) } : {}),
+      });
       return NextResponse.json({ error: "Review sync details are incomplete or invalid." }, { status: 400, headers: jsonHeaders(context) });
     }
 
@@ -94,7 +99,7 @@ async function parseSyncRequest(request: Request) {
     throw new ReviewSyncValidationError("Review sync details are incomplete or invalid.");
   }
 
-  const document = storedReviewDocumentSchema.parse(JSON.parse(documentValue) as unknown);
+  const document = importedReviewDocumentSchema.parse(JSON.parse(documentValue) as unknown);
   const image = formData.get("image");
   if (!(image instanceof File)) {
     return { documents: [document] };

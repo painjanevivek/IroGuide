@@ -1,4 +1,4 @@
-import { reviewSyncResponseSchema } from "@/domain/review-storage";
+import { createImportedReviewDocument, reviewSyncResponseSchema } from "@/domain/review-storage";
 import { postJsonWithFallback } from "@/lib/api-client";
 import {
   cacheReviewDocument,
@@ -41,6 +41,23 @@ export async function syncPendingAccountReviews({
 export async function syncReviewDocumentsToAccount(idToken: string, documents: StoredReviewDocument[]) {
   if (documents.length === 0) return { failedCount: 0, syncedCount: 0 };
 
+  const importDocuments = documents.flatMap((document) => {
+    try {
+      return [createImportedReviewDocument({
+        category: document.category,
+        review: document.review,
+        savedAt: document.savedAt,
+        userId: document.userId,
+      })];
+    } catch {
+      return [];
+    }
+  });
+  const rejectedCount = documents.length - importDocuments.length;
+  if (importDocuments.length === 0) {
+    return { failedCount: rejectedCount, syncedCount: 0 };
+  }
+
   const payload = await postJsonWithFallback({
     path: "/api/reviews/sync",
     unavailableMessage: "Review sync is not available right now.",
@@ -51,7 +68,7 @@ export async function syncReviewDocumentsToAccount(idToken: string, documents: S
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ documents }),
+      body: JSON.stringify({ documents: importDocuments }),
     },
   });
   const syncResult = reviewSyncResponseSchema.parse(payload);
@@ -70,7 +87,7 @@ export async function syncReviewDocumentsToAccount(idToken: string, documents: S
   }
 
   return {
-    failedCount: syncResult.failedIds.length,
+    failedCount: syncResult.failedIds.length + rejectedCount,
     syncedCount: syncResult.savedIds.length,
   };
 }

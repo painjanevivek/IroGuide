@@ -52,7 +52,7 @@ describe("review sync", () => {
     vi.unstubAllGlobals();
   });
 
-  it("syncs pending local reviews and marks cached documents as cloud-backed", async () => {
+  it("syncs pending local reviews as explicit imports and marks cached documents as cloud-backed", async () => {
     const review = createDemoReview(request);
     const document = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });
     cacheReviewDocument(document, storage);
@@ -71,15 +71,31 @@ describe("review sync", () => {
     expect(postJsonWithFallbackMock).toHaveBeenCalledWith(expect.objectContaining({
       path: "/api/reviews/sync",
       init: expect.objectContaining({
-        body: JSON.stringify({ documents: [document] }),
+        body: expect.any(String),
         headers: expect.objectContaining({ Authorization: "Bearer token" }),
         method: "POST",
       }),
     }));
+    const requestBody = JSON.parse(postJsonWithFallbackMock.mock.calls[0]?.[0].init.body as string);
+    expect(requestBody.documents).toEqual([
+      expect.objectContaining({ origin: "imported", status: "imported" }),
+    ]);
+    expect(requestBody.documents[0]).not.toHaveProperty("provenance");
     expect(getCachedReviewDocuments("user-a", storage)[0]).toEqual(expect.objectContaining({
       id: document.id,
       syncState: "cloud",
     }));
+  });
+
+  it("does not submit live-provider output through the import boundary", async () => {
+    const review = { ...createDemoReview(request), provider: "live" as const };
+    const document = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });
+
+    await expect(syncReviewDocumentsToAccount("token", [document])).resolves.toEqual({
+      failedCount: 1,
+      syncedCount: 0,
+    });
+    expect(postJsonWithFallbackMock).not.toHaveBeenCalled();
   });
 
   it("skips the network when there are no local reviews waiting for sync", async () => {

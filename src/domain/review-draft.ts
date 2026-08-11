@@ -3,6 +3,7 @@ import { feedbackModes, reviewCategories } from "./review";
 
 export const reviewDraftSchema = z.object({
   userId: z.string().min(1),
+  origin: z.literal("draft").default("draft"),
   status: z.literal("draft"),
   step: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   category: z.enum(reviewCategories),

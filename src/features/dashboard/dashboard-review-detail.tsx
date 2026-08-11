@@ -117,14 +117,12 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   if (document) {
     return (
       <ReviewResult
-        category={document.category}
         initialSaveError=""
         initialSaveState={document.syncState === "cloud" ? "saved" : "local"}
         initialSourceImage={document.sourceImage ?? null}
         onRestart={() => router.push("/review/new")}
         preview={previewUrl}
         review={document.review}
-        sourceFile={null}
       />
     );
   }

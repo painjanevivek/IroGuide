@@ -1,6 +1,10 @@
 import { Buffer } from "node:buffer";
 import type { ReviewCategory, ReviewOutput, ReviewRequest, ReviewSourceImage } from "@/domain/review";
-import { createStoredReviewDocument, type StoredReviewDocument } from "@/domain/review-storage";
+import {
+  createImportedReviewDocument,
+  type ImportedReviewDocument,
+  type TrustedStoredReviewDocument,
+} from "@/domain/review-storage";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
 import { createTrustedReviewDocument } from "./review-provenance";
 
@@ -43,7 +47,7 @@ export async function saveReviewForUser({
 export async function syncReviewDocumentsForUser(userId: string, documents: ReviewSyncDocumentInput[]): Promise<ReviewSaveResult> {
   const results = await Promise.allSettled(documents.map(async (input) => {
     const { document, sourceImage } = normalizeSyncDocumentInput(input);
-    const normalizedDocument = createStoredReviewDocument({
+    const normalizedDocument = createImportedReviewDocument({
       userId,
       review: document.review,
       category: document.category,
@@ -57,7 +61,7 @@ export async function syncReviewDocumentsForUser(userId: string, documents: Revi
       ? { ...normalizedDocument, sourceImage: persistedSourceImage }
       : normalizedDocument;
 
-    await writeReviewDocument(documentToWrite);
+    await writeImportedReviewDocument(documentToWrite);
     return { id: normalizedDocument.id, sourceImage: persistedSourceImage };
   }));
 
@@ -79,8 +83,8 @@ export type ReviewSourceImageUpload = {
   image: NonNullable<ReviewRequest["image"]>;
 };
 
-type ReviewSyncDocumentInput = StoredReviewDocument | {
-  document: StoredReviewDocument;
+type ReviewSyncDocumentInput = ImportedReviewDocument | {
+  document: ImportedReviewDocument;
   sourceImage?: ReviewSourceImageUpload;
 };
 
@@ -95,13 +99,29 @@ export async function deleteReviewDataForUser(userId: string): Promise<ReviewDel
   return { draftsDeleted, reviewsDeleted, sourceImagesDeleted };
 }
 
-async function writeReviewDocument(document: StoredReviewDocument) {
+async function writeReviewDocument(document: TrustedStoredReviewDocument) {
   const [{ FieldValue }, db] = await Promise.all([
     import("firebase-admin/firestore"),
     getFirebaseAdminFirestore(),
   ]);
 
   await db.collection(REVIEWS_COLLECTION)
+    .doc(document.id)
+    .set({
+      ...document,
+      syncState: "cloud",
+      savedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+}
+
+async function writeImportedReviewDocument(document: ImportedReviewDocument & { sourceImage?: ReviewSourceImage }) {
+  const [{ FieldValue }, db] = await Promise.all([
+    import("firebase-admin/firestore"),
+    getFirebaseAdminFirestore(),
+  ]);
+
+  await db.collection(REVIEW_DRAFTS_COLLECTION)
     .doc(document.id)
     .set({
       ...document,
