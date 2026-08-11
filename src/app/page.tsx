@@ -90,6 +90,7 @@ export default async function HomePage() {
     <>
       <script
         nonce={nonce}
+        suppressHydrationWarning
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([organizationJsonLd, websiteJsonLd, webApplicationJsonLd, faqJsonLd]).replace(/</g, "\\u003c"),

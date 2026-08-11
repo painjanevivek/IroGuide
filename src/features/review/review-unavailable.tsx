@@ -28,3 +28,17 @@ export function ReviewUnavailable() {
     </main>
   );
 }
+
+export function ReviewExtensionsUnavailable() {
+  return (
+    <section className="review-extensions-unavailable" aria-labelledby="review-extensions-unavailable-title">
+      <ShieldCheck aria-hidden="true" />
+      <div>
+        <p className="eyebrow">Protected free launch</p>
+        <h2 id="review-extensions-unavailable-title">Further AI critique is unavailable.</h2>
+        <p>Your saved critique remains readable, but follow-ups, comparisons, and generated improvement plans stay off until the complete review system is ready.</p>
+      </div>
+      <Link className="button-secondary" href="/docs"><BookOpen /> Review the workflow</Link>
+    </section>
+  );
+}

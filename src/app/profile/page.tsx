@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { AuthGate } from "@/features/auth/auth-gate";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import { UserMenu } from "@/features/auth/user-menu";
 import { ProfileSettings } from "@/features/auth/profile-settings";
 
@@ -24,7 +24,7 @@ export default function ProfilePage() {
           <Link href="/">Home</Link>
           <Link href="/dashboard">Dashboard</Link>
           <UserMenu />
-          <Link className="button button-small" href="/review/new">New review <ArrowRight /></Link>
+          <ReviewLaunchLink className="button button-small" enabledLabel="New review" />
         </nav>
       </header>
       <AuthGate>

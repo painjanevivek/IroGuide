@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import "@/app/route-styles.css";
 import { siteConfig } from "@/config/site";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import styles from "./docs-page.module.css";
 
 export const metadata: Metadata = {
@@ -117,9 +118,7 @@ export default function DocsPage() {
         <nav>
           <Link href="/about">About</Link>
           <Link href="/pricing">Pricing</Link>
-          <Link className="button button-small" href="/review/new">
-            Start review <ArrowRight size={16} />
-          </Link>
+          <ReviewLaunchLink className="button button-small" enabledLabel="Start review" />
         </nav>
       </header>
 
@@ -136,9 +135,7 @@ export default function DocsPage() {
               stronger design reviews from IroGuide.
             </p>
             <div className={styles.heroActions}>
-              <Link className="button button-dark" href="/review/new">
-                Try a review <ArrowRight size={18} />
-              </Link>
+              <ReviewLaunchLink className="button button-dark" enabledLabel="Try a review" />
               <Link className="button-quiet" href="#quick-start">
                 Read quick start <BookOpenText size={18} />
               </Link>

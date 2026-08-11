@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertCircle, ArrowRight, CheckCircle2, ImagePlus, KeyRound, Link2, LoaderCircle, RotateCcw, ShieldCheck, Trash2, UploadCloud, UserX } from "lucide-react";
 import { useAuth } from "./auth-provider";
 import { UserAvatar } from "./user-menu";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const MAX_AVATAR_BYTES = 1024 * 1024;
@@ -283,7 +284,7 @@ export function ProfileSettings() {
 
       <div className="profile-footer-actions">
         <Link className="button-secondary" href="/dashboard">Dashboard</Link>
-        <Link className="button" href="/review/new">New review <ArrowRight size={17} /></Link>
+        <ReviewLaunchLink className="button" enabledLabel="New review" />
       </div>
     </main>
   );

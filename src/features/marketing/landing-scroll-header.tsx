@@ -8,6 +8,7 @@ import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced
 import { useAuth } from "@/features/auth/auth-provider";
 import { AuthTransitionLink } from "@/features/auth/auth-transition-link";
 import { UserMenu } from "@/features/auth/user-menu";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 
 const landingSections = [
   { label: "How it works", href: "#how-it-works" },
@@ -17,6 +18,7 @@ const landingSections = [
 
 export function LandingScrollHeader() {
   const { user, loading } = useAuth();
+  const { aiCritique } = useLaunchCapabilities();
   const reducedMotion = usePrefersReducedMotion();
   const [activeHref, setActiveHref] = useState<(typeof landingSections)[number]["href"]>("#how-it-works");
   const rootRef = useRef<HTMLElement>(null);
@@ -194,12 +196,12 @@ export function LandingScrollHeader() {
         {loading ? <span className="auth-status">Checking session...</span> : user ? <UserMenu /> : null}
         {user ? (
           <Link
-            aria-label="Start a new review"
+            aria-label={aiCritique ? "Start a new review" : "Review availability"}
             className="button button-small landing-scroll-cta"
             href="/review/new"
             prefetch={false}
           >
-            <span className="landing-scroll-cta-label">Start review</span>
+            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Review availability"}</span>
             <ArrowRight size={16} />
           </Link>
         ) : (

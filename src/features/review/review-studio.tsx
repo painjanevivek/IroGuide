@@ -27,7 +27,7 @@ import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
 import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
-import { ReviewUnavailable } from "./review-unavailable";
+import { ReviewExtensionsUnavailable, ReviewUnavailable } from "./review-unavailable";
 
 const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -424,6 +424,7 @@ export function ReviewResult({
   onRestart: () => void;
   trustState: ReviewTrustState;
 }) {
+  const { aiCritique } = useLaunchCapabilities();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
   const saveState = initialSaveState;
@@ -532,9 +533,15 @@ export function ReviewResult({
               <div className="checklist">{review.checklist.map((item, index) => <label key={item.label} className={checked.includes(index) ? "checked" : ""}><input type="checkbox" checked={checked.includes(index)} onChange={() => setChecked((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index])} /><span><Check /></span><p>{item.label}</p><b>{item.priority}</b></label>)}</div>
             </section>
           </Reveal>
-          <Reveal delay={0.18}><ImprovementPanel review={review} /></Reveal>
-          <Reveal delay={0.2}><ComparisonPanel review={review} originalPreview={preview} /></Reveal>
-          <Reveal delay={0.22}><FollowUpChat review={review} /></Reveal>
+          {aiCritique ? (
+            <>
+              <Reveal delay={0.18}><ImprovementPanel review={review} /></Reveal>
+              <Reveal delay={0.2}><ComparisonPanel review={review} originalPreview={preview} /></Reveal>
+              <Reveal delay={0.22}><FollowUpChat review={review} /></Reveal>
+            </>
+          ) : (
+            <Reveal delay={0.18}><ReviewExtensionsUnavailable /></Reveal>
+          )}
         </section>
       </div>
     </main>

@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { GalleryVerticalEnd, LayoutDashboard, LogOut, MessageSquareText, PenLine, UserRound } from "lucide-react";
 import { useAuth } from "./auth-provider";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -15,6 +16,7 @@ const menuItems = [
 
 export function UserMenu() {
   const { user, avatarUrl, loading, signOut } = useAuth();
+  const { aiCritique } = useLaunchCapabilities();
 
   if (loading) return <span className="auth-status">Checking session...</span>;
   if (!user) return <span className="auth-status">Google sign-in required</span>;
@@ -31,9 +33,10 @@ export function UserMenu() {
         </div>
         {menuItems.map((item, index) => {
           const Icon = item.icon;
+          const label = item.href === "/review/new" && !aiCritique ? "Review availability" : item.label;
           return (
             <Link key={item.href} className="user-menu-item" href={item.href} style={{ "--item-index": index } as CSSProperties}>
-              <Icon size={16} /> {item.label}
+              <Icon size={16} /> {label}
             </Link>
           );
         })}
