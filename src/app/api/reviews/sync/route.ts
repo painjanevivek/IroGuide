@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
 import { storedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceSameOriginRequest, readRequestBodyWithLimit, RequestBodyTooLargeError, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
@@ -13,6 +13,7 @@ const syncRequestSchema = z.object({
   documents: z.array(storedReviewDocumentSchema).max(30),
 });
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_REQUEST_BODY_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const SYNC_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
 
@@ -64,6 +65,9 @@ export async function POST(request: Request) {
       logRequestEvent("warn", "review_sync.auth_invalid", context);
       return NextResponse.json({ error: error.message }, { status: 401, headers: jsonHeaders(context, getAuthDiagnosticHeaders(error)) });
     }
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ error: error.message }, { status: 413, headers: jsonHeaders(context) });
+    }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }
@@ -81,14 +85,14 @@ export async function POST(request: Request) {
 
 async function parseSyncRequest(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
+  const body = await readRequestBodyWithLimit(request, MAX_REQUEST_BODY_SIZE);
   if (!contentType.includes("multipart/form-data")) {
-    const body: unknown = await request.json();
     return {
-      documents: syncRequestSchema.parse(body).documents,
+      documents: syncRequestSchema.parse(JSON.parse(new TextDecoder().decode(body)) as unknown).documents,
     };
   }
 
-  const formData = await request.formData();
+  const formData = await new Response(body, { headers: { "content-type": contentType } }).formData();
   const documentValue = formData.get("document");
   if (typeof documentValue !== "string") {
     throw new ReviewSyncValidationError("Review sync details are incomplete or invalid.");

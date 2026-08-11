@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { enforceSameOriginRequest, requireContentType } from "./api-security";
+import { enforceSameOriginRequest, readRequestBodyWithLimit, RequestBodyTooLargeError, requireContentType } from "./api-security";
 import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "./observability";
 
 describe("api security logging", () => {
@@ -72,6 +72,38 @@ describe("api security logging", () => {
     expect("response" in result ? result.response.status : 200).toBe(415);
     expect("response" in result ? result.response.headers.get("Cache-Control") : null).toBe("no-store, max-age=0");
     warn.mockRestore();
+  });
+
+  it("rejects a declared oversized request before reading its body", async () => {
+    const request = new Request("https://iroguide.com/api/reviews", {
+      method: "POST",
+      headers: { "Content-Length": "1024" },
+      body: "small body",
+    });
+
+    await expect(readRequestBodyWithLimit(request, 16)).rejects.toBeInstanceOf(RequestBodyTooLargeError);
+    expect(request.bodyUsed).toBe(false);
+  });
+
+  it("stops reading an oversized request when content length is unavailable", async () => {
+    const request = new Request("https://iroguide.com/api/reviews", {
+      method: "POST",
+      body: "sixteen bytes!!!",
+    });
+
+    expect(request.headers.get("content-length")).toBeNull();
+    await expect(readRequestBodyWithLimit(request, 8)).rejects.toBeInstanceOf(RequestBodyTooLargeError);
+  });
+
+  it("preserves legitimate request bytes within the ceiling", async () => {
+    const request = new Request("https://iroguide.com/api/reviews", {
+      method: "POST",
+      body: "bounded body",
+    });
+
+    const body = await readRequestBodyWithLimit(request, 12);
+
+    expect(new TextDecoder().decode(body)).toBe("bounded body");
   });
 
   it("never emits inherited or caller-supplied CORS permissions on API responses", () => {

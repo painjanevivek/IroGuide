@@ -41,6 +41,13 @@ type SecurityGateResult = {
 
 const JSON_CONTENT_TYPES = new Set(["application/json"]);
 
+export class RequestBodyTooLargeError extends Error {
+  constructor() {
+    super("Request body is too large.");
+    this.name = "RequestBodyTooLargeError";
+  }
+}
+
 export function enforceSameOriginRequest(
   request: Request,
   context: RequestContext,
@@ -80,6 +87,54 @@ export function requireContentType(
       { status: 415, headers: jsonHeaders(context) },
     ),
   };
+}
+
+export async function readRequestBodyWithLimit(request: Request, maxBytes: number): Promise<ArrayBuffer> {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) {
+    throw new RangeError("Request body limit must be a non-negative safe integer.");
+  }
+
+  const contentLength = request.headers.get("content-length")?.trim();
+  if (contentLength !== undefined) {
+    const declaredBytes = Number(contentLength);
+    if (!/^\d+$/.test(contentLength) || !Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) {
+      throw new RequestBodyTooLargeError();
+    }
+  }
+
+  if (!request.body) return new ArrayBuffer(0);
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        try {
+          await reader.cancel();
+        } catch {
+          // The size violation is authoritative even if the transport cannot be canceled.
+        }
+        throw new RequestBodyTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body.buffer;
 }
 
 export async function requireVerifiedFirebaseUser(

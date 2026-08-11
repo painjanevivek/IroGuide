@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceSameOriginRequest, readRequestBodyWithLimit, RequestBodyTooLargeError, requireContentType } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
@@ -10,6 +10,7 @@ import { createReview, ReviewProviderUnavailableError } from "@/server/review-pr
 import { saveReviewForUser } from "@/server/review-storage";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_REQUEST_BODY_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const REVIEW_RATE_LIMIT = { limit: 12, windowMs: 10 * 60 * 1000 };
 
@@ -65,6 +66,9 @@ export async function POST(request: Request) {
       logRequestEvent("warn", "review.auth_invalid", context);
       return NextResponse.json({ error: error.message }, { status: 401, headers: jsonHeaders(context, getAuthDiagnosticHeaders(error)) });
     }
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ error: error.message }, { status: 413, headers: jsonHeaders(context) });
+    }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }
@@ -109,16 +113,16 @@ async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<ty
 
 async function parseReviewRequest(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
+  const body = await readRequestBodyWithLimit(request, MAX_REQUEST_BODY_SIZE);
   if (contentType.includes("multipart/form-data")) {
-    return parseMultipartReviewRequest(request);
+    return parseMultipartReviewRequest(contentType, body);
   }
 
-  const body: unknown = await request.json();
-  return reviewRequestSchema.parse(body);
+  return reviewRequestSchema.parse(JSON.parse(new TextDecoder().decode(body)) as unknown);
 }
 
-async function parseMultipartReviewRequest(request: Request) {
-  const formData = await request.formData();
+async function parseMultipartReviewRequest(contentType: string, body: ArrayBuffer) {
+  const formData = await new Response(body, { headers: { "content-type": contentType } }).formData();
   const category = getRequiredString(formData, "category");
   const mode = getRequiredString(formData, "mode");
   const brief = parseBrief(getRequiredString(formData, "brief"));
