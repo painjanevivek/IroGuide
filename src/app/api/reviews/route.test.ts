@@ -72,6 +72,11 @@ describe("review generation authorization", () => {
       savedAt: review.createdAt,
       updatedAt: review.createdAt,
       syncState: "cloud",
+      provenance: {
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: review.createdAt,
+      },
     });
   });
 
@@ -117,6 +122,12 @@ describe("review generation authorization", () => {
 
     expect(response.status).toBe(200);
     expect(createReview).toHaveBeenCalledOnce();
+    await expect(response.json()).resolves.toMatchObject({
+      persistence: {
+        documentId: "document-1",
+        savedToAccount: true,
+      },
+    });
   });
 });
 

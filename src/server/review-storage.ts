@@ -2,6 +2,7 @@ import { Buffer } from "node:buffer";
 import type { ReviewCategory, ReviewOutput, ReviewRequest, ReviewSourceImage } from "@/domain/review";
 import { createStoredReviewDocument, type StoredReviewDocument } from "@/domain/review-storage";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
+import { createTrustedReviewDocument } from "./review-provenance";
 
 const REVIEWS_COLLECTION = "reviews";
 const REVIEW_DRAFTS_COLLECTION = "reviewDrafts";
@@ -30,7 +31,7 @@ export async function saveReviewForUser({
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
-  const baseDocument = createStoredReviewDocument({ userId, review, category, syncState: "cloud" });
+  const baseDocument = createTrustedReviewDocument({ userId, review, category });
   const persistedSourceImage = sourceImage
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
     : undefined;

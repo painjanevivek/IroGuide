@@ -83,6 +83,11 @@ describe("review storage", () => {
       category: "logo",
       review,
       syncState: "cloud",
+      provenance: expect.objectContaining({
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: expect.any(String),
+      }),
     }), { merge: true });
   });
 

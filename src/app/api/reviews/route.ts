@@ -108,6 +108,7 @@ async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<ty
     return {
       savedToAccount: true,
       imageSavedToAccount: Boolean(document.sourceImage),
+      documentId: document.id,
       ...(document.sourceImage ? { sourceImage: document.sourceImage } : {}),
     };
   } catch {

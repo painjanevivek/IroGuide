@@ -88,6 +88,7 @@ export const reviewCreateResponseSchema = z.object({
   persistence: z.object({
     savedToAccount: z.boolean(),
     imageSavedToAccount: z.boolean().default(false),
+    documentId: z.string().min(1).optional(),
     sourceImage: reviewSourceImageSchema.optional(),
   }),
 });
