@@ -41,7 +41,22 @@ describe("account reviews", () => {
       overallScore: review.overallScore,
       sourceImage: document.sourceImage,
       syncState: "cloud",
+      trustState: "legacy-unverified",
     });
+  });
+
+  it("projects strict server provenance as verified account history", () => {
+    const review = createDemoReview(request);
+    const document = createStoredReviewDocument({ category: "logo", review, userId: "user-a" });
+
+    expect(toAccountStoredReview(document.id, {
+      ...document,
+      provenance: {
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: "2026-08-11T09:30:00.000Z",
+      },
+    })).toMatchObject({ trustState: "server-verified" });
   });
 
   it("merges cached and cloud reviews with cloud data winning duplicate ids", () => {

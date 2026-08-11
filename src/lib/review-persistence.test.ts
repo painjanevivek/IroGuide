@@ -54,6 +54,20 @@ describe("review persistence", () => {
     expect(document.categoryLabel).toBe("Logo");
     expect(document.status).toBe("complete");
     expect(document.syncState).toBe("local");
+    expect(document.provenance).toBeUndefined();
+  });
+
+  it("keeps legacy unattested reviews readable without promoting them to trusted", () => {
+    const storage = new MemoryStorage();
+    const review = createDemoReview(request);
+    const legacyDocument = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });
+
+    storage.setItem("iroguide:dashboard-reviews:v1:user-a", JSON.stringify([legacyDocument]));
+
+    const [cachedDocument] = getCachedReviewDocuments("user-a", storage);
+
+    expect(cachedDocument).toEqual(expect.objectContaining({ id: legacyDocument.id }));
+    expect(cachedDocument).not.toHaveProperty("provenance");
   });
 
   it("caches completed reviews per signed-in user", () => {

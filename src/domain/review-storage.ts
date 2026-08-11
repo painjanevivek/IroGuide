@@ -3,6 +3,14 @@ import { categoryLabels, reviewCategories, reviewOutputSchema, reviewSourceImage
 
 export const reviewSyncStateSchema = z.enum(["local", "cloud"]);
 
+export const trustedReviewProvenanceSchema = z.strictObject({
+  origin: z.literal("server"),
+  schemaVersion: z.literal(1),
+  generatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const reviewTrustStateSchema = z.enum(["server-verified", "legacy-unverified"]);
+
 export const storedReviewDocumentSchema = z.object({
   id: z.string().min(1),
   userId: z.string().min(1),
@@ -15,6 +23,24 @@ export const storedReviewDocumentSchema = z.object({
   updatedAt: z.string().min(1),
   syncState: reviewSyncStateSchema,
   sourceImage: reviewSourceImageSchema.optional(),
+  provenance: trustedReviewProvenanceSchema.optional(),
+});
+
+export const trustedStoredReviewDocumentSchema = storedReviewDocumentSchema
+  .extend({ provenance: trustedReviewProvenanceSchema })
+  .refine((document) => document.provider === document.review.provider, {
+    message: "Stored provider must match the normalized review provider.",
+    path: ["provider"],
+  });
+
+const trustedReviewEvidenceSchema = z.object({
+  status: z.literal("complete"),
+  provider: reviewOutputSchema.shape.provider,
+  review: reviewOutputSchema,
+  provenance: trustedReviewProvenanceSchema,
+}).refine((document) => document.provider === document.review.provider, {
+  message: "Stored provider must match the normalized review provider.",
+  path: ["provider"],
 });
 
 export const reviewSyncResponseSchema = z.object({
@@ -27,7 +53,20 @@ export const reviewSyncResponseSchema = z.object({
 });
 
 export type StoredReviewDocument = z.infer<typeof storedReviewDocumentSchema>;
+export type TrustedReviewProvenance = z.infer<typeof trustedReviewProvenanceSchema>;
+export type TrustedStoredReviewDocument = z.infer<typeof trustedStoredReviewDocumentSchema>;
+export type ReviewTrustState = z.infer<typeof reviewTrustStateSchema>;
 export type ReviewSyncResponse = z.infer<typeof reviewSyncResponseSchema>;
+
+export function isTrustedReviewDocument(value: unknown): value is TrustedStoredReviewDocument {
+  return trustedStoredReviewDocumentSchema.safeParse(value).success;
+}
+
+export function getReviewTrustState(value: unknown): ReviewTrustState {
+  return trustedReviewEvidenceSchema.safeParse(value).success
+    ? "server-verified"
+    : "legacy-unverified";
+}
 
 export function getReviewDocumentId(userId: string, reviewId: string) {
   return `${sanitizeDocumentId(userId)}_${sanitizeDocumentId(reviewId)}`;
