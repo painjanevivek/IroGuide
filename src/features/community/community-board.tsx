@@ -37,6 +37,7 @@ import {
   persistE2ELocalCommunityInteraction,
   readE2ELocalCommunityComments,
 } from "@/lib/e2e-community";
+import { getRecentCommunityCommentsQuery } from "@/lib/firebase/community-comments-query";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { createOptimisticMutationScope, runOptimisticMutation } from "@/lib/optimistic-mutation";
 
@@ -724,8 +725,9 @@ function CommunityComments({
     }
 
     const db = getFirebaseClientFirestore();
+    const commentsQuery = getRecentCommunityCommentsQuery(db, post.id);
 
-    return onSnapshot(collection(db, "communityPosts", post.id, "comments"), (snapshot) => {
+    return onSnapshot(commentsQuery, (snapshot) => {
       const nextComments = snapshot.docs
         .map((commentDoc) => toCommunityComment(commentDoc.id, commentDoc.data()))
         .filter((comment): comment is CommunityComment => comment !== null)
