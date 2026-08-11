@@ -48,6 +48,10 @@ npx firebase-tools deploy --only firestore:rules --project <firebase-project-id>
 
 The browser signs in with Firebase and sends the ID token to the review API.
 The API verifies the token server-side before saving completed reviews.
+Live review generation additionally requires a verified email plus either the
+signed Firebase custom claim `iroguide_review_entitled=true` or membership in
+the server-only `IROGUIDE_REVIEW_ENTITLED_UIDS` beta allowlist. This gate must
+be configured before enabling paid provider credentials.
 
 ### Security rules emulator tests
 

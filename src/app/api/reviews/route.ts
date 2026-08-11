@@ -6,6 +6,7 @@ import { enforceSameOriginRequest, requireContentType } from "@/server/api-secur
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
+import { hasReviewGenerationAccess } from "@/server/review-access";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
 
@@ -30,6 +31,13 @@ export async function POST(request: Request) {
 
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+    if (!hasReviewGenerationAccess(decodedToken)) {
+      logRequestEvent("warn", "review.access_denied", context, { user: toLogSafeUserId(decodedToken.uid) });
+      return NextResponse.json(
+        { error: "Verify your email and request beta review access before starting a critique." },
+        { status: 403, headers: jsonHeaders(context) },
+      );
+    }
     const rateLimit = checkRateLimit({
       key: `review:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...REVIEW_RATE_LIMIT,
