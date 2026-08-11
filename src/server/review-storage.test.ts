@@ -19,6 +19,10 @@ const firestoreMock = vi.hoisted(() => {
   return { batch, batchDelete, collection, commit, doc, get, set, where };
 });
 
+const firestoreFieldValueMock = vi.hoisted(() => ({
+  serverTimestamp: vi.fn(() => ({ __type: "serverTimestamp" })),
+}));
+
 const storageMock = vi.hoisted(() => {
   const save = vi.fn();
   const file = vi.fn(() => ({ save }));
@@ -37,6 +41,10 @@ vi.mock("./firebase-admin", () => ({
     file: storageMock.file,
     getFiles: storageMock.getFiles,
   }),
+}));
+
+vi.mock("firebase-admin/firestore", () => ({
+  FieldValue: firestoreFieldValueMock,
 }));
 
 const request: ReviewRequest = {
@@ -63,6 +71,7 @@ describe("review storage", () => {
     firestoreMock.get.mockReset();
     firestoreMock.set.mockClear();
     firestoreMock.where.mockClear();
+    firestoreFieldValueMock.serverTimestamp.mockClear();
     firestoreMock.get.mockResolvedValue({ docs: [], empty: true });
     storageMock.file.mockClear();
     storageMock.fileDelete.mockClear();
