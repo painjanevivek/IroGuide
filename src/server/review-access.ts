@@ -1,4 +1,4 @@
-type ReviewAccessCandidate = {
+export type ReviewAccessCandidate = {
   uid: string;
   email_verified?: unknown;
   iroguide_review_entitled?: unknown;

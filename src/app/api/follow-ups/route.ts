@@ -4,6 +4,7 @@ import { createDemoFollowUp } from "@/domain/demo-follow-up";
 import { followUpRequestSchema } from "@/domain/follow-up";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
+import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 
 const FOLLOW_UP_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
 
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     missing: "Sign in again before asking a follow-up.",
   });
   if ("response" in auth) return auth.response;
+  const policy = enforceReviewGenerationPolicy({ context, eventPrefix: "follow_up", user: auth.user });
+  if (!policy.allowed) return policy.response;
 
   const rateLimit = enforceRateLimit({
     context,
