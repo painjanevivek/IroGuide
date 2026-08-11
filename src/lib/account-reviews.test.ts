@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import type { ReviewRequest } from "@/domain/review";
 import { createStoredReviewDocument } from "@/lib/review-persistence";
-import { mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
+import { isAccountReviewPublishable, mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
 
 const request: ReviewRequest = {
   category: "logo",
@@ -41,7 +41,25 @@ describe("account reviews", () => {
       overallScore: review.overallScore,
       sourceImage: document.sourceImage,
       syncState: "cloud",
+      trustState: "legacy-unverified",
     });
+  });
+
+  it("projects strict server provenance as verified account history", () => {
+    const review = createDemoReview(request);
+    const document = createStoredReviewDocument({ category: "logo", review, userId: "user-a" });
+
+    const accountReview = toAccountStoredReview(document.id, {
+      ...document,
+      provenance: {
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: "2026-08-11T09:30:00.000Z",
+      },
+    });
+
+    expect(accountReview).toMatchObject({ trustState: "server-verified" });
+    expect(isAccountReviewPublishable(accountReview!)).toBe(true);
   });
 
   it("merges cached and cloud reviews with cloud data winning duplicate ids", () => {

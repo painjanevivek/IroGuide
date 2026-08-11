@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Save, Sparkles, Upload, X } from "lucide-react";
+import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
 import { Reveal } from "@/components/motion/reveal";
@@ -14,9 +14,9 @@ import { getAnnotationIssueId } from "@/domain/review-annotations";
 import type { FixFirstAction } from "@/domain/review-priority";
 import { getFixFirstAction } from "@/domain/review-priority";
 import { categoryLabels, feedbackModes, reviewBriefSchema, reviewCategories, reviewCreateResponseSchema, reviewOutputSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
-import { reviewSyncResponseSchema } from "@/domain/review-storage";
+import type { ReviewTrustState } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
-import { postFormDataWithFallback, postJsonWithFallback } from "@/lib/api-client";
+import { postFormDataWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
@@ -185,6 +185,7 @@ export function ReviewStudio() {
     const timeout = window.setTimeout(() => {
       const parsed = reviewDraftSchema.safeParse({
         userId: user.uid,
+        origin: "draft",
         status: "draft",
         step,
         category,
@@ -336,7 +337,7 @@ export function ReviewStudio() {
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} sourceFile={file} category={category} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} trustState={resultSaveState === "saved" ? "server-verified" : "legacy-unverified"} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
@@ -402,68 +403,38 @@ async function createSampleDesignFile(sample: (typeof sampleDesigns)[number]) {
 export function ReviewResult({
   review,
   preview,
-  sourceFile,
-  category,
   initialSaveState,
   initialSaveError,
   initialSourceImage,
   onRestart,
+  trustState,
 }: {
   review: ReviewOutput;
   preview: string | null;
-  sourceFile: File | null;
-  category: ReviewCategory;
   initialSaveState: ReviewSaveState;
   initialSaveError: string;
   initialSourceImage: ReviewSourceImage | null;
   onRestart: () => void;
+  trustState: ReviewTrustState;
 }) {
-  const { user } = useAuth();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<ReviewSaveState>(initialSaveState);
-  const [saveError, setSaveError] = useState(initialSaveError);
-  const [sourceImage, setSourceImage] = useState<ReviewSourceImage | null>(initialSourceImage);
-  const autoSyncAttemptedRef = useRef(false);
+  const saveState = initialSaveState;
+  const saveError = initialSaveError;
+  const sourceImage = initialSourceImage;
   const fixFirst = getFixFirstAction(review);
-  const providerLabel = review.provider === "live" ? "Live critique" : "Structured critique";
-
-  const saveReview = useCallback(async () => {
-    if (saveState === "saving") return;
-    const currentUser = user;
-    if (!currentUser) {
-      setSaveError("Sign in again before saving this review.");
-      return;
-    }
-
-    setSaveState("saving");
-    setSaveError("");
-    try {
-      const saveResult = await syncCompletedReviewToAccount(await currentUser.getIdToken(), currentUser.uid, review, category, sourceFile);
-      void deleteActiveReviewDraft(currentUser.uid);
-      setSaveState(saveResult.syncedToCloud ? "saved" : "local");
-      setSaveError(saveResult.message ?? "");
-      setSourceImage(saveResult.sourceImage ?? null);
-    } catch (error) {
-      setSaveState("idle");
-      setSaveError(error instanceof Error ? error.message : "Could not save this review. Please try again.");
-    }
-  }, [category, review, saveState, sourceFile, user]);
-
-  useEffect(() => {
-    if (saveState !== "local" || !user || autoSyncAttemptedRef.current) return;
-    autoSyncAttemptedRef.current = true;
-    void saveReview();
-  }, [saveReview, saveState, user]);
+  const providerLabel = trustState === "server-verified"
+    ? review.provider === "live" ? "Verified live critique" : "Verified structured critique"
+    : "Unverified private copy";
 
   return (
     <main className="result-shell">
       <header className="studio-header dark">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
         <div className="result-header-actions">
-          <span className={`review-provider-badge is-${review.provider}`}>{providerLabel}</span>
-          <button type="button" className="button button-lime button-small header-save-button" onClick={saveReview} disabled={saveState === "saving" || saveState === "saved" || saveState === "local"}>
-            {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><Save size={14} /> Syncing automatically</> : saveState === "saving" ? <>Saving...</> : <><Save size={14} /> Retry save</>}
+          <span className={`review-provider-badge is-${trustState === "server-verified" ? review.provider : "unverified"}`}>{providerLabel}</span>
+          <button type="button" className="button button-lime button-small header-save-button" onClick={saveState === "saved" ? undefined : onRestart} disabled={saveState === "saving" || saveState === "saved"}>
+            {saveState === "saved" ? <><Check size={14} /> {sourceImage ? "Saved with image" : "Saved to dashboard"}</> : saveState === "local" ? <><RotateCcw size={14} /> Rerun to save securely</> : saveState === "saving" ? <>Saving...</> : <><RotateCcw size={14} /> Start again</>}
           </button>
           <Link href="/dashboard">Dashboard</Link>
         </div>
@@ -499,7 +470,9 @@ export function ReviewResult({
             </div>
           </Reveal>
           <Reveal delay={0.05}>
-            {review.provider === "live" ? (
+            {trustState !== "server-verified" ? (
+              <div className="demo-warning"><AlertCircle /><p><strong>Unverified private copy:</strong> this critique remains readable, but it cannot be published as trusted. Rerun it to create a server-verified copy.</p></div>
+            ) : review.provider === "live" ? (
               <div className="demo-warning live-warning"><Check /><p><strong>Live vision critique:</strong> this result came from the configured vision provider.</p></div>
             ) : (
               <div className="demo-warning"><AlertCircle /><p><strong>Preview critique mode:</strong> this structured critique is deterministic until live vision analysis is enabled.</p></div>
@@ -592,65 +565,8 @@ async function cacheCompletedReviewForDashboard(userId: string, review: ReviewOu
     : {
         syncedToCloud: false,
         sourceImage,
-        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
+        message: "Saved privately on this device as unverified. Rerun the critique when account saving is available to create a trusted copy.",
       };
-}
-
-async function syncCompletedReviewToAccount(idToken: string, userId: string, review: ReviewOutput, category: ReviewCategory, sourceFile: File | null) {
-  const storedReview = createStoredReviewDocument({ userId, review, category, syncState: "local" });
-  cacheReviewDocument(storedReview);
-  if (sourceFile) {
-    await cacheLocalReviewSourceImage(userId, storedReview.id, sourceFile);
-  }
-  const payload = sourceFile
-    ? await postReviewSyncForm(idToken, storedReview, sourceFile)
-    : await postJsonWithFallback({
-        path: "/api/reviews/sync",
-        unavailableMessage: "Review sync is not available right now.",
-        failureMessage: "Review sync failed.",
-        init: {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ documents: [storedReview] }),
-        },
-      });
-  const syncResult = reviewSyncResponseSchema.parse(payload);
-  const syncedToCloud = syncResult.savedIds.includes(storedReview.id);
-  const syncedSourceImage = syncResult.sourceImages.find((item) => item.id === storedReview.id)?.sourceImage;
-  cacheReviewDocument({
-    ...storedReview,
-    ...(syncedSourceImage ? { sourceImage: syncedSourceImage } : {}),
-    syncState: syncedToCloud ? "cloud" : "local",
-    updatedAt: new Date().toISOString(),
-  });
-
-  return syncedToCloud
-    ? { syncedToCloud: true, sourceImage: syncedSourceImage }
-    : {
-        syncedToCloud: false,
-        sourceImage: syncedSourceImage,
-        message: "Saved to your dashboard on this device. IroGuide will keep syncing it to your account automatically.",
-      };
-}
-
-async function postReviewSyncForm(idToken: string, storedReview: ReturnType<typeof createStoredReviewDocument>, sourceFile: File) {
-  const body = new FormData();
-  body.append("document", JSON.stringify(storedReview));
-  body.append("image", sourceFile);
-
-  return postFormDataWithFallback({
-    path: "/api/reviews/sync",
-    unavailableMessage: "Review sync is not available right now.",
-    failureMessage: "Review sync failed.",
-    init: {
-      method: "POST",
-      headers: { Authorization: `Bearer ${idToken}` },
-      body,
-    },
-  });
 }
 
 async function deleteActiveReviewDraft(userId: string) {

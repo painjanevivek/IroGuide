@@ -54,8 +54,8 @@ describe("Firebase security rules", () => {
     await assertFails(testEnv.unauthenticatedContext().firestore().doc(`reviews/${REVIEW_ID}`).get());
   });
 
-  it("requires review writes to keep userId owned by the signed-in account", async () => {
-    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).set({
+  it("denies all direct client writes to trusted reviews", async () => {
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).set({
       id: REVIEW_ID,
       userId: OWNER_UID,
       status: "complete",
@@ -72,6 +72,14 @@ describe("Firebase security rules", () => {
       userId: OTHER_UID,
       status: "complete",
     }));
+
+    await seedFirestoreDocument(`reviews/${REVIEW_ID}`, {
+      id: REVIEW_ID,
+      userId: OWNER_UID,
+      status: "complete",
+    });
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).update({ status: "complete" }));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).delete());
   });
 
   it("allows only the owner to read active review drafts", async () => {
@@ -87,23 +95,44 @@ describe("Firebase security rules", () => {
     await assertFails(testEnv.unauthenticatedContext().firestore().doc(`reviewDrafts/${DRAFT_ID}`).get());
   });
 
-  it("requires draft writes to keep userId owned by the signed-in account", async () => {
-    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set({
-      id: DRAFT_ID,
-      userId: OWNER_UID,
-      status: "draft",
-    }));
+  it("allows only bounded owner-authored draft and imported records", async () => {
+    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set(validDraftRecord()));
+    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/import-alpha").set(validImportedRecord()));
 
-    await assertFails(authenticatedFirestore(OTHER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set({
-      id: DRAFT_ID,
-      userId: OWNER_UID,
-      status: "draft",
-    }));
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set(validDraftRecord()));
 
     await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set({
-      id: DRAFT_ID,
+      ...validDraftRecord(),
       userId: OTHER_UID,
-      status: "draft",
+    }));
+  });
+
+  it("rejects trust claims and unexpected fields in draft storage", async () => {
+    const imported = validImportedRecord();
+
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/server-origin").set({
+      ...imported,
+      origin: "server",
+    }));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/complete-status").set({
+      ...imported,
+      status: "complete",
+    }));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/live-provider").set({
+      ...imported,
+      review: { ...imported.review, provider: "live" },
+    }));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/provenance").set({
+      ...imported,
+      provenance: {
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: "2026-08-11T09:30:00.000Z",
+      },
+    }));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/unexpected").set({
+      ...validDraftRecord(),
+      trusted: true,
     }));
   });
 
@@ -183,4 +212,61 @@ function authenticatedFirestore(uid: string) {
 
 function authenticatedStorage(uid: string) {
   return testEnv.authenticatedContext(uid).storage();
+}
+
+function validDraftRecord() {
+  return {
+    userId: OWNER_UID,
+    origin: "draft",
+    status: "draft",
+    step: 2,
+    category: "logo",
+    mode: "mentor",
+    brief: {
+      audience: "Independent designers",
+      purpose: "Evaluate a brand mark",
+      style: "Bold minimal identity",
+      goal: "Improve first impression",
+      concern: "",
+    },
+    createdAt: new Date("2026-08-11T09:30:00.000Z"),
+    updatedAt: new Date("2026-08-11T09:30:00.000Z"),
+  };
+}
+
+function validImportedRecord() {
+  return {
+    id: "user-a_imported",
+    userId: OWNER_UID,
+    origin: "imported",
+    status: "imported",
+    category: "logo",
+    categoryLabel: "Logo",
+    savedAt: "2026-08-11T09:30:00.000Z",
+    updatedAt: "2026-08-11T09:30:00.000Z",
+    syncState: "cloud",
+    review: {
+      id: "imported",
+      createdAt: "2026-08-11T09:30:00.000Z",
+      overallScore: 7,
+      summary: "A private imported critique.",
+      strengths: ["Clear hierarchy."],
+      scores: [{ label: "Clarity", score: 7 }],
+      rubricVersion: "legacy",
+      issues: [{
+        id: "issue-1",
+        category: "Clarity",
+        score: 7,
+        priority: "medium",
+        observation: "Spacing is uneven.",
+        impact: "The mark feels less deliberate.",
+        recommendation: "Normalize spacing.",
+        actions: ["Use one spacing unit."],
+      }],
+      annotations: [],
+      checklist: [{ label: "Normalize spacing.", priority: "medium" }],
+      followUps: [],
+      provider: "demo",
+    },
+  };
 }

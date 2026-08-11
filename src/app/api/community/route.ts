@@ -42,6 +42,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Community details are incomplete or invalid." }, { status: 400, headers: jsonHeaders(context) });
     }
     if (error instanceof CommunityMutationError) {
+      if (error.status === 409) {
+        logRequestEvent("warn", "community_mutation.provenance_rejected", context, { user: auth.userLogId });
+      }
       return NextResponse.json({ error: error.message }, { status: error.status, headers: jsonHeaders(context) });
     }
 

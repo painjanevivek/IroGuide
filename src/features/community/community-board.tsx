@@ -27,7 +27,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { communityCommentSchema, communityPostSchema, type CommunityMutation, type CommunityPostInput } from "@/domain/community";
-import { categoryLabels, reviewOutputSchema, type ReviewCategory, type ReviewOutput } from "@/domain/review";
+import type { ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { requestJsonWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
@@ -38,14 +38,12 @@ import {
   readE2ELocalCommunityComments,
 } from "@/lib/e2e-community";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
+import {
+  getPublishableCommunityReviews,
+  toCommunitySavedReview,
+  type CommunitySavedReview as SavedReview,
+} from "@/lib/community-reviews";
 import { createOptimisticMutationScope, runOptimisticMutation } from "@/lib/optimistic-mutation";
-
-type SavedReview = {
-  savedDocId: string;
-  category: ReviewCategory | "other";
-  categoryLabel: string;
-  review: ReviewOutput;
-};
 
 type CommunityPost = CommunityPostInput & {
   id: string;
@@ -261,11 +259,14 @@ export function CommunityBoard() {
       reviewsQuery,
       (snapshot) => {
         const nextReviews = snapshot.docs
-          .map((reviewDoc) => toSavedReview(reviewDoc.id, reviewDoc.data()))
+          .map((reviewDoc) => toCommunitySavedReview(reviewDoc.id, reviewDoc.data()))
           .filter((review): review is SavedReview => review !== null)
           .sort((left, right) => Date.parse(right.review.createdAt) - Date.parse(left.review.createdAt));
+        const nextPublishableReviews = getPublishableCommunityReviews(nextReviews);
         setSavedReviews(nextReviews);
-        setSelectedReviewId((current) => current || nextReviews[0]?.savedDocId || "");
+        setSelectedReviewId((current) => nextPublishableReviews.some((review) => review.savedDocId === current)
+          ? current
+          : nextPublishableReviews[0]?.savedDocId ?? "");
         setLoadingSaved(false);
       },
       () => {
@@ -275,9 +276,13 @@ export function CommunityBoard() {
     );
   }, [user]);
 
+  const publishableReviews = useMemo(
+    () => getPublishableCommunityReviews(savedReviews),
+    [savedReviews],
+  );
   const selectedReview = useMemo(
-    () => savedReviews.find((review) => review.savedDocId === selectedReviewId) ?? null,
-    [savedReviews, selectedReviewId],
+    () => publishableReviews.find((review) => review.savedDocId === selectedReviewId) ?? null,
+    [publishableReviews, selectedReviewId],
   );
   const visiblePosts = posts.length > 0 ? posts : fallbackPosts;
   const myPosts = user ? visiblePosts.filter((post) => post.authorId === user.uid) : [];
@@ -467,10 +472,11 @@ export function CommunityBoard() {
               }}
               onTitleChange={setTitle}
               publishing={publishing}
-              savedReviews={savedReviews}
+              savedReviews={publishableReviews}
               selectedReview={selectedReview}
               selectedReviewId={selectedReviewId}
               title={title}
+              unverifiedReviewCount={savedReviews.length - publishableReviews.length}
               userSignedIn={Boolean(user)}
             />
           )}
@@ -529,6 +535,7 @@ function CommunityComposer({
   selectedReview,
   selectedReviewId,
   title,
+  unverifiedReviewCount,
   userSignedIn,
 }: {
   consent: boolean;
@@ -546,6 +553,7 @@ function CommunityComposer({
   selectedReview: SavedReview | null;
   selectedReviewId: string;
   title: string;
+  unverifiedReviewCount: number;
   userSignedIn: boolean;
 }) {
   if (!userSignedIn) {
@@ -565,9 +573,11 @@ function CommunityComposer({
   if (savedReviews.length === 0) {
     return (
       <div className="community-composer signed-out">
-        <strong>No saved critiques yet.</strong>
-        <p>Run a private critique, save it, then choose whether it belongs in Community.</p>
-        <Link className="button button-lime" href="/review/new">Create private critique <Sparkles /></Link>
+        <strong>{unverifiedReviewCount > 0 ? "No verified critiques ready to publish." : "No saved critiques yet."}</strong>
+        <p>{unverifiedReviewCount > 0
+          ? `${unverifiedReviewCount} private critique${unverifiedReviewCount === 1 ? " is" : "s are"} still available in your history, but cannot claim trusted provenance. Rerun a design to create a verified copy.`
+          : "Run a private critique, save it, then choose whether it belongs in Community."}</p>
+        <Link className="button button-lime" href="/review/new">{unverifiedReviewCount > 0 ? "Create verified critique" : "Create private critique"} <Sparkles /></Link>
       </div>
     );
   }
@@ -866,21 +876,6 @@ function EmptyCommunityState({ activeView }: { activeView: CommunityView }) {
       <p>{copy[1]}</p>
     </div>
   );
-}
-
-function toSavedReview(id: string, data: DocumentData): SavedReview | null {
-  const candidate = data.review ?? data;
-  const parsed = reviewOutputSchema.safeParse({ ...candidate, id: candidate.id ?? id });
-  if (!parsed.success) return null;
-  const category = typeof data.category === "string" && data.category in categoryLabels ? data.category as ReviewCategory : "other";
-  const categoryLabel = typeof data.categoryLabel === "string" ? data.categoryLabel : categoryLabels[category];
-
-  return {
-    savedDocId: id,
-    category,
-    categoryLabel,
-    review: parsed.data,
-  };
 }
 
 function toCommunityPost(id: string, data: DocumentData): CommunityPost | null {

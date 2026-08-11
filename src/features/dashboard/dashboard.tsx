@@ -167,8 +167,8 @@ export function Dashboard() {
               <div className="workspace-badge workspace-badge-muted">
                 <ShieldCheck />
                 <div>
-                  <strong>Saved locally, waiting for account sync</strong>
-                  <span>Your latest critique is available here. IroGuide will keep syncing it to your account automatically.</span>
+                  <strong>Private unverified copy</strong>
+                  <span>Your latest critique remains available on this device, but it cannot be published as trusted. Rerun it when account saving is available to create a verified copy.</span>
                 </div>
               </div>
             </Reveal>
@@ -193,7 +193,9 @@ export function Dashboard() {
                 {reviewImageUrls[review.documentId] ? <Image src={reviewImageUrls[review.documentId]} alt={`${review.category ?? "Design"} source image`} fill unoptimized /> : <FileImage />}
               </div>
             )}
-            <span>{review.category ?? "Design review"}</span><strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time>
+            <span>{review.category ?? "Design review"}</span>
+            <span className={`review-trust-badge is-${review.trustState}`}>{review.trustState === "server-verified" ? "Verified" : "Unverified import"}</span>
+            <strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time>
           </Link></StaggerItem>)}</Stagger>
         </>
       )}

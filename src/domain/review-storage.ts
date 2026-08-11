@@ -3,6 +3,31 @@ import { categoryLabels, reviewCategories, reviewOutputSchema, reviewSourceImage
 
 export const reviewSyncStateSchema = z.enum(["local", "cloud"]);
 
+export const trustedReviewProvenanceSchema = z.strictObject({
+  origin: z.literal("server"),
+  schemaVersion: z.literal(1),
+  generatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const reviewTrustStateSchema = z.enum(["server-verified", "legacy-unverified"]);
+
+const importedReviewOutputSchema = reviewOutputSchema
+  .extend({ provider: z.literal("demo") })
+  .strict();
+
+export const importedReviewDocumentSchema = z.strictObject({
+  id: z.string().min(1).max(700),
+  userId: z.string().min(1).max(128),
+  origin: z.literal("imported"),
+  status: z.literal("imported"),
+  review: importedReviewOutputSchema,
+  category: z.enum(reviewCategories),
+  categoryLabel: z.string().min(1).max(80),
+  savedAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  syncState: reviewSyncStateSchema,
+});
+
 export const storedReviewDocumentSchema = z.object({
   id: z.string().min(1),
   userId: z.string().min(1),
@@ -15,6 +40,24 @@ export const storedReviewDocumentSchema = z.object({
   updatedAt: z.string().min(1),
   syncState: reviewSyncStateSchema,
   sourceImage: reviewSourceImageSchema.optional(),
+  provenance: trustedReviewProvenanceSchema.optional(),
+});
+
+export const trustedStoredReviewDocumentSchema = storedReviewDocumentSchema
+  .extend({ provenance: trustedReviewProvenanceSchema })
+  .refine((document) => document.provider === document.review.provider, {
+    message: "Stored provider must match the normalized review provider.",
+    path: ["provider"],
+  });
+
+const trustedReviewEvidenceSchema = z.object({
+  status: z.literal("complete"),
+  provider: reviewOutputSchema.shape.provider,
+  review: reviewOutputSchema,
+  provenance: trustedReviewProvenanceSchema,
+}).refine((document) => document.provider === document.review.provider, {
+  message: "Stored provider must match the normalized review provider.",
+  path: ["provider"],
 });
 
 export const reviewSyncResponseSchema = z.object({
@@ -27,7 +70,48 @@ export const reviewSyncResponseSchema = z.object({
 });
 
 export type StoredReviewDocument = z.infer<typeof storedReviewDocumentSchema>;
+export type TrustedReviewProvenance = z.infer<typeof trustedReviewProvenanceSchema>;
+export type TrustedStoredReviewDocument = z.infer<typeof trustedStoredReviewDocumentSchema>;
+export type ReviewTrustState = z.infer<typeof reviewTrustStateSchema>;
+export type ImportedReviewDocument = z.infer<typeof importedReviewDocumentSchema>;
 export type ReviewSyncResponse = z.infer<typeof reviewSyncResponseSchema>;
+
+export function isTrustedReviewDocument(value: unknown): value is TrustedStoredReviewDocument {
+  return trustedStoredReviewDocumentSchema.safeParse(value).success;
+}
+
+export function getReviewTrustState(value: unknown): ReviewTrustState {
+  return trustedReviewEvidenceSchema.safeParse(value).success
+    ? "server-verified"
+    : "legacy-unverified";
+}
+
+export function createImportedReviewDocument({
+  category,
+  review,
+  savedAt = new Date().toISOString(),
+  syncState = "local",
+  userId,
+}: {
+  category: ReviewCategory;
+  review: ReviewOutput;
+  savedAt?: string;
+  syncState?: ImportedReviewDocument["syncState"];
+  userId: string;
+}): ImportedReviewDocument {
+  return importedReviewDocumentSchema.parse({
+    id: getReviewDocumentId(userId, review.id),
+    userId,
+    origin: "imported",
+    status: "imported",
+    review,
+    category,
+    categoryLabel: categoryLabels[category],
+    savedAt,
+    updatedAt: savedAt,
+    syncState,
+  });
+}
 
 export function getReviewDocumentId(userId: string, reviewId: string) {
   return `${sanitizeDocumentId(userId)}_${sanitizeDocumentId(reviewId)}`;

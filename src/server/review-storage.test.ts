@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
-import { createStoredReviewDocument } from "@/domain/review-storage";
+import { createImportedReviewDocument } from "@/domain/review-storage";
 import type { ReviewRequest } from "@/domain/review";
 import { deleteReviewDataForUser, saveReviewForUser, syncReviewDocumentsForUser } from "./review-storage";
 
@@ -83,25 +83,40 @@ describe("review storage", () => {
       category: "logo",
       review,
       syncState: "cloud",
+      provenance: expect.objectContaining({
+        origin: "server",
+        schemaVersion: 1,
+        generatedAt: expect.any(String),
+      }),
     }), { merge: true });
   });
 
-  it("normalizes pending sync documents to the verified user", async () => {
+  it("stores pending sync documents as untrusted imports for the verified user", async () => {
     const review = createDemoReview(request);
-    const clientDocument = createStoredReviewDocument({
+    const clientDocument = createImportedReviewDocument({
       userId: "forged-user",
       review,
       category: "logo",
-      syncState: "local",
     });
 
     const result = await syncReviewDocumentsForUser("verified-user", [clientDocument]);
-    const savedPayload = firestoreMock.set.mock.calls[0]?.[0] as { userId: string; id: string };
+    const savedPayload = firestoreMock.set.mock.calls[0]?.[0] as {
+      id: string;
+      origin: string;
+      provenance?: unknown;
+      status: string;
+      userId: string;
+    };
 
     expect(result.failedIds).toEqual([]);
     expect(result.savedIds).toEqual([savedPayload.id]);
+    expect(firestoreMock.collection).toHaveBeenCalledWith("reviewDrafts");
+    expect(firestoreMock.collection).not.toHaveBeenCalledWith("reviews");
     expect(savedPayload.userId).toBe("verified-user");
     expect(savedPayload.id).not.toContain("forged-user");
+    expect(savedPayload.origin).toBe("imported");
+    expect(savedPayload.status).toBe("imported");
+    expect(savedPayload.provenance).toBeUndefined();
   });
 
   it("stores the uploaded source image privately with the review document", async () => {

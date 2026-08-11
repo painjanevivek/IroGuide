@@ -1,6 +1,7 @@
 import { limit, type DocumentData, type QueryConstraint, type QueryDocumentSnapshot } from "firebase/firestore";
 import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
 import type { ProgressReview } from "@/domain/progress";
+import { getReviewTrustState, type ReviewTrustState } from "@/domain/review-storage";
 import type { StoredReviewDocument } from "@/lib/review-persistence";
 import { getCachedReviewDocuments } from "@/lib/review-persistence";
 
@@ -9,6 +10,7 @@ export type AccountStoredReview = ReviewOutput & ProgressReview & {
   documentId: string;
   sourceImage?: ReviewSourceImage;
   syncState?: StoredReviewDocument["syncState"];
+  trustState: ReviewTrustState;
 };
 
 export const DEFAULT_ACCOUNT_REVIEW_LIMIT = 12;
@@ -44,6 +46,12 @@ export function toAccountStoredReview(id: string, data: DocumentData): AccountSt
     documentId: id,
     ...(parsedSourceImage.success ? { sourceImage: parsedSourceImage.data } : {}),
     syncState,
+    trustState: getReviewTrustState({
+      provenance: data.provenance,
+      provider: data.provider,
+      review: parsed.data,
+      status: data.status,
+    }),
   };
 }
 
@@ -70,6 +78,10 @@ export function hasCachedOnlyAccountReviews(cloudReviews: AccountStoredReview[],
     (cachedReview) => cachedReview.syncState === "local"
       && !cloudReviews.some((cloudReview) => cloudReview.id === cachedReview.id),
   );
+}
+
+export function isAccountReviewPublishable(review: AccountStoredReview) {
+  return review.trustState === "server-verified";
 }
 
 function sortReviewsNewestFirst(left: AccountStoredReview, right: AccountStoredReview) {

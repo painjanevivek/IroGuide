@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { communityCommentSchema, communityMutationSchema, communityPostSchema, type CommunityMutation } from "@/domain/community";
 import { reviewOutputSchema } from "@/domain/review";
+import { getReviewTrustState, trustedReviewProvenanceSchema } from "@/domain/review-storage";
 import { getFirebaseAdminFirestore } from "@/server/firebase-admin";
 import type { Query } from "firebase-admin/firestore";
 
@@ -20,7 +21,13 @@ type CommunityActor = {
 const storedCommunityReviewSchema = z.object({
   userId: z.string().min(1),
   categoryLabel: z.string().min(1).max(80),
+  status: z.literal("complete"),
+  provider: reviewOutputSchema.shape.provider,
+  provenance: trustedReviewProvenanceSchema.optional(),
   review: reviewOutputSchema,
+}).refine((document) => document.provider === document.review.provider, {
+  message: "Stored provider must match the normalized review provider.",
+  path: ["provider"],
 });
 
 export class CommunityMutationError extends Error {
@@ -72,6 +79,12 @@ async function publishCommunityPost(actor: CommunityActor, mutation: Extract<Com
   const reviewDocument = reviewSnapshot.exists ? storedCommunityReviewSchema.safeParse(reviewSnapshot.data()) : null;
   if (!reviewDocument?.success || reviewDocument.data.userId !== actor.uid) {
     throw new CommunityMutationError("The selected critique is no longer available.", 404);
+  }
+  if (getReviewTrustState(reviewDocument.data) !== "server-verified") {
+    throw new CommunityMutationError(
+      "This private critique is unverified. Rerun it before publishing to Community.",
+      409,
+    );
   }
 
   const review = reviewDocument.data;

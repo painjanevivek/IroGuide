@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { LoaderCircle, LayoutDashboard } from "lucide-react";
-import { storedReviewDocumentSchema, type StoredReviewDocument } from "@/domain/review-storage";
+import { getReviewTrustState, storedReviewDocumentSchema, type StoredReviewDocument } from "@/domain/review-storage";
 import { useAuth } from "@/features/auth/auth-provider";
 import { ReviewResult } from "@/features/review/review-studio";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
@@ -51,7 +51,12 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
           return;
         }
 
-        const parsed = storedReviewDocumentSchema.safeParse(snapshot.data());
+        const snapshotData = snapshot.data();
+        const parsed = storedReviewDocumentSchema.safeParse({
+          ...snapshotData,
+          savedAt: toIsoDate(snapshotData.savedAt),
+          updatedAt: toIsoDate(snapshotData.updatedAt),
+        });
         if (!parsed.success || parsed.data.userId !== currentUser.uid) {
           setError(cachedDocument ? "" : "This review could not be opened.");
           return;
@@ -117,14 +122,13 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   if (document) {
     return (
       <ReviewResult
-        category={document.category}
         initialSaveError=""
         initialSaveState={document.syncState === "cloud" ? "saved" : "local"}
         initialSourceImage={document.sourceImage ?? null}
         onRestart={() => router.push("/review/new")}
         preview={previewUrl}
         review={document.review}
-        sourceFile={null}
+        trustState={getReviewTrustState(document)}
       />
     );
   }
@@ -140,4 +144,12 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
       </div>
     </main>
   );
+}
+
+function toIsoDate(value: unknown) {
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "toDate" in value && typeof value.toDate === "function") {
+    return value.toDate().toISOString() as string;
+  }
+  return "";
 }
