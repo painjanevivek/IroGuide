@@ -3,7 +3,6 @@ import { signInWithEmail } from "./auth-helpers";
 
 test("uses real sample artwork and matching critique context", async ({ page }) => {
   await signInWithEmail(page, "designer@iroguide.test", "iroguide-e2e-password");
-  await page.getByRole("button", { name: /dismiss cookie notice/i }).click();
   await page.getByRole("link", { name: /new review/i }).first().click();
 
   const sampleImages = page.locator(".sample-card img");

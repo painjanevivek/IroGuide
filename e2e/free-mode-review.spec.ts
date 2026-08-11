@@ -4,8 +4,12 @@ import { signInWithEmail } from "./auth-helpers";
 test("stops free-launch users before the critique workflow begins", async ({ page }) => {
   const email = "free-launch@iroguide.test";
   const reviewRequests: string[] = [];
+  const sourceImageRequests: string[] = [];
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === "/api/reviews") reviewRequests.push(request.url());
+    if (request.url().includes("firebasestorage.googleapis.com") || request.url().includes("/__e2e__/private-storage/")) {
+      sourceImageRequests.push(request.url());
+    }
   });
 
   await signInWithEmail(page, email, "iroguide-e2e-password");
@@ -41,6 +45,7 @@ test("stops free-launch users before the critique workflow begins", async ({ pag
   await expect(page.locator('input[type="file"]')).toHaveCount(0);
   await expect(page.getByRole("button", { name: /start critique/i })).toHaveCount(0);
   expect(reviewRequests).toEqual([]);
+  expect(sourceImageRequests).toEqual([]);
 });
 
 async function seedSavedReview(page: import("@playwright/test").Page, email: string) {
@@ -58,6 +63,13 @@ async function seedSavedReview(page: import("@playwright/test").Page, email: str
     savedAt: timestamp,
     updatedAt: timestamp,
     syncState: "cloud",
+    sourceImage: {
+      storagePath: `users/${userId}/reviews/${documentId}/source.png`,
+      contentType: "image/png",
+      size: 128,
+      originalName: "historical-design.png",
+      uploadedAt: timestamp,
+    },
     review: {
       id: reviewId,
       createdAt: timestamp,

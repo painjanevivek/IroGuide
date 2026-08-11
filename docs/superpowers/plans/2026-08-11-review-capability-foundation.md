@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next.js 16 App Router, React 19, TypeScript 6, Zod 4, Vitest 4, Playwright 1.61, Firebase Admin/Auth/Firestore/Storage.
 
+**Execution status:** Tasks 1-7 and the local portions of Task 8 are implemented. Verified locally on 2026-08-11 with 160/160 unit tests, 11/11 Firebase rules tests, a clean typecheck/lint/build gate, 7/7 enabled-profile Playwright tests, and 1/1 free-launch Playwright contract. Production deployment plus deployed security and production smoke remain release gates and must not be marked complete from local evidence.
+
 ## Global Constraints
 
 - Production defaults to `free` when `IROGUIDE_LAUNCH_PROFILE` is absent or invalid; it must never infer `full` from credentials.
