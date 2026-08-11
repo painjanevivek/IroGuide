@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved on 2026-08-11 for implementation on the existing `codex/fix-review-entitlement` security branch.
+Implemented and verified on 2026-08-11 on the `codex/fix-review-entitlement` security branch.
 
 ## Goal
 
@@ -192,6 +192,16 @@ Run focused Vitest files first, then `npm test`, `npm run test:rules`, `npm run 
 - Unverified review detail pages explain the restriction only where it affects interpretation or publishing.
 - Community publishing lists only server-verified reviews; when only legacy content exists, the composer keeps it private and directs the owner to rerun the critique.
 - A failed server save remains available as an unverified local copy and is never retried through the import endpoint as trusted output.
+
+## Verification receipt
+
+- `npm run check` passed end to end with JDK 25 selected for Firebase emulators.
+- Vitest passed 129 tests across 41 files.
+- Firebase Rules Unit Testing passed 11 Firestore and Storage rules tests.
+- TypeScript, ESLint with zero warnings, and the Next.js production build passed.
+- A forged completed/live/server-provenance sync payload is rejected with HTTP 400 before storage.
+- An owned legacy-unattested review is rejected with HTTP 409 before any Community write.
+- Verified entitled review creation, owner-only private reads, bounded import storage, and trusted Community publication remain supported.
 
 ## Remaining security program
 

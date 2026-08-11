@@ -8,6 +8,8 @@
 
 **Tech stack:** Next.js 16 route handlers, React 19, TypeScript, Zod 4, Firebase Admin, Firestore security rules, Vitest, Firebase Rules Unit Testing.
 
+**Execution status:** Completed and verified on 2026-08-11.
+
 ---
 
 ## Phase 0: Publish the executable plan
@@ -310,3 +312,16 @@ docs(security): record provenance remediation
 - record trusted Community publication verification
 - capture rollout constraints and remaining independent findings
 ```
+
+## Completed phase receipts
+
+- Phase 0: `aabca03 docs(security): plan strict review provenance`
+- Phase 1: `718755b feat(security): model strict review provenance`
+- Phase 2: `49d42ec fix(security): attest server-generated reviews`
+- Phase 3: `2b4307d fix(security): isolate review imports from trusted storage`
+- Phase 4: `b44e4aa fix(firebase): enforce review provenance boundaries`
+- Phase 5: `6367b14 fix(community): require trusted review provenance`
+- Phase 6: `b7981a7 feat(reviews): disclose review trust state`
+- Phase 7 verification: `npm run check` passed with 129 unit tests, 11 Firebase rules tests, zero-warning lint, TypeScript, and production build.
+
+The original exploit is closed at both independent boundaries: synchronization cannot write completed or trusted records, and Community cannot publish any review without exact server provenance. Existing legitimate private history remains readable and explicitly unverified when provenance is absent.
