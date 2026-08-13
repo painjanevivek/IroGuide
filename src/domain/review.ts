@@ -47,13 +47,17 @@ export const reviewRequestSchema = z.object({
 
 export const reviewIssueSchema = z.object({
   id: z.string().min(1).optional(),
+  rubricId: z.string().min(1).optional(),
   category: z.string(),
   score: z.number().min(0).max(10),
   priority: z.enum(["high", "medium", "low"]),
   observation: z.string(),
+  evidenceKind: z.enum(["visible", "brief", "visual-risk"]).optional(),
+  evidenceDescription: z.string().max(500).optional(),
   impact: z.string(),
   recommendation: z.string(),
   actions: z.array(z.string()).min(1),
+  confidence: z.number().min(0).max(1).optional(),
 });
 
 export const reviewAnnotationSchema = z.object({
@@ -94,6 +98,7 @@ export const reviewCreateResponseSchema = z.object({
 });
 
 export type ReviewRequest = z.infer<typeof reviewRequestSchema>;
+export type ReviewIssue = z.infer<typeof reviewIssueSchema>;
 export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
 export type ReviewCreateResponse = z.infer<typeof reviewCreateResponseSchema>;
 export type ReviewSourceImage = z.infer<typeof reviewSourceImageSchema>;

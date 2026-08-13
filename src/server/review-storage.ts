@@ -11,6 +11,7 @@ import { createTrustedReviewDocument } from "./review-provenance";
 
 const REVIEWS_COLLECTION = "reviews";
 const REVIEW_DRAFTS_COLLECTION = "reviewDrafts";
+const REVIEW_FEEDBACK_COLLECTION = "reviewFeedback";
 const FIRESTORE_BATCH_LIMIT = 450;
 
 export type ReviewSaveResult = {
@@ -98,6 +99,7 @@ export async function deleteReviewDataForUser(userId: string): Promise<ReviewDel
     deleteDocumentsForUser(db, REVIEWS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_DRAFTS_COLLECTION, userId),
     capabilities.sourceImageStorage ? deleteReviewSourceImagesForUser(userId) : Promise.resolve(0),
+    deleteDocumentsForUser(db, REVIEW_FEEDBACK_COLLECTION, userId),
   ]);
 
   return { draftsDeleted, reviewsDeleted, sourceImagesDeleted };

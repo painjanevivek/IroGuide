@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "targetCaseCount": 80,
+  "adjudication": "two-reviewers-plus-adjudicator",
+  "cases": [
+    {
+      "id": "seed-ui-form-together-001",
+      "category": "ui",
+      "assetPath": "public/samples/form-together-friendly.png",
+      "status": "unlabeled"
+    },
+    {
+      "id": "seed-website-fieldnote-001",
+      "category": "website",
+      "assetPath": "public/samples/fieldnote-mentor.png",
+      "status": "unlabeled"
+    },
+    {
+      "id": "seed-website-signal-noise-001",
+      "category": "website",
+      "assetPath": "public/samples/signal-noise-direct.png",
+      "status": "unlabeled"
+    }
+  ]
+}

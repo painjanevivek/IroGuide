@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { createDemoReview } from "@/domain/demo-review";
-import { categoryLabels, reviewOutputSchema, type ReviewOutput, type ReviewRequest } from "@/domain/review";
+import { critiqueRubricVersion, validateGroundedFindings } from "@/domain/critique-rubrics";
+import { categoryLabels, reviewIssueSchema, reviewOutputSchema, type ReviewOutput, type ReviewRequest } from "@/domain/review";
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions";
 const LIVE_PROVIDER_MODES = new Set(["live", "vision", "openrouter"]);
@@ -14,6 +15,12 @@ const liveReviewResponseSchema = reviewOutputSchema.omit({
   id: reviewOutputSchema.shape.id.optional(),
   createdAt: reviewOutputSchema.shape.createdAt.optional(),
   provider: reviewOutputSchema.shape.provider.optional(),
+  issues: z.array(reviewIssueSchema.extend({
+    rubricId: z.string().min(1),
+    evidenceKind: z.enum(["visible", "brief", "visual-risk"]),
+    evidenceDescription: z.string().min(1).max(500),
+    confidence: z.number().min(0).max(1),
+  })).min(1),
 });
 
 const openRouterResponseSchema = z.object({
@@ -126,6 +133,13 @@ async function createOpenRouterReview(request: ReviewRequest, apiKey: string, mo
     throw new Error("Live vision critique returned an invalid review.");
   }
 
+  if (request.category === "ui" || request.category === "website") {
+    const validationErrors = validateGroundedFindings(request.category, parsedReview.data.issues);
+    if (validationErrors.length > 0) {
+      throw new Error(`Live vision critique violated the evidence contract: ${validationErrors.join(" ")}`);
+    }
+  }
+
   return normalizeLiveReview(parsedReview.data);
 }
 
@@ -160,13 +174,15 @@ function getOpenRouterRequestBody(request: ReviewRequest, model: string): OpenRo
           "Analyze the actual uploaded image pixels together with the user's brief.",
           "Return only valid JSON. Do not wrap the response in markdown.",
           "The JSON must match this TypeScript shape:",
-          "{ overallScore:number, summary:string, strengths:string[], scores:{label:string,score:number}[], rubricVersion:string, issues:{id?:string,category:string,score:number,priority:'high'|'medium'|'low',observation:string,impact:string,recommendation:string,actions:string[]}[], annotations:{id:string,issueId:string,label:string,description:string,x:number,y:number,width:number,height:number,confidence:number}[], checklist:{label:string,priority:'high'|'medium'|'low'}[], followUps:string[] }",
+          "{ overallScore:number, summary:string, strengths:string[], scores:{label:string,score:number}[], rubricVersion:string, issues:{id?:string,rubricId:string,category:string,score:number,priority:'high'|'medium'|'low',observation:string,evidenceKind:'visible'|'brief'|'visual-risk',evidenceDescription:string,impact:string,recommendation:string,actions:string[],confidence:number}[], annotations:{id:string,issueId:string,label:string,description:string,x:number,y:number,width:number,height:number,confidence:number}[], checklist:{label:string,priority:'high'|'medium'|'low'}[], followUps:string[] }",
           "Use normalized annotation coordinates from 0 to 1 relative to the full uploaded image pixel area.",
           "For every annotation, x and y are the top-left corner of a tight bounding box; width and height are the box size.",
           "Place each box directly over the visible evidence for that issue, never over empty margins or unrelated artwork.",
           "Use specific annotation labels tied to the visible fault, and omit an annotation when the issue cannot be localized visually.",
           "Every annotation must map to an issueId.",
           "Ground observations in visible evidence from the image and the stated audience, purpose, style, and goal.",
+          `For UI/UX screens and websites, set rubricVersion to ${critiqueRubricVersion}. For UI/UX screens use UI-TASK-CLARITY-001, UI-INFORMATION-HIERARCHY-001, UI-INTERACTION-AFFORDANCE-001, UI-SYSTEM-CONSISTENCY-001, or UI-VISUAL-ACCESSIBILITY-001. For websites use WEB-HERO-CLARITY-001, WEB-NAVIGATION-001, WEB-CONVERSION-PATH-001, WEB-TRUST-001, or WEB-VISUAL-ACCESSIBILITY-001.`,
+          "Accessibility observations from an image are visual risks only: never claim WCAG conformance, keyboard behavior, screen-reader behavior, semantic HTML, focus behavior, or responsive runtime behavior.",
           "Do not infer sensitive traits, authorship, culture, or intent from the image.",
         ].join(" "),
       },
@@ -236,7 +252,7 @@ function sanitizeLiveReviewPayload(payload: unknown, request: ReviewRequest): un
     summary,
     strengths: sanitizeStringList(payload.strengths, [summary]),
     scores: sanitizeScores(payload.scores),
-    rubricVersion: getNonEmptyString(payload.rubricVersion) ?? "live-v1",
+    rubricVersion: getNonEmptyString(payload.rubricVersion) ?? (request.category === "ui" || request.category === "website" ? critiqueRubricVersion : "live-v1"),
     issues,
     annotations: sanitizeAnnotations(payload.annotations, issueIds),
     checklist: sanitizeChecklist(payload.checklist, issues),
@@ -246,13 +262,17 @@ function sanitizeLiveReviewPayload(payload: unknown, request: ReviewRequest): un
 
 function sanitizeIssues(value: unknown): Array<{
   id: string;
+  rubricId: string;
   category: string;
   score: number;
   priority: "high" | "medium" | "low";
   observation: string;
+  evidenceKind: "visible" | "brief" | "visual-risk";
+  evidenceDescription: string;
   impact: string;
   recommendation: string;
   actions: string[];
+  confidence: number;
 }> {
   const sourceIssues = Array.isArray(value) ? value : [];
   const issues = sourceIssues
@@ -262,13 +282,17 @@ function sanitizeIssues(value: unknown): Array<{
       const recommendation = getNonEmptyString(issue.recommendation) ?? "Clarify the main focal point and reduce competing elements.";
       return {
         id: getNonEmptyString(issue.id) ?? `issue-${index + 1}`,
+        rubricId: getNonEmptyString(issue.rubricId) ?? "legacy-unmapped",
         category: getNonEmptyString(issue.category) ?? "Clarity",
         score: clampScore(issue.score),
         priority: normalizePriority(issue.priority),
         observation,
+        evidenceKind: normalizeEvidenceKind(issue.evidenceKind),
+        evidenceDescription: truncateString(getNonEmptyString(issue.evidenceDescription) ?? observation, 500),
         impact: getNonEmptyString(issue.impact) ?? "This can make the design harder to understand quickly.",
         recommendation,
         actions: sanitizeStringList(issue.actions, [recommendation]),
+        confidence: clampCoordinate(issue.confidence, 0, 1),
       };
     });
 
@@ -276,13 +300,17 @@ function sanitizeIssues(value: unknown): Array<{
 
   return [{
     id: "issue-1",
+    rubricId: "legacy-unmapped",
     category: "Clarity",
     score: 6,
     priority: "medium",
     observation: "The critique provider did not return a structured issue.",
+    evidenceKind: "visible",
+    evidenceDescription: "The provider did not include localized evidence.",
     impact: "The next revision still needs one clear improvement direction.",
     recommendation: "Review the hierarchy, focal point, and readability before the next version.",
     actions: ["Identify the primary focal point.", "Remove one competing visual element."],
+    confidence: 0.5,
   }];
 }
 
@@ -348,6 +376,12 @@ function normalizePriority(value: unknown): "high" | "medium" | "low" {
   const priority = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (priority === "high" || priority === "medium" || priority === "low") return priority;
   return "medium";
+}
+
+function normalizeEvidenceKind(value: unknown): "visible" | "brief" | "visual-risk" {
+  const evidenceKind = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (evidenceKind === "visible" || evidenceKind === "brief" || evidenceKind === "visual-risk") return evidenceKind;
+  return "visible";
 }
 
 function clampScore(value: unknown) {

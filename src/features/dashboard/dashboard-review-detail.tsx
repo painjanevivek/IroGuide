@@ -130,6 +130,7 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
         onRestart={() => router.push("/review/new")}
         preview={previewUrl}
         review={document.review}
+        reviewDocumentId={document.id}
         trustState={getReviewTrustState(document)}
       />
     );
