@@ -1,13 +1,10 @@
 "use client";
 
-import { Skeleton } from "boneyard-js/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
-import "@/bones/registry";
 
 export function BoneyardSiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const skeletonName = getRouteSkeletonName(pathname);
   const [pendingPathname, setPendingPathname] = useState<string | null>(null);
   const routeLoading = pendingPathname !== null && pendingPathname !== pathname;
 
@@ -32,27 +29,16 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Skeleton
-      name={skeletonName}
-      loading={routeLoading}
-      className="boneyard-site-shell"
-      fallback={<IroGuideSkeletonScreen />}
-      transition={260}
-    >
-      <div onClick={handleClick}>{children}</div>
-    </Skeleton>
+    <div className="boneyard-site-shell" aria-busy={routeLoading} onClick={handleClick}>
+      {routeLoading ? <IroGuideSkeletonScreen /> : children}
+    </div>
   );
-}
-
-function getRouteSkeletonName(pathname: string | null) {
-  if (!pathname || pathname === "/") return "iroguide-route-home";
-  const routeKey = pathname.replace(/^\/+|\/+$/g, "").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
-  return `iroguide-route-${routeKey || "home"}`;
 }
 
 function IroGuideSkeletonScreen() {
   return (
-    <main className="boneyard-fallback" aria-label="Loading IroGuide">
+    <main className="boneyard-fallback" aria-label="Loading IroGuide" aria-live="polite">
+      <p className="sr-only" role="status">Loading the next page</p>
       <div className="boneyard-fallback-header">
         <div className="boneyard-fallback-brand">
           <span className="boneyard-fallback-logo" />

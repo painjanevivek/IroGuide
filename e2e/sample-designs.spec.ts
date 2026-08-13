@@ -10,7 +10,7 @@ test("uses real sample artwork and matching critique context", async ({ page }) 
   await expect.poll(async () => sampleImages.evaluateAll((images) => images.every((image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth >= 200 && image.naturalHeight >= 120))).toBe(true);
 
   await page.getByRole("button", { name: /Fieldnote/i }).click();
-  await expect(page.getByText("fieldnote-landing-page.png")).toBeVisible();
+  await expect(page.getByText("fieldnote-landing-page.webp")).toBeVisible();
   await expect(page.getByRole("status")).toContainText(/Fieldnote is ready for critique/i);
   await page.getByRole("button", { name: /continue/i }).click();
 

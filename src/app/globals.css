@@ -10,8 +10,11 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-html, body { scrollbar-width: none; }
-html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+html { scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: rgba(9,9,15,.34) var(--paper-2); }
+html::-webkit-scrollbar { width: 10px; height: 10px; }
+html::-webkit-scrollbar-track { background: var(--paper-2); }
+html::-webkit-scrollbar-thumb { background: rgba(9,9,15,.34); border: 2px solid var(--paper-2); border-radius: 999px; }
+html::-webkit-scrollbar-thumb:hover { background: rgba(104,72,232,.72); }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body), sans-serif; }
 a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }

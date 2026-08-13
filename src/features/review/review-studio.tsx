@@ -63,8 +63,8 @@ const sampleDesigns: Array<{
     title: "FORM / TOGETHER",
     description: "A finished ceramics campaign with photography, event details, and a clear booking action.",
     category: "social",
-    fileName: "form-together-campaign.png",
-    imageSrc: "/samples/form-together-friendly.png",
+    fileName: "form-together-campaign.webp",
+    imageSrc: "/samples/form-together-friendly.webp",
     imageAlt: "FORM TOGETHER community ceramics weekend campaign graphic",
     brief: {
       audience: "Adults interested in beginner-friendly community ceramics workshops",
@@ -79,8 +79,8 @@ const sampleDesigns: Array<{
     title: "Fieldnote",
     description: "A high-fidelity research platform landing page with a product view and conversion path.",
     category: "website",
-    fileName: "fieldnote-landing-page.png",
-    imageSrc: "/samples/fieldnote-mentor.png",
+    fileName: "fieldnote-landing-page.webp",
+    imageSrc: "/samples/fieldnote-mentor.webp",
     imageAlt: "Fieldnote research platform landing page design",
     brief: {
       audience: "Product researchers and research operations teams",
@@ -95,8 +95,8 @@ const sampleDesigns: Array<{
     title: "SIGNAL / NOISE",
     description: "A finished audio-visual event poster with dense typography and practical details.",
     category: "poster",
-    fileName: "signal-noise-event-poster.png",
-    imageSrc: "/samples/signal-noise-direct.png",
+    fileName: "signal-noise-event-poster.webp",
+    imageSrc: "/samples/signal-noise-direct.webp",
     imageAlt: "SIGNAL NOISE live audio visual event poster",
     brief: {
       audience: "Independent electronic music and visual arts audiences",
@@ -407,7 +407,7 @@ async function createSampleDesignFile(sample: (typeof sampleDesigns)[number]) {
   const response = await fetch(sample.imageSrc);
   if (!response.ok) throw new Error("Sample image could not be loaded.");
   const blob = await response.blob();
-  return new File([blob], sample.fileName, { type: blob.type || "image/png" });
+  return new File([blob], sample.fileName, { type: blob.type || "image/webp" });
 }
 
 export function ReviewResult({
@@ -454,7 +454,7 @@ export function ReviewResult({
       </header>
       <div className="result-layout">
         <aside className="result-preview">
-          <button className="back-link light-button" onClick={onRestart}><ArrowLeft /> New review</button>
+          <button type="button" className="back-link light-button" onClick={onRestart}><ArrowLeft /> New review</button>
           <div className={`result-image${preview ? "" : " result-image-empty"}`}>
             {preview ? (
               <>

@@ -288,7 +288,12 @@ async function authenticatedReviewSmoke(expectations) {
     const response = await submitReview(idToken);
     const payload = await response.json();
     if (response.status !== expectations.authenticatedReviewStatus) {
-      addResult("authenticated review smoke", false, `status=${response.status} error=${payload.error ?? "unknown"}`);
+      const authDiagnostic = response.headers.get("x-iroguide-auth-error");
+      addResult(
+        "authenticated review smoke",
+        false,
+        `status=${response.status} error=${payload.error ?? "unknown"}${authDiagnostic ? ` authDiagnostic=${authDiagnostic}` : ""}`,
+      );
       return;
     }
     if (expectations.profile === "free") {

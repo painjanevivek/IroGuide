@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { BoneyardSiteShell } from "@/components/boneyard-site-shell";
 import { CookieConsent } from "@/components/cookie-consent";
-import { TargetCursor } from "@/components/motion/target-cursor";
+import { DeferredTargetCursor } from "@/components/motion/deferred-target-cursor";
+import { SkipLink } from "@/components/skip-link";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { LaunchCapabilitiesProvider } from "@/features/capabilities/launch-capabilities-provider";
 import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
-    images: [{ url: siteConfig.logoPath, width: 512, height: 512, alt: `${siteConfig.name} logo` }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: `${siteConfig.name} design critique workspace` }],
     locale: "en_US",
     type: "website",
   },
@@ -60,8 +61,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.title,
     description: siteConfig.description,
-    images: [siteConfig.logoPath],
+    images: ["/opengraph-image"],
   },
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: siteConfig.logoPath, type: "image/png" }],
     shortcut: [siteConfig.logoPath],
@@ -80,6 +82,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "light",
+  themeColor: "#09090f",
+};
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const launchCapabilities = getServerLaunchCapabilities();
@@ -87,20 +96,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
-        <a className="skip-link" href="#app-content">Skip to main content</a>
+        <SkipLink />
         <LaunchCapabilitiesProvider capabilities={launchCapabilities}>
           <AuthProvider>
-            <div id="app-content">
+            <div id="app-content" tabIndex={-1}>
               <BoneyardSiteShell>{children}</BoneyardSiteShell>
             </div>
             <AnalyticsTracker nonce={nonce} />
             <CookieConsent />
-            <TargetCursor
-              targetSelector=".cursor-target, a[href], button, input, textarea, select, summary, [role='button']"
-              hideDefaultCursor={false}
-              hoverDuration={0.28}
-              cursorColorOnTarget="#c8f45d"
-            />
+            <DeferredTargetCursor />
           </AuthProvider>
         </LaunchCapabilitiesProvider>
       </body>

@@ -10,6 +10,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: [...configDefaults.exclude, "**/.tmp/**", "**/*.rules.test.ts", "e2e/**"],
+    exclude: [...configDefaults.exclude, "**/.tmp/**", "**/.worktrees/**", "**/*.rules.test.ts", "e2e/**"],
   },
 });

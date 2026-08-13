@@ -43,6 +43,10 @@ Thumbs.db
 .agents/
 .codex/
 skills-lock.json
+.playwright-mcp/
+.worktrees/
+outputs/
+AGENTS.md
 
 # Firebase local state and private credentials
 **/.firebase/
