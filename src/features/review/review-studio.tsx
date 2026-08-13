@@ -27,6 +27,7 @@ import { AnnotationOverlay } from "./annotation-overlay";
 import { ComparisonPanel } from "./comparison-panel";
 import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
+import { ReviewFindingFeedback } from "./review-finding-feedback";
 import { ReviewExtensionsUnavailable, ReviewUnavailable } from "./review-unavailable";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -143,6 +144,7 @@ function ReviewStudioFlow() {
   const [resultSaveState, setResultSaveState] = useState<ReviewSaveState>("idle");
   const [resultSaveError, setResultSaveError] = useState("");
   const [resultSourceImage, setResultSourceImage] = useState<ReviewSourceImage | null>(null);
+  const [resultDocumentId, setResultDocumentId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState("Draft will save to dashboard");
 
   useEffect(() => () => {
@@ -339,12 +341,13 @@ function ReviewStudioFlow() {
         setResultSaveError(saveError instanceof Error ? saveError.message : "The critique was created, but it could not be saved to your dashboard yet.");
         setResultSourceImage(null);
       }
+      setResultDocumentId(reviewResponse.persistence.documentId ?? null);
       setReview(parsed);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : "Review failed. Please try again."); }
     finally { setSubmitting(false); }
   }
 
-  if (review) return <ReviewResult review={review} preview={preview} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} trustState={resultSaveState === "saved" ? "server-verified" : "legacy-unverified"} onRestart={() => { setReview(null); setResultSourceImage(null); setStep(1); }} />;
+  if (review) return <ReviewResult review={review} preview={preview} initialSaveState={resultSaveState} initialSaveError={resultSaveError} initialSourceImage={resultSourceImage} reviewDocumentId={resultDocumentId} trustState={resultSaveState === "saved" ? "server-verified" : "legacy-unverified"} onRestart={() => { setReview(null); setResultSourceImage(null); setResultDocumentId(null); setStep(1); }} />;
 
   return (
     <main className="studio-shell">
@@ -414,6 +417,7 @@ export function ReviewResult({
   initialSaveError,
   initialSourceImage,
   onRestart,
+  reviewDocumentId,
   trustState,
 }: {
   review: ReviewOutput;
@@ -422,6 +426,7 @@ export function ReviewResult({
   initialSaveError: string;
   initialSourceImage: ReviewSourceImage | null;
   onRestart: () => void;
+  reviewDocumentId?: string | null;
   trustState: ReviewTrustState;
 }) {
   const { aiCritique } = useLaunchCapabilities();
@@ -519,7 +524,7 @@ export function ReviewResult({
                         onMouseLeave={() => setActiveIssueId(null)}
                       >
                         <header><span>{String(index + 1).padStart(2, "0")}</span><div><p>{issue.category}</p><strong>{issue.score}/10</strong></div><b>{issue.priority} priority</b></header>
-                        <div><h3>What we see</h3><p>{issue.observation}</p><h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul></div>
+                        <div><h3>What we see</h3><p>{issue.observation}</p>{issue.evidenceDescription && <><h3>Evidence</h3><p>{issue.evidenceDescription}</p></>}<h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul>{trustState === "server-verified" && reviewDocumentId && <ReviewFindingFeedback reviewDocumentId={reviewDocumentId} issueId={issueId} rubricId={issue.rubricId ?? "legacy-unmapped"} />}</div>
                       </article>
                     </StaggerItem>
                   );

@@ -82,6 +82,18 @@ describe("Firebase security rules", () => {
     await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).delete());
   });
 
+  it("denies direct client access to review-finding feedback", async () => {
+    const feedbackRef = authenticatedFirestore(OWNER_UID).doc("reviewFeedback/owner_review-alpha_issue-1");
+    await assertFails(feedbackRef.set({
+      id: "owner_review-alpha_issue-1",
+      userId: OWNER_UID,
+      reviewDocumentId: REVIEW_ID,
+      issueId: "issue-1",
+      verdict: "helpful",
+    }));
+    await assertFails(feedbackRef.get());
+  });
+
   it("allows only the owner to read active review drafts", async () => {
     await seedFirestoreDocument(`reviewDrafts/${DRAFT_ID}`, {
       id: DRAFT_ID,
