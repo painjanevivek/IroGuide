@@ -3,13 +3,18 @@ import { createVerify } from "node:crypto";
 import type { App, AppOptions } from "firebase-admin/app";
 
 const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+const FIREBASE_CERT_FETCH_TIMEOUT_MS = 5_000;
 const MAX_TOKEN_AGE_SKEW_SECONDS = 300;
 const MAX_DESTRUCTIVE_AUTH_AGE_SECONDS = 300;
+const MAX_UNKNOWN_FIREBASE_CERT_KEYS = 256;
+const UNKNOWN_FIREBASE_CERT_KEY_TTL_MS = 30_000;
 
 let firebaseCertCache: {
   certs: Record<string, string>;
   expiresAt: number;
 } | null = null;
+let firebaseCertRefresh: Promise<Record<string, string>> | null = null;
+const unknownFirebaseCertKeys = new Map<string, number>();
 
 export class FirebaseAdminUnavailableError extends Error {
   constructor(message = "Account storage is not configured yet.") {
@@ -159,7 +164,7 @@ async function verifyFirebaseSecureToken(idToken: string, projectId: string): Pr
   }
 
   const header = parseJwtSegment<FirebaseJwtHeader>(encodedHeader);
-  if (header.alg !== "RS256" || !header.kid) {
+  if (header.alg !== "RS256" || typeof header.kid !== "string" || header.kid.length === 0 || header.kid.length > 256) {
     throw new Error("Firebase ID token has an unsupported signature.");
   }
 
@@ -181,8 +186,7 @@ async function verifyFirebaseSecureToken(idToken: string, projectId: string): Pr
     throw new Error("Firebase ID token issued-at time is invalid.");
   }
 
-  const cert = (await getFirebaseSecureTokenCerts())[header.kid];
-  if (!cert) throw new Error("Firebase ID token key is not recognized.");
+  const cert = await getFirebaseSecureTokenCert(header.kid);
 
   const verifier = createVerify("RSA-SHA256");
   verifier.update(`${encodedHeader}.${encodedPayload}`);
@@ -196,18 +200,66 @@ async function verifyFirebaseSecureToken(idToken: string, projectId: string): Pr
   } as VerifiedFirebaseToken;
 }
 
+async function getFirebaseSecureTokenCert(kid: string) {
+  const now = Date.now();
+  const unknownUntil = unknownFirebaseCertKeys.get(kid);
+  if (unknownUntil && unknownUntil > now) {
+    throw new Error("Firebase ID token key is not recognized.");
+  }
+  if (unknownUntil) unknownFirebaseCertKeys.delete(kid);
+
+  const cert = (await getFirebaseSecureTokenCerts())[kid];
+  if (!cert) {
+    rememberUnknownFirebaseCertKey(kid, now);
+    throw new Error("Firebase ID token key is not recognized.");
+  }
+
+  unknownFirebaseCertKeys.delete(kid);
+  return cert;
+}
+
 async function getFirebaseSecureTokenCerts() {
   if (firebaseCertCache && firebaseCertCache.expiresAt > Date.now()) return firebaseCertCache.certs;
+  if (firebaseCertRefresh) return firebaseCertRefresh;
 
-  const response = await fetch(FIREBASE_CERTS_URL);
-  if (!response.ok) throw new Error(`Firebase certificate fetch failed with status ${response.status}.`);
+  firebaseCertRefresh = refreshFirebaseSecureTokenCerts().finally(() => {
+    firebaseCertRefresh = null;
+  });
+  return firebaseCertRefresh;
+}
 
-  const certs = await response.json() as Record<string, string>;
-  firebaseCertCache = {
-    certs,
-    expiresAt: Date.now() + getCacheMaxAgeMs(response.headers.get("cache-control")),
-  };
-  return certs;
+async function refreshFirebaseSecureTokenCerts() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FIREBASE_CERT_FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(FIREBASE_CERTS_URL, { signal: controller.signal });
+    if (!response.ok) throw new Error(`Firebase certificate fetch failed with status ${response.status}.`);
+
+    const certs = await response.json() as Record<string, string>;
+    firebaseCertCache = {
+      certs,
+      expiresAt: Date.now() + getCacheMaxAgeMs(response.headers.get("cache-control")),
+    };
+    return certs;
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error("Firebase certificate fetch timed out.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function rememberUnknownFirebaseCertKey(kid: string, now: number) {
+  for (const [cachedKid, expiresAt] of unknownFirebaseCertKeys) {
+    if (expiresAt <= now) unknownFirebaseCertKeys.delete(cachedKid);
+  }
+  while (unknownFirebaseCertKeys.size >= MAX_UNKNOWN_FIREBASE_CERT_KEYS) {
+    const oldestKid = unknownFirebaseCertKeys.keys().next().value;
+    if (typeof oldestKid !== "string") break;
+    unknownFirebaseCertKeys.delete(oldestKid);
+  }
+  unknownFirebaseCertKeys.set(kid, now + UNKNOWN_FIREBASE_CERT_KEY_TTL_MS);
 }
 
 function getCacheMaxAgeMs(cacheControl: string | null) {

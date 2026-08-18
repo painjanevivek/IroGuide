@@ -12,6 +12,7 @@ import { saveReviewForUser } from "@/server/review-storage";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const REVIEW_AUTH_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 const REVIEW_RATE_LIMIT = { limit: 12, windowMs: 10 * 60 * 1000 };
 
 export const runtime = "nodejs";
@@ -29,12 +30,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sign in again before starting a critique." }, { status: 401, headers: jsonHeaders(context) });
   }
 
+  const clientKey = getClientKey(request, "unknown");
+  const authRateLimit = await checkRateLimit({
+    key: `review-auth:${clientKey}`,
+    ...REVIEW_AUTH_RATE_LIMIT,
+  });
+  if (!authRateLimit.allowed) {
+    logRequestEvent("warn", "review.auth_rate_limited", context);
+    return NextResponse.json(
+      { error: "Too many sign-in attempts. Please try again shortly." },
+      { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(authRateLimit)) },
+    );
+  }
+
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     const policy = enforceReviewGenerationPolicy({ context, eventPrefix: "review", user: decodedToken });
     if (!policy.allowed) return policy.response;
     const rateLimit = await checkRateLimit({
-      key: `review:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+      key: `review:${decodedToken.uid}:${clientKey}`,
       ...REVIEW_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {

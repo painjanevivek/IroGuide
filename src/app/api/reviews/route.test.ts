@@ -15,7 +15,7 @@ vi.mock("@/server/review-storage", () => ({
   saveReviewForUser: vi.fn(),
 }));
 
-import { verifyFirebaseIdToken } from "@/server/firebase-admin";
+import { FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createReview } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
 import { POST } from "./route";
@@ -130,10 +130,6 @@ describe("review generation authorization", () => {
     });
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it("stops a free-launch request before provider use even for an entitled account", async () => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
@@ -153,15 +149,43 @@ describe("review generation authorization", () => {
     expect(createReview).not.toHaveBeenCalled();
     expect(saveReviewForUser).not.toHaveBeenCalled();
   });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 });
 
-function createRequest() {
+describe("review authentication abuse controls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(verifyFirebaseIdToken).mockRejectedValue(new FirebaseTokenVerificationError());
+  });
+
+  it("throttles repeated forged tokens before further verification work", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const clientKey = `198.51.100.${Date.now()}`;
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const response = await POST(createRequest(clientKey));
+      expect(response.status).toBe(401);
+    }
+
+    const blocked = await POST(createRequest(clientKey));
+
+    expect(blocked.status).toBe(429);
+    expect(verifyFirebaseIdToken).toHaveBeenCalledTimes(30);
+    warn.mockRestore();
+  });
+});
+
+function createRequest(clientKey?: string) {
   return new Request("https://iroguide.com/api/reviews", {
     method: "POST",
     headers: {
       Authorization: "Bearer valid-token",
       "Content-Type": "application/json",
       Origin: "https://iroguide.com",
+      ...(clientKey ? { "x-forwarded-for": clientKey } : {}),
     },
     body: JSON.stringify(reviewRequest),
   });
