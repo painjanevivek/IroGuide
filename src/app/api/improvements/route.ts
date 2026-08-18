@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const policy = enforceReviewGenerationPolicy({ context, eventPrefix: "improvement", user: auth.user });
   if (!policy.allowed) return policy.response;
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "improvement",
     key: `improvement:${auth.user.uid}`,

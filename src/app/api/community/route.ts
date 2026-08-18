@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   });
   if ("response" in auth) return auth.response;
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "community_mutation",
     key: `community:${auth.user.uid}`,

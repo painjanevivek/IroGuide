@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     const policy = enforceReviewGenerationPolicy({ context, eventPrefix: "review", user: decodedToken });
     if (!policy.allowed) return policy.response;
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `review:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...REVIEW_RATE_LIMIT,
     });

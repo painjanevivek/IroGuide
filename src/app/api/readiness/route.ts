@@ -11,9 +11,9 @@ const READINESS_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
 
 export const runtime = "nodejs";
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   const context = createPublicRequestContext(request, "api.readiness.get");
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "readiness",
     key: "readiness",
@@ -48,7 +48,7 @@ export function GET(request: Request) {
   }, { status: readiness.ok ? 200 : 503, headers: jsonHeaders(context, getRateHeaders(rateLimit)) });
 }
 
-function getRateHeaders(rateLimit: ReturnType<typeof enforceRateLimit>): HeadersInit {
+function getRateHeaders(rateLimit: Awaited<ReturnType<typeof enforceRateLimit>>): HeadersInit {
   return "result" in rateLimit ? {
     "X-RateLimit-Limit": String(rateLimit.result.limit),
     "X-RateLimit-Remaining": String(rateLimit.result.remaining),

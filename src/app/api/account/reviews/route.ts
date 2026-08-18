@@ -22,7 +22,7 @@ export async function DELETE(request: Request) {
 
   try {
     const decodedToken = await verifyRecentFirebaseIdToken(authorization.slice("Bearer ".length).trim());
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `account-reviews-delete:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...REVIEW_PURGE_RATE_LIMIT,
     });

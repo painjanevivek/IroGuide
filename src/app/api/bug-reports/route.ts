@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "bug_report");
   if ("response" in contentTypeCheck) return contentTypeCheck.response;
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "bug_report",
     key: "bug-report",

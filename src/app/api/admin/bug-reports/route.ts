@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "This account cannot view bug reports." }, { status: 403, headers: jsonHeaders(context) });
   }
 
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "admin_bug_reports",
     key: `admin-bug-reports:${auth.user.uid}`,

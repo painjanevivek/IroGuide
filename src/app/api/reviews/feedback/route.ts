@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     missing: "Sign in again before rating a critique finding.",
   });
   if ("response" in auth) return auth.response;
-  const rateLimit = enforceRateLimit({
+  const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "review_feedback",
     key: `review-feedback:${auth.user.uid}`,

@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     verifiedUserId = decodedToken.uid;
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `review-sync:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
       ...SYNC_RATE_LIMIT,
     });

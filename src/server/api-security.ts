@@ -127,7 +127,7 @@ export async function requireVerifiedFirebaseUser(
   }
 }
 
-export function enforceRateLimit({
+export async function enforceRateLimit({
   context,
   eventPrefix,
   key,
@@ -135,8 +135,8 @@ export function enforceRateLimit({
   message,
   request,
   windowMs,
-}: RateLimitOptions): RateLimitCheck {
-  const result = checkRateLimit({
+}: RateLimitOptions): Promise<RateLimitCheck> {
+  const result = await checkRateLimit({
     key: `${key}:${getClientKey(request, "unknown")}`,
     limit,
     windowMs,
