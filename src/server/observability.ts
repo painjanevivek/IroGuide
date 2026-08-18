@@ -20,8 +20,16 @@ export function createRequestContext(request: Request, route: string): RequestCo
 }
 
 export function getClientKey(request: Request, fallback: string) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? request.headers.get("x-real-ip")
+  const vercelClientIp = getHeaderIp(request, "x-vercel-forwarded-for");
+  if (process.env.VERCEL === "1" && vercelClientIp) return vercelClientIp;
+
+  // Production deployments outside Vercel must add a platform-specific trusted
+  // adapter before using client IPs for a security decision. Accepting ordinary
+  // forwarding headers here would let a caller choose their own rate-limit key.
+  if (process.env.NODE_ENV === "production") return fallback;
+
+  return getHeaderIp(request, "x-forwarded-for")
+    ?? getHeaderIp(request, "x-real-ip")
     ?? fallback;
 }
 
@@ -78,4 +86,13 @@ function mergeVary(current: string | null, ...values: string[]) {
     ...(current?.split(",").map((value) => value.trim()).filter(Boolean) ?? []),
     ...values,
   ])).join(", ");
+}
+
+function getHeaderIp(request: Request, name: string) {
+  const value = request.headers.get(name)?.split(",")[0]?.trim();
+  if (!value || value.length > 64) return null;
+
+  // IPv4 and IPv6 literals only. This rejects header junk before it can become
+  // a Redis key or a rate-limit partition.
+  return /^[0-9a-f:.]+$/i.test(value) ? value : null;
 }

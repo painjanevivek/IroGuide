@@ -30,6 +30,7 @@ const requireReady = process.env.SMOKE_REQUIRE_READY !== "false";
 const runAuthenticatedReview = process.env.SMOKE_AUTHENTICATED_REVIEW !== "false";
 const runSecurityHeaders = process.env.SMOKE_SECURITY_HEADERS !== "false";
 const runFirebaseRules = process.env.SMOKE_FIREBASE_RULES !== "false";
+const launchProfile = process.env.SMOKE_LAUNCH_PROFILE ?? "free";
 const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms", "/.well-known/security.txt", "/security-policy.txt"];
 const securityHeaderRoutes = getListEnv("SMOKE_SECURITY_HEADER_PATHS", ["/", "/api/readiness"]);
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
@@ -72,6 +73,7 @@ async function main() {
       runAuthenticatedReview,
       runFirebaseRules,
       runSecurityHeaders,
+      launchProfile,
       securityHeaderRoutes,
     },
     publicRoutes,
@@ -164,10 +166,10 @@ async function checkReadiness() {
   try {
     const response = await fetch(`${baseUrl}/api/readiness`);
     const payload = await response.json();
-    const expectations = getSmokeExpectations(payload);
+    const expectations = getSmokeExpectations(launchProfile);
     const httpReady = requireReady ? response.ok && payload.ok === true : response.status === 200 || response.status === 503;
     const ok = httpReady && expectations.ok;
-    addResult(name, ok, `status=${response.status} profile=${payload.capabilities?.profile ?? "unknown"} accountStorage=${Boolean(payload.checks?.accountStorage)} bugReportEmail=${Boolean(payload.checks?.bugReportEmail)} liveVision=${Boolean(payload.checks?.liveVision)} sourceImageStorage=${Boolean(payload.checks?.sourceImageStorage)} provider=${payload.reviewProvider?.activeProvider ?? "unknown"}${expectations.ok ? "" : ` contract=${expectations.detail}`}`);
+    addResult(name, ok, `status=${response.status} expectedProfile=${launchProfile}${expectations.ok ? "" : ` contract=${expectations.detail}`}`);
     return expectations.ok ? expectations : null;
   } catch (error) {
     addResult(name, false, getErrorMessage(error));
@@ -462,27 +464,16 @@ export function normalizeBaseUrl(value) {
   return value.replace(/\/+$/, "");
 }
 
-export function getSmokeExpectations(payload) {
-  const capabilities = payload?.capabilities;
-  if (!capabilities || (capabilities.profile !== "free" && capabilities.profile !== "full")) {
+export function getSmokeExpectations(profile) {
+  if (profile !== "free" && profile !== "full") {
     return { ok: false, detail: "missing or unsupported production launch profile" };
   }
 
-  if (capabilities.profile === "free") {
-    const coherent = capabilities.aiCritique === false
-      && capabilities.bugReportEmail === false
-      && capabilities.sourceImageStorage === false;
-    return coherent
-      ? { ok: true, profile: "free", authenticatedReviewStatus: 403, requireStorage: false }
-      : { ok: false, detail: "free profile exposes an enabled paid capability" };
+  if (profile === "free") {
+    return { ok: true, profile: "free", authenticatedReviewStatus: 403, requireStorage: false };
   }
 
-  const coherent = capabilities.aiCritique === true
-    && capabilities.bugReportEmail === true
-    && capabilities.sourceImageStorage === true;
-  return coherent
-    ? { ok: true, profile: "full", authenticatedReviewStatus: 200, requireStorage: true }
-    : { ok: false, detail: "full profile has a disabled required capability" };
+  return { ok: true, profile: "full", authenticatedReviewStatus: 200, requireStorage: true };
 }
 
 function getListEnv(name, fallback) {

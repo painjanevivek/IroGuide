@@ -29,7 +29,9 @@ export type RateLimitResult = {
  * credentials are configured. Local development remains dependency-free.
  */
 export async function checkRateLimit({ key, limit, windowMs }: RateLimitOptions): Promise<RateLimitResult> {
-  if (!redis) return checkLocalRateLimit({ key, limit, windowMs });
+  const mode = resolveRateLimitMode(Boolean(redis));
+  if (mode === "deny") return getUnavailableResult(limit, windowMs);
+  if (mode === "local") return checkLocalRateLimit({ key, limit, windowMs });
 
   try {
     const result = await getDistributedLimiter(limit, windowMs).limit(key);
@@ -89,11 +91,29 @@ function cleanupExpiredBuckets(now: number) {
 }
 
 function createRedisClient() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
 
-  return new Redis({ url, token });
+  try {
+    const endpoint = new URL(url);
+    if (endpoint.protocol !== "https:") return null;
+    return new Redis({ url: endpoint.toString(), token });
+  } catch {
+    return null;
+  }
+}
+
+export function isDistributedRateLimitRequired(env = process.env) {
+  // Vercel previews deliberately remain usable without production secrets.
+  // Every actual production runtime fails closed when the shared limiter is
+  // unavailable or misconfigured, so a serverless scale-out cannot bypass it.
+  return env.NODE_ENV === "production" && env.VERCEL_ENV !== "preview";
+}
+
+export function resolveRateLimitMode(hasRedis: boolean, env = process.env) {
+  if (hasRedis) return "distributed";
+  return isDistributedRateLimitRequired(env) ? "deny" : "local";
 }
 
 function getDistributedLimiter(limit: number, windowMs: number) {

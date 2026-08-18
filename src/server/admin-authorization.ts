@@ -4,13 +4,15 @@ type AdminCandidate = {
   email_verified?: unknown;
 };
 
-export function isBugReportInboxAdmin(user: AdminCandidate) {
+export function isIroGuideAdmin(user: AdminCandidate) {
   const allowedUids = getCsvEnvSet(process.env.IROGUIDE_ADMIN_UIDS);
   const allowedEmails = getCsvEnvSet(process.env.IROGUIDE_ADMIN_EMAILS);
   const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
 
   return allowedUids.has(user.uid) || (user.email_verified === true && email.length > 0 && allowedEmails.has(email));
 }
+
+export const isBugReportInboxAdmin = isIroGuideAdmin;
 
 function getCsvEnvSet(value: string | undefined) {
   return new Set(

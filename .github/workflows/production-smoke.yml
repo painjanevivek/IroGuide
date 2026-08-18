@@ -55,6 +55,7 @@ jobs:
       SMOKE_AUTHENTICATED_REVIEW: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_authenticated_review }}
       SMOKE_FIREBASE_RULES: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_firebase_rules }}
       SMOKE_SECURITY_HEADERS: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_security_headers }}
+      SMOKE_LAUNCH_PROFILE: ${{ vars.IROGUIDE_LAUNCH_PROFILE || 'free' }}
       NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID || secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
@@ -67,10 +68,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -131,7 +132,7 @@ jobs:
 
       - name: Upload production smoke report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: production-smoke-report-${{ env.SMOKE_TARGET }}
           path: artifacts/production-smoke-report.json

@@ -119,7 +119,7 @@ async function checkReadiness() {
   const payload = await readJson(response);
   const headerProblems = getApiHeaderProblems(response.headers);
   const leakage = getSensitivePayloadFindings(payload);
-  const bodyProblems = payload && typeof payload === "object" ? [] : ["readiness did not return JSON"];
+  const bodyProblems = getPublicReadinessPayloadProblems(payload);
   const ready = response.status === 200 && payload?.ok === true;
   const allowedStatus = response.status === 200 || response.status === 503;
   const ok = allowedStatus && headerProblems.length === 0 && leakage.length === 0 && bodyProblems.length === 0 && (!requireReady || ready);
@@ -132,6 +132,14 @@ async function checkReadiness() {
     ...leakage,
     !ready && !requireReady ? "staging is not reporting ready" : "",
   ].filter(Boolean).join("; "));
+}
+
+function getPublicReadinessPayloadProblems(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return ["readiness did not return a JSON object"];
+  if (typeof payload.ok !== "boolean") return ["readiness did not return a boolean ok field"];
+
+  const unexpectedKeys = Object.keys(payload).filter((key) => key !== "ok");
+  return unexpectedKeys.length > 0 ? [`readiness exposed unexpected fields: ${unexpectedKeys.join(", ")}`] : [];
 }
 
 async function checkAuthGate(route) {

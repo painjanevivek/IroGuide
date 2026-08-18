@@ -103,14 +103,7 @@ describe("production smoke helpers", () => {
   });
 
   it("derives free-mode smoke behavior without paid service operations", () => {
-    expect(getSmokeExpectations({
-      capabilities: {
-        profile: "free",
-        aiCritique: false,
-        bugReportEmail: false,
-        sourceImageStorage: false,
-      },
-    })).toEqual({
+    expect(getSmokeExpectations("free")).toEqual({
       ok: true,
       profile: "free",
       authenticatedReviewStatus: 403,
@@ -119,14 +112,7 @@ describe("production smoke helpers", () => {
   });
 
   it("derives full-mode smoke behavior with entitlement and storage", () => {
-    expect(getSmokeExpectations({
-      capabilities: {
-        profile: "full",
-        aiCritique: true,
-        bugReportEmail: true,
-        sourceImageStorage: true,
-      },
-    })).toEqual({
+    expect(getSmokeExpectations("full")).toEqual({
       ok: true,
       profile: "full",
       authenticatedReviewStatus: 200,
@@ -134,12 +120,7 @@ describe("production smoke helpers", () => {
     });
   });
 
-  it.each([
-    undefined,
-    { capabilities: { profile: "development", aiCritique: true, bugReportEmail: false, sourceImageStorage: false } },
-    { capabilities: { profile: "free", aiCritique: true, bugReportEmail: false, sourceImageStorage: false } },
-    { capabilities: { profile: "full", aiCritique: true, bugReportEmail: true, sourceImageStorage: false } },
-  ])("rejects missing or contradictory production capability state", (payload) => {
-    expect(getSmokeExpectations(payload)).toMatchObject({ ok: false });
+  it.each([undefined, "development", "preview", "FULL"])("rejects unsupported production launch profiles", (profile) => {
+    expect(getSmokeExpectations(profile)).toMatchObject({ ok: false });
   });
 });

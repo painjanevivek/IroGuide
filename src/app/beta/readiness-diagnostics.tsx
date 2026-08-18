@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
+import { useAuth } from "@/features/auth/auth-provider";
 
 type ReadinessPayload = {
   ok: boolean;
@@ -43,6 +44,7 @@ type ReadinessPayload = {
 type DiagnosticsState =
   | { status: "loading" }
   | { status: "ready"; payload: ReadinessPayload; httpStatus: number; checkedAt: Date }
+  | { status: "restricted" }
   | { status: "error"; message: string; checkedAt: Date | null };
 
 type DiagnosticItem = {
@@ -53,17 +55,21 @@ type DiagnosticItem = {
   fix: string;
 };
 
-const endpointPath = "/api/readiness";
+const endpointPath = "/api/admin/readiness";
 
 export function ReadinessDiagnostics() {
+  const { user } = useAuth();
   const [state, setState] = useState<DiagnosticsState>({ status: "loading" });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadReadiness = useCallback(async () => {
+    if (!user) {
+      return;
+    }
     setIsRefreshing(true);
 
     try {
-      const { payload, httpStatus } = await readReadiness();
+      const { payload, httpStatus } = await readReadiness(user);
       setState({
         status: "ready",
         payload,
@@ -79,14 +85,17 @@ export function ReadinessDiagnostics() {
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+    const authenticatedUser: { getIdToken: () => Promise<string> } = user;
+
     let isMounted = true;
 
     async function loadInitialReadiness() {
       try {
-        const { payload, httpStatus } = await readReadiness();
+        const { payload, httpStatus } = await readReadiness(authenticatedUser);
         if (!isMounted) return;
         setState({
           status: "ready",
@@ -109,12 +118,25 @@ export function ReadinessDiagnostics() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]);
 
   const diagnostics = useMemo(() => {
     if (state.status !== "ready") return null;
     return buildDiagnostics(state.payload);
   }, [state]);
+
+  if (!user || state.status === "restricted") {
+    return (
+      <section className="diagnostics-shell section-pad" aria-live="polite">
+        <div className="diagnostics-error">
+          <ShieldCheck />
+          <span className="mono-label">OPERATOR ACCESS REQUIRED</span>
+          <h2>Deployment details stay private.</h2>
+          <p>Public availability is checked without exposing provider, storage, email, or credential-configuration details. Sign in with an authorized project account to inspect them.</p>
+        </div>
+      </section>
+    );
+  }
 
   if (state.status === "loading") {
     return (
@@ -415,10 +437,13 @@ function getLiveCredentialDetail(payload: ReadinessPayload) {
   return "OpenRouter credential is configured.";
 }
 
-async function readReadiness() {
+async function readReadiness(user: { getIdToken: () => Promise<string> }) {
   const response = await fetch(endpointPath, {
     cache: "no-store",
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${await user.getIdToken()}`,
+    },
   });
   const payload = await response.json() as unknown;
 
