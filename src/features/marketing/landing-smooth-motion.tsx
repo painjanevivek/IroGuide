@@ -21,8 +21,6 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
   const reducedMotion = usePrefersReducedMotion();
 
   useGSAP(() => {
-    registerIroGuideGsap();
-
     const wrapper = wrapperRef.current;
     const content = contentRef.current;
     if (!wrapper || !content) return;
@@ -35,6 +33,7 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
     document.documentElement.dataset.motionEnhanced = motionDisabled ? "basic" : "smooth";
 
     if (!motionDisabled) {
+      registerIroGuideGsap();
       smoother = ScrollSmoother.create({
         wrapper,
         content,
@@ -59,6 +58,11 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
 
       event.preventDefault();
 
+      if (motionDisabled) {
+        target.scrollIntoView({ behavior: "auto", block: "start" });
+        return;
+      }
+
       if (smoother) {
         smoother.scrollTo(target, true, "top 96px");
         return;
@@ -71,20 +75,24 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
       });
     };
 
-    observer = Observer.create({
-      target: window,
-      type: "wheel,touch,pointer",
-      tolerance: 16,
-      onChange: () => {
-        document.documentElement.dataset.gestureActive = "true";
-        gsap.delayedCall(0.24, () => {
-          document.documentElement.dataset.gestureActive = "false";
-        });
-      },
-    });
+    if (!motionDisabled) {
+      observer = Observer.create({
+        target: window,
+        type: "wheel,touch,pointer",
+        tolerance: 16,
+        onChange: () => {
+          document.documentElement.dataset.gestureActive = "true";
+          gsap.delayedCall(0.24, () => {
+            document.documentElement.dataset.gestureActive = "false";
+          });
+        },
+      });
+    }
 
     document.addEventListener("click", handleAnchorClick);
-    ScrollTrigger.refresh();
+    if (!motionDisabled) {
+      ScrollTrigger.refresh();
+    }
 
     return () => {
       document.removeEventListener("click", handleAnchorClick);

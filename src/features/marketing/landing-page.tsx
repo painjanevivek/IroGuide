@@ -85,7 +85,7 @@ export function LandingPage() {
           <div className="hero-actions">
             <Link className="button button-large" href="/review/new" prefetch={false} data-analytics-event="hero_review_design_click">Review my design <WandSparkles size={19} /></Link>
             <LandingHeroAuthButton />
-            <Link className="button-quiet" href="#example" data-analytics-event="hero_example_click">See a real critique <ArrowRight size={18} /></Link>
+            <Link className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></Link>
           </div>
           <div className="micro-proof">
             <span><Check size={15} /> Context-aware</span>

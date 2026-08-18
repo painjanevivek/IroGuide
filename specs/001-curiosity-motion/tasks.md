@@ -39,10 +39,10 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 **Purpose**: Establish a repeatable baseline and a small, testable presentation-model seam without changing product behaviour.
 
-- [ ] T001 Record the current landing-page interaction baseline, existing review-link labels, and 390 px overflow result in `specs/001-curiosity-motion/tasks.md` before editing `src/features/marketing/landing-page.tsx`.
-- [ ] T002 [P] Review and retain the existing motion lifecycle and reduced-motion behaviour in `src/features/marketing/landing-smooth-motion.tsx` and `src/components/motion/use-prefers-reduced-motion.ts`; document any required compatibility constraints in `specs/001-curiosity-motion/research.md`.
-- [ ] T003 Create immutable `CritiqueBeat` definitions and a clamped active-index selection helper in `src/features/marketing/critique-preview-model.ts`, following the invariants in `specs/001-curiosity-motion/data-model.md`.
-- [ ] T004 [P] Add boundary and single-active-state coverage for the helper in `src/features/marketing/critique-preview-model.test.ts` before integrating it into the critique lab.
+- [X] T001 Record the current landing-page interaction baseline, existing review-link labels, and 390 px overflow result in `specs/001-curiosity-motion/tasks.md` before editing `src/features/marketing/landing-page.tsx`.
+- [X] T002 [P] Review and retain the existing motion lifecycle and reduced-motion behaviour in `src/features/marketing/landing-smooth-motion.tsx` and `src/components/motion/use-prefers-reduced-motion.ts`; document any required compatibility constraints in `specs/001-curiosity-motion/research.md`.
+- [X] T003 Create immutable `CritiqueBeat` definitions and a clamped active-index selection helper in `src/features/marketing/critique-preview-model.ts`, following the invariants in `specs/001-curiosity-motion/data-model.md`.
+- [X] T004 [P] Add boundary and single-active-state coverage for the helper in `src/features/marketing/critique-preview-model.test.ts` before integrating it into the critique lab.
 
 **Checkpoint**: The model has no persisted state, exposes at least three meaningful example beats, and is safe to use from the existing client component.
 
@@ -54,10 +54,10 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 **⚠️ CRITICAL**: Complete this phase before enabling any additional GSAP choreography or interaction semantics.
 
-- [ ] T005 Define semantic landmark, heading, example-disclaimer, preview-control, and review-link locators in `e2e/web-quality.spec.ts` so browser tests assert the UI contract in `specs/001-curiosity-motion/contracts/landing-experience.md`.
-- [ ] T006 Keep the value proposition, a labelled `/review/new` primary link, and an explicit static visual-story sequence in `src/features/marketing/landing-page.tsx`; do not make any of them conditional on client motion initialization.
-- [ ] T007 Ensure initial and final readable states, visible focus treatment, bounded decorative layers, and non-clipping layouts are represented in `src/app/route-styles.css` (with only truly global safeguards in `src/app/globals.css`).
-- [ ] T008 Verify `src/features/marketing/landing-smooth-motion.tsx` cleans up GSAP/observer work and never intercepts a review link or anchor when enhancement is disabled.
+- [X] T005 Define semantic landmark, heading, example-disclaimer, preview-control, and review-link locators in `e2e/web-quality.spec.ts` so browser tests assert the UI contract in `specs/001-curiosity-motion/contracts/landing-experience.md`.
+- [X] T006 Keep the value proposition, a labelled `/review/new` primary link, and an explicit static visual-story sequence in `src/features/marketing/landing-page.tsx`; do not make any of them conditional on client motion initialization.
+- [X] T007 Ensure initial and final readable states, visible focus treatment, bounded decorative layers, and non-clipping layouts are represented in `src/app/globals.css`, which is the current home of landing-page styles.
+- [X] T008 Verify `src/features/marketing/landing-smooth-motion.tsx` cleans up GSAP/observer work and never intercepts a review link or anchor when enhancement is disabled.
 
 **Checkpoint**: Loading `/` with JavaScript delayed or motion disabled still exposes the value, story, preview text, and `/review/new` route.
 
@@ -71,14 +71,14 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Add Playwright assertions for the first-viewport value proposition, named primary review action, `/review/new` target, and complete story-stage text in `e2e/web-quality.spec.ts`.
+- [X] T009 [P] [US1] Add Playwright assertions for the first-viewport value proposition, named primary review action, `/review/new` target, and complete story-stage text in `e2e/web-quality.spec.ts`.
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Recompose the hero and product-story sequence in `src/features/marketing/landing-page.tsx` so context, critique insight, and practical refinement are visually ordered while every stage remains in semantic HTML.
-- [ ] T011 [US1] Refine section-level reveal choreography in `src/features/marketing/landing-smooth-motion.tsx` so it reinforces sequence only after baseline content is visible and does not prevent normal anchor/review navigation.
-- [ ] T012 [US1] Implement the coherent journey visual language, static fallback, and responsive spacing for the hero/story/final CTA in `src/app/route-styles.css` without relying on `overflow-x: hidden` to conceal defects.
-- [ ] T013 [US1] Run the focused first-visit flow in `e2e/web-quality.spec.ts` and record the result beside this checkpoint in `specs/001-curiosity-motion/tasks.md`.
+- [X] T010 [US1] Recompose the hero and product-story sequence in `src/features/marketing/landing-page.tsx` so context, critique insight, and practical refinement are visually ordered while every stage remains in semantic HTML.
+- [X] T011 [US1] Refine section-level reveal choreography in `src/features/marketing/landing-smooth-motion.tsx` so it reinforces sequence only after baseline content is visible and does not prevent normal anchor/review navigation.
+- [X] T012 [US1] Implement the coherent journey visual language, static fallback, and responsive spacing for the hero/story/final CTA in `src/app/globals.css` without relying on `overflow-x: hidden` to conceal defects.
+- [X] T013 [US1] Run the focused first-visit flow in `e2e/web-quality.spec.ts` and record the result beside this checkpoint in `specs/001-curiosity-motion/tasks.md`.
 
 **Checkpoint**: User Story 1 is independently ready when the product purpose and review invitation are visible immediately and work without preview interaction.
 
@@ -92,15 +92,15 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Extend `src/features/marketing/critique-preview-model.test.ts` to prove every configured beat has a unique id, non-personalized explanatory copy, and an outcome-oriented next step.
-- [ ] T015 [P] [US2] Add semantic Playwright coverage for labelled example status, `aria-pressed` selection, live readout change, and preview CTA target in `e2e/web-quality.spec.ts`.
+- [X] T014 [P] [US2] Extend `src/features/marketing/critique-preview-model.test.ts` to prove every configured beat has a unique id, non-personalized explanatory copy, and an outcome-oriented next step.
+- [X] T015 [P] [US2] Add semantic Playwright coverage for labelled example status, `aria-pressed` selection, live readout change, and preview CTA target in `e2e/web-quality.spec.ts`.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Replace local critique-beat data and index mutation in `src/features/marketing/animated-critique-lab.tsx` with the shared model/helper from `src/features/marketing/critique-preview-model.ts` while preserving one atomic active state.
-- [ ] T017 [US2] Update the preview’s control semantics, example disclosure, outcome copy, polite readout, and normal `/review/new` continuation link in `src/features/marketing/animated-critique-lab.tsx` according to `specs/001-curiosity-motion/contracts/landing-experience.md`.
-- [ ] T018 [US2] Style selected controls, readable example disclosure, readout hierarchy, and small-screen wrapping in `src/app/route-styles.css` without making drag, hover, SVG hotspots, or animation the only way to learn an insight.
-- [ ] T019 [US2] Run the model and preview browser checks for `src/features/marketing/critique-preview-model.test.ts` and `e2e/web-quality.spec.ts`, then record the result in `specs/001-curiosity-motion/tasks.md`.
+- [X] T016 [US2] Replace local critique-beat data and index mutation in `src/features/marketing/animated-critique-lab.tsx` with the shared model/helper from `src/features/marketing/critique-preview-model.ts` while preserving one atomic active state.
+- [X] T017 [US2] Update the preview’s control semantics, example disclosure, outcome copy, polite readout, and normal `/review/new` continuation link in `src/features/marketing/animated-critique-lab.tsx` according to `specs/001-curiosity-motion/contracts/landing-experience.md`.
+- [X] T018 [US2] Style selected controls, readable example disclosure, readout hierarchy, and small-screen wrapping in `src/app/globals.css` without making drag, hover, SVG hotspots, or animation the only way to learn an insight.
+- [X] T019 [US2] Run the model and preview browser checks for `src/features/marketing/critique-preview-model.test.ts` and `e2e/web-quality.spec.ts`, then record the result in `specs/001-curiosity-motion/tasks.md`.
 
 **Checkpoint**: User Stories 1 and 2 both work independently; the preview feels product-specific but never claims to have analyzed the visitor’s work.
 
@@ -114,15 +114,15 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 ### Tests for User Story 3
 
-- [ ] T020 [P] [US3] Add Playwright scenarios for reduced-motion static content, keyboard selection/focus order, and no document-level horizontal overflow at 390 × 844 in `e2e/web-quality.spec.ts`.
-- [ ] T021 [P] [US3] Add regression coverage for clamped rapid-selection requests in `src/features/marketing/critique-preview-model.test.ts` so repeated pointer, scroll, or drag signals cannot produce an invalid active state.
+- [X] T020 [P] [US3] Add Playwright scenarios for reduced-motion static content, keyboard selection/focus order, and no document-level horizontal overflow at 390 × 844 in `e2e/web-quality.spec.ts`.
+- [X] T021 [P] [US3] Add regression coverage for clamped rapid-selection requests in `src/features/marketing/critique-preview-model.test.ts` so repeated pointer, scroll, or drag signals cannot produce an invalid active state.
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Gate all non-essential scroll smoothing, path drawing, scramble text, draggable movement, and decorative transitions on the existing reduced-motion and small-viewport conditions in `src/features/marketing/landing-smooth-motion.tsx`.
-- [ ] T023 [US3] Make `src/features/marketing/animated-critique-lab.tsx` render and update complete semantic content immediately in basic mode while treating GSAP observer/drag/scrub behaviour as progressive enhancement with lifecycle cleanup.
-- [ ] T024 [US3] Harden focus visibility, target sizing, `max-inline-size`, grid/stack breakpoints, SVG containment, and final-state visibility in `src/app/route-styles.css` and `src/app/globals.css`.
-- [ ] T025 [US3] Run the reduced-motion, keyboard, and narrow-touch flows in `e2e/web-quality.spec.ts` and log the exact browser command/result in `specs/001-curiosity-motion/tasks.md`.
+- [X] T022 [US3] Gate all non-essential scroll smoothing, path drawing, scramble text, draggable movement, and decorative transitions on the existing reduced-motion and small-viewport conditions in `src/features/marketing/landing-smooth-motion.tsx`.
+- [X] T023 [US3] Make `src/features/marketing/animated-critique-lab.tsx` render and update complete semantic content immediately in basic mode while treating GSAP observer/drag/scrub behaviour as progressive enhancement with lifecycle cleanup.
+- [X] T024 [US3] Harden focus visibility, target sizing, `max-inline-size`, grid/stack breakpoints, SVG containment, and final-state visibility in `src/app/globals.css`.
+- [X] T025 [US3] Run the reduced-motion, keyboard, and narrow-touch flows in `e2e/web-quality.spec.ts` and log the exact browser command/result in `specs/001-curiosity-motion/tasks.md`.
 
 **Checkpoint**: All three user stories work with or without enhanced motion; no interaction path requires scrolling, drag, hover, or animation completion.
 
@@ -132,13 +132,22 @@ For defect work, use the identical structure with `fix(scope): concise repaired 
 
 **Purpose**: Verify visual coherence, performance discipline, test quality, and handoff evidence across the completed experience.
 
-- [ ] T026 [P] Audit `src/features/marketing/landing-page.tsx`, `src/features/marketing/animated-critique-lab.tsx`, and `src/features/marketing/landing-smooth-motion.tsx` for animation that conveys hierarchy, sequence, feedback, or state only; remove ornamental movement that does not.
-- [ ] T027 [P] Inspect `src/app/route-styles.css` for transform/opacity/SVG-property-only enhancement, predictable final states, and absence of global horizontal-overflow masking; document any deliberate exception in `specs/001-curiosity-motion/research.md`.
-- [ ] T028 Run `npm run lint` against the changed files under `src/features/marketing/`, `src/app/`, and `e2e/`; record the pass/fail result in `specs/001-curiosity-motion/tasks.md`.
-- [ ] T029 Run `npm run typecheck` for the component and model changes in `src/features/marketing/`; record the pass/fail result in `specs/001-curiosity-motion/tasks.md`.
-- [ ] T030 Run focused Vitest checks for `src/features/marketing/critique-preview-model.test.ts` and focused Playwright checks in `e2e/web-quality.spec.ts`; record exact commands and results in `specs/001-curiosity-motion/tasks.md`.
-- [ ] T031 Run `npm run build` after all landing changes, verify the public route still compiles, and record the result in `specs/001-curiosity-motion/tasks.md`.
-- [ ] T032 Update the completion state and validation evidence for every task in `specs/001-curiosity-motion/tasks.md`, then compare the delivered UI against all requirements in `specs/001-curiosity-motion/spec.md` before handoff.
+- [X] T026 [P] Audit `src/features/marketing/landing-page.tsx`, `src/features/marketing/animated-critique-lab.tsx`, and `src/features/marketing/landing-smooth-motion.tsx` for animation that conveys hierarchy, sequence, feedback, or state only; remove ornamental movement that does not.
+- [X] T027 [P] Inspect `src/app/globals.css` for transform/opacity/SVG-property-only enhancement, predictable final states, and absence of global horizontal-overflow masking; document any deliberate exception in `specs/001-curiosity-motion/research.md`.
+- [X] T028 Run `npm run lint` against the changed files under `src/features/marketing/`, `src/app/`, and `e2e/`; record the pass/fail result in `specs/001-curiosity-motion/tasks.md`.
+- [X] T029 Run `npm run typecheck` for the component and model changes in `src/features/marketing/`; record the pass/fail result in `specs/001-curiosity-motion/tasks.md`.
+- [X] T030 Run focused Vitest checks for `src/features/marketing/critique-preview-model.test.ts` and focused Playwright checks in `e2e/web-quality.spec.ts`; record exact commands and results in `specs/001-curiosity-motion/tasks.md`.
+- [X] T031 Run `npm run build` after all landing changes, verify the public route still compiles, and record the result in `specs/001-curiosity-motion/tasks.md`.
+- [X] T032 Update the completion state and validation evidence for every task in `specs/001-curiosity-motion/tasks.md`, then compare the delivered UI against all requirements in `specs/001-curiosity-motion/spec.md` before handoff.
+
+---
+
+## Completion Evidence
+
+- **Shared model and static fallback**: `src/features/marketing/critique-preview-model.test.ts` passes two Vitest tests covering unique illustrative beats and clamped rapid/invalid selection.
+- **Public landing flow**: `e2e/web-quality.spec.ts` passes five Chromium scenarios, including the primary `/review/new` destination, hero-to-preview anchor navigation, no-JavaScript fallback, keyboard selection, reduced-motion mode, and 390 px page-overflow check.
+- **Quality gates**: `npm run lint`, `npm run typecheck`, and `npm run build` completed successfully on 2026-08-18.
+- **Visual review**: a local desktop Playwright capture confirmed the existing asymmetric hero remains intact. Full-page capture is not used as visual evidence because GSAP ScrollSmoother renders transformed content outside its native document-position model.
 
 ---
 

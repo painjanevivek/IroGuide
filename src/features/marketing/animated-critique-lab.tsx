@@ -3,77 +3,53 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { ArrowRight, Crosshair, MousePointer2, Route, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import {
-  Draggable,
   Flip,
   gsap,
-  Observer,
   registerIroGuideGsap,
   SplitText,
 } from "@/components/motion/gsap-runtime";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
-
-const critiqueBeats = [
-  {
-    label: "Capture",
-    title: "Upload evidence",
-    copy: "The review starts by reading layout, type, contrast, and the design goal before making any judgment.",
-    metric: "12 signals",
-    x: 145,
-    y: 160,
-    glyph: "M0 -34 12 -8 40 -6 18 12 24 40 0 24 -24 40 -18 12 -40 -6 -12 -8Z",
-  },
-  {
-    label: "Focus",
-    title: "Find the friction",
-    copy: "IroGuide traces the decision that slows comprehension, then ties it to hierarchy and audience fit.",
-    metric: "3 priorities",
-    x: 330,
-    y: 255,
-    glyph: "M-40 -8 H-8 V-40 H8 V-8 H40 V8 H8 V40 H-8 V8 H-40Z",
-  },
-  {
-    label: "Refine",
-    title: "Make the next move",
-    copy: "The output turns critique into a short, ordered revision plan that keeps the designer in control.",
-    metric: "1 path",
-    x: 545,
-    y: 145,
-    glyph: "M0 -40 C22 -40 40 -22 40 0 S22 40 0 40 -40 22 -40 0 -22 -40 0 -40Z M-14 -3 0 13 20 -15",
-  },
-] as const;
+import { clampCritiqueBeatIndex, critiqueBeats, getCritiqueBeat } from "@/features/marketing/critique-preview-model";
 
 export function AnimatedCritiqueLab() {
   const reducedMotion = usePrefersReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [motionEnabled, setMotionEnabled] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
   const routeRef = useRef<SVGPathElement>(null);
   const orbRef = useRef<SVGCircleElement>(null);
   const glyphRef = useRef<SVGPathElement>(null);
-  const knobRef = useRef<HTMLButtonElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLParagraphElement>(null);
   const activeIndexRef = useRef(0);
   const flipStateRef = useRef<Flip.FlipState | null>(null);
 
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 721px) and (prefers-reduced-motion: no-preference)");
+    const updateMotionMode = () => setMotionEnabled(query.matches && !reducedMotion);
+
+    updateMotionMode();
+    query.addEventListener("change", updateMotionMode);
+
+    return () => query.removeEventListener("change", updateMotionMode);
+  }, [reducedMotion]);
+
   const selectBeat = useCallback((nextIndex: number) => {
-    const nextBeatIndex = Math.max(0, Math.min(critiqueBeats.length - 1, nextIndex));
+    const nextBeatIndex = clampCritiqueBeatIndex(nextIndex);
     if (nextBeatIndex === activeIndexRef.current) return;
 
-    if (!reducedMotion) {
+    if (motionEnabled) {
       const marker = rootRef.current?.querySelector(".gsap-lab-control-marker");
       flipStateRef.current = marker ? Flip.getState(marker) : null;
     }
 
     flushSync(() => setActiveIndex(nextBeatIndex));
     activeIndexRef.current = nextBeatIndex;
-  }, [reducedMotion]);
+  }, [motionEnabled]);
 
   useEffect(() => {
-    if (reducedMotion || !rootRef.current) {
+    if (!motionEnabled || !rootRef.current) {
       return;
     }
 
@@ -81,14 +57,8 @@ export function AnimatedCritiqueLab() {
 
     const root = rootRef.current;
     const title = titleRef.current;
-    const stage = stageRef.current;
     const route = routeRef.current;
     const orb = orbRef.current;
-    const knob = knobRef.current;
-    const track = trackRef.current;
-    const status = statusRef.current;
-    const draggers: Draggable[] = [];
-    let observer: Observer | undefined;
     let split: SplitText | null = null;
 
     const context = gsap.context(() => {
@@ -129,67 +99,22 @@ export function AnimatedCritiqueLab() {
         .from(".gsap-lab-hotspot", { scale: 0.72, opacity: 0, stagger: 0.1, duration: 0.45 }, 0.45)
         .from(".gsap-lab-glyph", { scale: 0.82, rotate: -10, opacity: 0, stagger: 0.06, duration: 0.4 }, 0.5);
 
-      if (status) {
-        gsap.to(status, {
-          scrambleText: { text: "Drag, wheel, or swipe the priority control to preview each review layer.", chars: "IroGuide0123456789", speed: 0.38 },
-          duration: 1.4,
-          ease: "none",
-          scrollTrigger: {
-            trigger: root,
-            start: "top 58%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
-
-      if (knob && track) {
-        draggers.push(...Draggable.create(knob, {
-          type: "x",
-          bounds: track,
-          inertia: false,
-          onDrag(this: Draggable) {
-            const max = this.maxX || 1;
-            const nextIndex = Math.round((this.x / max) * (critiqueBeats.length - 1));
-            selectBeat(nextIndex);
-          },
-          onRelease(this: Draggable) {
-            const max = this.maxX || 1;
-            const nextIndex = Math.round((this.x / max) * (critiqueBeats.length - 1));
-            gsap.to(knob, { x: (max / (critiqueBeats.length - 1)) * nextIndex, duration: 0.24, ease: "power3.out" });
-          },
-        }));
-      }
-
-      if (stage) {
-        observer = Observer.create({
-          target: stage,
-          type: "wheel,touch,pointer",
-          tolerance: 28,
-          onDown: () => selectBeat(activeIndexRef.current + 1),
-          onLeft: () => selectBeat(activeIndexRef.current + 1),
-          onRight: () => selectBeat(activeIndexRef.current - 1),
-          onUp: () => selectBeat(activeIndexRef.current - 1),
-        });
-      }
     }, root);
 
     return () => {
-      draggers.forEach((dragger) => dragger.kill());
-      observer?.kill();
       split?.revert();
       context.revert();
     };
-  }, [reducedMotion, selectBeat]);
+  }, [motionEnabled]);
 
   useEffect(() => {
     activeIndexRef.current = activeIndex;
 
-    if (reducedMotion || !knobRef.current || !trackRef.current) {
+    if (!motionEnabled) {
       return;
     }
 
-    const activeBeat = critiqueBeats[activeIndex];
-    const max = Math.max(0, trackRef.current.clientWidth - knobRef.current.offsetWidth);
+    const activeBeat = getCritiqueBeat(activeIndex);
 
     if (flipStateRef.current) {
       Flip.from(flipStateRef.current, {
@@ -201,13 +126,6 @@ export function AnimatedCritiqueLab() {
       flipStateRef.current = null;
     }
 
-    gsap.to(knobRef.current, {
-      x: (max / (critiqueBeats.length - 1)) * activeIndex,
-      duration: 0.28,
-      ease: "power3.out",
-      overwrite: true,
-    });
-
     gsap.to(glyphRef.current, {
       morphSVG: activeBeat.glyph,
       duration: 0.34,
@@ -216,35 +134,25 @@ export function AnimatedCritiqueLab() {
 
     gsap.fromTo(".gsap-lab-readout > *", { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.24, stagger: 0.035, ease: "power3.out" });
 
-    gsap.to(statusRef.current, {
-      scrambleText: { text: `${activeBeat.label}: ${activeBeat.title}`, chars: "IroGuide0123456789", speed: 0.42 },
-      duration: 0.34,
-      ease: "none",
-      overwrite: true,
-    });
-  }, [activeIndex, reducedMotion]);
+  }, [activeIndex, motionEnabled]);
 
-  const activeBeat = critiqueBeats[activeIndex];
+  const activeBeat = getCritiqueBeat(activeIndex);
 
   return (
-    <section className="gsap-lab section-pad" ref={rootRef} aria-labelledby="gsap-lab-title">
+    <section className="gsap-lab section-pad" id="critique-preview" ref={rootRef} aria-labelledby="gsap-lab-title">
       <div className="gsap-lab-copy">
-        <p className="eyebrow light"><Sparkles size={14} /> Animated critique system</p>
+        <p className="eyebrow light"><Sparkles size={14} /> Example critique preview</p>
         <h2 id="gsap-lab-title" ref={titleRef}>A review path you can feel before you submit.</h2>
-        <p>
-          Scroll through the lab to watch IroGuide connect evidence, diagnosis, and next steps. The SVG path is animated with GSAP, while the priority control stays interactive for hands-on exploration.
-        </p>
-        <p className="gsap-lab-status" ref={statusRef}>Scroll the lab into view to activate the critique path.</p>
+        <p>This illustrative preview shows how IroGuide moves from evidence to a useful next move. It is not a critique of your design.</p>
+        <p className="gsap-lab-status">Choose an insight to inspect the example in your own time.</p>
         <Link className="button button-lime" href="/review/new" prefetch={false} data-analytics-event="gsap_lab_review_click">
-          Try the live workflow <ArrowRight size={18} />
+          Start a real review <ArrowRight size={18} />
         </Link>
       </div>
 
-      <div className="gsap-lab-panel" aria-label="Interactive critique path preview">
-        <div className="gsap-lab-stage" ref={stageRef}>
-          <svg className="gsap-lab-svg" viewBox="0 0 720 460" role="img" aria-labelledby="gsap-lab-svg-title gsap-lab-svg-desc">
-            <title id="gsap-lab-svg-title">Animated IroGuide critique path</title>
-            <desc id="gsap-lab-svg-desc">A design review path moving from upload evidence to friction diagnosis to a revision plan.</desc>
+      <div className="gsap-lab-panel" aria-labelledby="gsap-lab-title">
+        <div className="gsap-lab-stage">
+          <svg className="gsap-lab-svg" viewBox="0 0 720 460" aria-hidden="true">
             <defs>
               <pattern id="gsap-lab-grid" width="44" height="44" patternUnits="userSpaceOnUse">
                 <path d="M 44 0 L 0 0 0 44" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="1" />
@@ -281,18 +189,19 @@ export function AnimatedCritiqueLab() {
             </g>
           </svg>
 
-          <div className="gsap-lab-readout" aria-live="polite">
+          <div className="gsap-lab-readout" id="critique-preview-readout" aria-atomic="true" aria-live="polite">
             <span className="mono-label">{activeBeat.label}</span>
             <h3>{activeBeat.title}</h3>
             <p>{activeBeat.copy}</p>
-            <strong>{activeBeat.metric}</strong>
+            <strong>{activeBeat.outcome}</strong>
           </div>
         </div>
 
         <div className="gsap-lab-controls">
-          <div className="gsap-lab-control-row" role="list" aria-label="Critique layers">
+          <div className="gsap-lab-control-row" role="group" aria-label="Example critique insights">
             {critiqueBeats.map((beat, index) => (
               <button
+                aria-controls="critique-preview-readout"
                 aria-pressed={activeIndex === index}
                 className={activeIndex === index ? "is-active" : undefined}
                 key={beat.label}
@@ -304,15 +213,6 @@ export function AnimatedCritiqueLab() {
                 <small>{beat.title}</small>
               </button>
             ))}
-          </div>
-          <div className="gsap-lab-scrubber">
-            <Route size={18} aria-hidden="true" />
-            <div className="gsap-lab-scrubber-track" ref={trackRef}>
-              <button className="gsap-lab-scrubber-knob" ref={knobRef} type="button" aria-label="Drag to preview critique layers">
-                <MousePointer2 size={16} fill="currentColor" />
-              </button>
-            </div>
-            <Crosshair size={18} aria-hidden="true" />
           </div>
         </div>
       </div>
