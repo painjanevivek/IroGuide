@@ -1,8 +1,8 @@
 # IroGuide Product Foundation
 
-Status: Approved baseline for implementation  
+Status: Current product baseline
 Working product name: **IroGuide**
-Last updated: 2026-06-22
+Last updated: 2026-08-24
 
 ## Vision
 
@@ -37,12 +37,12 @@ This is especially costly for learners without regular mentor access, freelancer
 
 | Priority | User | Primary need | Product response |
 | --- | --- | --- | --- |
-| 1 | Design students | Principle-based critique and portfolio growth | Educational feedback with professional depth |
-| 2 | Beginner designers | Clear language and confidence-building direction | Beginner mode and explained recommendations |
-| 3 | Freelancers | Fast quality control before delivery | Mentor and direct modes with prioritized fixes |
-| 4 | Business owners | Brand and audience-fit validation | Plain-language commercial guidance |
+| 1 | Beginner designers | Clear language and confidence-building direction | Friendly mode and explained recommendations |
+| 2 | Freelancers | Fast quality control before delivery | Mentor and direct modes with prioritized fixes |
+| 3 | UI/UX designers | Visual usability and accessibility-risk critique | UI-specific evidence rubric and conversion guidance |
+| 4 | Design students | Principle-based critique and portfolio growth | Educational feedback with professional depth |
 | 5 | Content creators | Platform-aware, attention-focused feedback | Readability, hierarchy, and engagement review |
-| 6 | UI/UX designers | Usability and accessibility critique | UI-specific rubric and conversion guidance |
+| 6 | Business owners | Brand and audience-fit validation | Plain-language commercial guidance |
 
 ## MVP design categories
 
@@ -88,15 +88,15 @@ Every successful review contains:
 
 ## MVP scope
 
-### Included
+### Target product scope
 
 - Account entry flow and protected personal workspace.
 - Single-image upload with preview and validation.
 - Category selection and design brief.
 - Three feedback modes.
-- Structured AI review generation.
+- Structured AI review generation after provider activation approval.
 - Review result presentation.
-- Contextual follow-up conversation.
+- Contextual follow-up conversation after provider activation approval.
 - Basic review history and deletion.
 - Responsive, accessible marketing and product UI.
 
@@ -107,6 +107,14 @@ Every successful review contains:
 - Multi-image projects and native design-file editing.
 - Automated redesigns without explicit user action.
 - Team workspaces and paid subscriptions.
+
+### Current free-production scope
+
+- Firebase account entry and private workspace.
+- Saved trusted critique text and bounded active drafts.
+- Provenance-compatible progress when enough trusted history exists.
+- Profile controls, review-history deletion, account deletion, documentation, and stored bug reports.
+- New AI critique, new source-image persistence, provider extensions, Community, billing, and public portfolio publishing are unavailable.
 
 ## Product principles
 

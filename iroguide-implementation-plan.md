@@ -541,6 +541,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** every major route is classified; documentation describes the integrated Next.js server architecture; free-profile behavior is unambiguous.
 
+**Implementation record (2026-08-24):** product, UX, launch, README, and technical architecture now agree on the primary cohorts, integrated Next.js server boundary, free profile, 4 MB proxied limit, and gated Community. `docs/capability-route-matrix.md` classifies page/API behavior and progressive disclosure; `docs/community-gate-runbook.md` defines regression, incident, and reopening rules; public landing, About, Projects, and Pricing actions/copy no longer present gated capabilities or plan hypotheses as live. The controlled component extraction seams are inventoried without mixing a refactor into this baseline phase.
+
 ### Phase 2: Alpha Core — Free-Profile Readiness
 
 **Objective:** Make the external free-profile experience trustworthy, secure, and operationally verifiable without activating paid AI.
@@ -695,7 +697,7 @@ No new integration is approved by this plan.
 
 ### Product and learning-loop workstream
 
-- [ ] `TASK-001` — Reconcile product and technical documentation
+- [x] `TASK-001` — Reconcile product and technical documentation
   - Purpose: Replace stale separate-backend and deferred-feature assumptions with the actual integrated architecture and confirmed scope.
   - Dependencies: RISK-001 through RISK-009 decisions; documentation must describe the corrected target rather than the flawed baseline.
   - Expected output: Updated product foundation, technical architecture, UX scope, trust baseline, and launch plan.
@@ -704,7 +706,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline and Delivery Roadmap.
   - Risks: Documentation may accidentally describe inactive provider paths as live.
 
-- [ ] `TASK-002` — Create the authoritative capability and route matrix
+- [x] `TASK-002` — Create the authoritative capability and route matrix
   - Purpose: Define what each route and action does in local demo, test, free production, and later enabled production.
   - Dependencies: TASK-001.
   - Expected output: Version-controlled capability matrix with UI, API, data, and test behavior.
@@ -713,7 +715,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline.
   - Risks: Client and server may use different interpretations unless the server remains authoritative.
 
-- [ ] `TASK-003` — Prove and operationalize the Community gate
+- [x] `TASK-003` — Prove and operationalize the Community gate
   - Purpose: Turn the immediate boundary from RISK-001 into a maintained product and release contract.
   - Dependencies: RISK-001 and TASK-002.
   - Expected output: Operator override policy, internal-preview authorization, capability-aware route inventory, incident action, and regression suite.
@@ -722,7 +724,7 @@ No new integration is approved by this plan.
   - Relevant visual: Delivery Roadmap.
   - Risks: Hiding navigation alone would leave direct routes or Firestore mutations exposed.
 
-- [ ] `TASK-004` — Align free-profile product copy and actions
+- [x] `TASK-004` — Align free-profile product copy and actions
   - Purpose: Prevent users from entering flows that production will reject.
   - Dependencies: TASK-002.
   - Expected output: Capability-aware landing, pricing, dashboard, projects, and review-entry copy.

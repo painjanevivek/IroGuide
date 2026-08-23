@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight, Eye, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { Eye, ShieldCheck, Sparkles, Target } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 export const metadata: Metadata = {
   title: `About ${siteConfig.name} - AI Design Critique Workspace`,
@@ -25,7 +26,7 @@ export default function AboutPage() {
           <p className="eyebrow"><Sparkles className="sparkle-blink-glow" /> About IroGuide</p>
           <h1>IroGuide is the official AI critique workspace for better design decisions.</h1>
           <p>IroGuide helps designers, students, creators, and founders understand what is working in a visual design, what is getting in the way, and what to improve next.</p>
-          <Link className="button button-dark" href="/review/new">Start a design review <ArrowRight size={18} /></Link>
+          <ReviewLaunchLink className="button button-dark" enabledLabel="Start a design review" disabledLabel="Review availability" eventName="about_review_click" />
         </section>
         <section className="official-grid" aria-label="IroGuide principles">
           <article><Eye /><h2>Context first</h2><p>Feedback is shaped around the audience, format, goal, and creative intent instead of generic taste.</p></article>

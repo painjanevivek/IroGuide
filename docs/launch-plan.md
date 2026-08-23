@@ -1,7 +1,7 @@
 # IroGuide Launch Plan
 
-Status: Phase 13 readiness plan  
-Product state: Verified local product demo; external services not configured
+Status: Current staged-launch plan
+Product state: Free production profile; paid provider and Community gated
 
 ## Launch principle
 
@@ -9,18 +9,19 @@ Launch the smallest trustworthy critique loop, learn from real design submission
 
 ## Current readiness
 
-### Ready locally
+### Ready now
 
 - Responsive marketing site and product story.
 - Validated upload preview, category, brief, mode, and confirmation flow.
 - Structured demo review, issue hierarchy, checklist, and improvement prompt.
-- Local history, learning insights, data deletion, community/portfolio/pricing previews.
+- Authenticated history, bounded drafts, provenance-compatible progress, and retryable data deletion.
+- Transparent Community gate and pricing/portfolio research previews.
 - Typecheck, lint, unit tests, production build, route smoke tests, and security-header checks.
 
-### Required before external alpha
+### Required before a provider-enabled alpha
 
-- Configure Firebase Authentication, Cloud Firestore, private Firebase Storage, and OpenRouter.
-- Implement provider adapters, ownership checks, retention jobs, rate limits, and abuse controls.
+- Approve a live-provider budget and direct private-upload implementation.
+- Implement durable idempotent provider jobs, decoded-image validation, and orphan cleanup.
 - Add durable review jobs, timeout/retry behavior, observability, and incident alerts.
 - Complete legal privacy/terms review and provider data-processing review.
 - Run manual keyboard, screen-reader, contrast, zoom, and mobile-device audits.
@@ -30,7 +31,7 @@ Launch the smallest trustworthy critique loop, learn from real design submission
 
 ### Cohort
 
-15–30 invited design students, freelancers, creators, and product designers with varied skill levels. Require informed consent for test data and prohibit sensitive/client-confidential uploads unless explicitly approved.
+15–30 invited beginner designers, freelancers, and UI/UX designers with varied skill levels. Require informed consent for test data and prohibit sensitive/client-confidential uploads unless explicitly approved.
 
 ### Success gates
 
@@ -115,10 +116,9 @@ The product should preserve drafts and communicate status honestly during a paus
 
 ## Immediate next implementation order
 
-1. Production auth and ownership model.
-2. Private storage and server-side image validation.
-3. Live vision provider adapter with schema repair and evaluation set.
-4. Cloud Firestore persistence and durable review history.
-5. Rate limits, job reliability, observability, and deletion jobs.
-6. Staging security/accessibility review.
-7. Private-alpha invitation and feedback operations.
+1. Keep the free capability matrix and Community gate regression-green.
+2. Validate permitted auth, history, drafts, progress, bug-report, and deletion behavior.
+3. Complete staging security, accessibility, and production smoke evidence.
+4. Build the provider-independent evaluation and learning-loop contracts.
+5. Revisit live provider and direct upload only after budget and quality approval.
+6. Revisit Community only after retention and moderation gates pass.

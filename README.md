@@ -1,14 +1,15 @@
 # IroGuide
 
-Standalone Next.js website, product experience, and authenticated review API for IroGuide.
+Integrated Next.js website, product experience, and authenticated server API for IroGuide.
 
 ```powershell
 npm install
 npm run dev
 ```
 
-The app runs on `http://localhost:3000`. `NEXT_PUBLIC_API_URL` can point to a
-separate compatible API, otherwise the built-in Next.js API routes are used.
+The app runs on `http://localhost:3000`. Built-in Next.js route handlers are the
+authoritative API. `NEXT_PUBLIC_API_URL` is retained only for explicit compatible
+development adapters and is not the production architecture.
 
 ## Firebase setup
 
@@ -18,8 +19,9 @@ separate compatible API, otherwise the built-in Next.js API routes are used.
    domains before testing sign-in.
 4. Add Firebase Admin credentials to the server environment so API routes can
    verify ID tokens and persist completed reviews from a trusted context.
-5. Publish the rules in `firestore.rules` so signed-in users can read their own
-   account data and use draft/community interactions.
+5. Publish `firestore.rules` and `firestore.indexes.json` so signed-in users can
+   read owned account data, write only their UID-bound active draft, and remain
+   denied from gated Community collections.
 
 Use a base64-encoded service account JSON when your host makes multiline
 secrets awkward:
@@ -95,10 +97,10 @@ images. It uses the same Firebase web key and Admin credential environment
 variables described above. Set `SMOKE_SECURITY_HEADERS=false` or
 `SMOKE_FIREBASE_RULES=false` only when intentionally narrowing a diagnostic run.
 
-The `Production Smoke` GitHub Actions workflow runs the same command and uploads
-`artifacts/production-smoke-report.json`. Successful deployments to the `staging`
-environment run staging smoke automatically; production remains a manual
-`workflow_dispatch` gate. Configure one target URL before running it:
+The `Production Smoke` workflow uploads `artifacts/production-smoke-report.json`.
+Successful `staging` and `production` deployments trigger it automatically;
+production uses non-destructive checks. Authenticated, rules-writing, provider,
+and deletion checks remain manual approval options. Configure the target URLs:
 
 - `vars.IROGUIDE_STAGING_URL` or `secrets.IROGUIDE_STAGING_URL`
 - `vars.IROGUIDE_PRODUCTION_URL` or `secrets.IROGUIDE_PRODUCTION_URL`
@@ -119,7 +121,11 @@ Production uses one server-owned switch for paid or externally billed capabiliti
 IROGUIDE_LAUNCH_PROFILE=free
 ```
 
-`free` disables new AI critiques, Firebase source-image operations, and Resend delivery while preserving Firebase authentication, Firestore text history/drafts, bug-report storage, profile controls, documentation, and readable Community content. Missing or invalid production values fail closed to `free`; credentials never enable a capability by themselves.
+`free` disables new AI critiques, source-image creation/reads, Resend delivery,
+and Community. It preserves Firebase authentication, owned critique text and
+drafts, compatible progress, bug-report storage, profile controls, deletion,
+and documentation. Historical image deletion still runs. Missing or invalid
+production values fail closed to `free`; credentials never enable a capability.
 
 Do not set `full` until all of these are ready and explicitly approved:
 
@@ -129,13 +135,16 @@ Do not set `full` until all of these are ready and explicitly approved:
 - verified Resend sender/recipient configuration;
 - green enabled-path Playwright, security smoke, and capability-driven production smoke results.
 
+Community remains gated even in `full`; it requires a separate product, safety,
+rules, moderation, and operational approval.
+
 The production smoke reads `/api/readiness` once and treats its capability object as the oracle. Free mode positively verifies a `403` generation denial and Firestore isolation without contacting paid services; full mode verifies an entitled successful review plus Storage isolation.
 
 ## Live vision setup
 
 Local development may use demo mode. Production review requests fail clearly
-until live vision credentials are configured.
-To enable live pixel analysis, set these deployment environment variables:
+while the free profile is active. These values are for a separately approved
+provider-enabled environment; credentials alone do not activate critique:
 
 ```powershell
 IROGUIDE_REVIEW_PROVIDER=openrouter
@@ -145,9 +154,9 @@ OPENROUTER_SITE_URL=https://iroguide.com
 OPENROUTER_APP_NAME=IroGuide
 ```
 
-Do not commit `OPENROUTER_API_KEY`. Add it through your hosting provider's
-secret/environment settings, then redeploy. Successful live reviews show the
-`Live vision critique` banner instead of `Local demo mode`.
+Do not commit `OPENROUTER_API_KEY`. Provider budget, direct upload, durable job,
+evaluation, entitlement, and rollback gates must pass before a production
+profile change.
 
 ## Architecture notes
 

@@ -1,40 +1,40 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight, Layers3, MessageSquareText, Palette, ScanLine } from "lucide-react";
+import { ArrowRight, BookOpen, Layers3, LayoutDashboard, ScanLine } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 const projects = [
   {
-    title: "AI Design Review",
-    href: "/review/new",
-    icon: ScanLine,
-    copy: "Upload creative work and receive structured critique across composition, hierarchy, typography, color, and audience fit.",
+    title: "Private Workspace",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    copy: "Available now — keep owned critique text, drafts, progress evidence, and data controls in one signed-in workspace.",
   },
   {
-    title: "Improvement Planning",
+    title: "Design Review",
     href: "/review/new",
-    icon: MessageSquareText,
-    copy: "Turn a critique into prioritized actions so the next version has a clear design direction.",
+    icon: ScanLine,
+    copy: "Gated for the free launch — inspect the workflow and activation requirements without sending a design to a provider.",
   },
   {
     title: "Portfolio Workshop",
     href: "/portfolio",
     icon: Layers3,
-    copy: "Shape critique history into stronger project stories for a future public portfolio workflow.",
+    copy: "Private concept — shape owned critique history into stronger project stories without public publishing.",
   },
   {
-    title: "Creative Community",
-    href: "/community",
-    icon: Palette,
-    copy: "Practice giving and receiving more specific feedback with structured community critique concepts.",
+    title: "Design Learning Guide",
+    href: "/docs",
+    icon: BookOpen,
+    copy: "Available now — understand the what, why, and how critique model, privacy boundary, and staged launch.",
   },
 ] as const;
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} Projects`,
   description:
-    "Official IroGuide projects, including AI design review, improvement planning, portfolio workflows, and creative community critique.",
+    "Official IroGuide product areas with clear availability for the private workspace, design review, portfolio preparation, and learning guide.",
   alternates: {
     canonical: "/projects",
   },
@@ -51,7 +51,7 @@ export default function ProjectsPage() {
         <section className="official-hero">
           <p className="eyebrow"><Layers3 /> IroGuide projects</p>
           <h1>Official IroGuide product areas and creative workflows.</h1>
-          <p>Explore the active parts of IroGuide: design critique, improvement planning, portfolio preparation, and structured community feedback.</p>
+          <p>See what is available now, what remains private or gated, and where the critique learning loop is heading next.</p>
         </section>
         <section className="project-list" aria-label="IroGuide project areas">
           {projects.map((project) => {
