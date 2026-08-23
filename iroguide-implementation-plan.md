@@ -583,6 +583,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** insights are based on comparable trusted evidence; users can understand progress without fake or incompatible score comparisons.
 
+**Implementation record (2026-08-24):** progress now exposes an explicit empty/baseline/comparable evidence state, requires two compatible server-verified reviews for trend and recurring-area claims, counts excluded evidence, detects recurring issue categories, and supports deterministic cursor continuation. Dashboard cards no longer render zero or unsupported strongest/practice claims when evidence is insufficient. Private case-study drafts require owner-matched server-verified evidence, trace every claim to a source, leave outcomes empty without a trusted comparison, and keep export/publishing disabled. `docs/retention-evidence-model.md` records compatibility, sample-count, event-privacy, and future consent boundaries.
+
 ### Phase 5: Community
 
 **Objective:** Prepare safe optional sharing while keeping it gated until explicitly approved.
@@ -809,7 +811,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop and Trusted Review Pipeline.
   - Risks: An unrepresentative sample set can overstate readiness.
 
-- [ ] `TASK-013` — Make progress insights provenance-aware
+- [x] `TASK-013` — Make progress insights provenance-aware
   - Purpose: Prevent misleading trends across incompatible review versions or demo/live sources.
   - Dependencies: RISK-007, reliable stored provenance, and repeated review data.
   - Expected output: Compatibility rules, ordered/cursor-backed history, sample-count policy, and updated progress calculations.
@@ -818,7 +820,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Conservative filtering may temporarily reduce visible dashboard insights.
 
-- [ ] `TASK-014` — Prepare private portfolio evidence
+- [x] `TASK-014` — Prepare private portfolio evidence
   - Purpose: Convert verified before/after learning into freelancer value without public publishing.
   - Dependencies: TASK-009 activation and trusted comparison history.
   - Expected output: Private case-study structure and export/privacy decision proposal.

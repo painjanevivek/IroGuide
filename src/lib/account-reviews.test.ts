@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import type { ReviewRequest } from "@/domain/review";
 import { createStoredReviewDocument } from "@/lib/review-persistence";
-import { getProgressEvidence, isAccountReviewPublishable, mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
+import { getProgressCohort, getProgressEvidence, isAccountReviewPublishable, mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
 
 const request: ReviewRequest = {
   category: "logo",
@@ -95,5 +95,9 @@ describe("account reviews", () => {
 
     expect(getProgressEvidence([unverified, wrongProvider, wrongCategory, compatible, latest]).map((review) => review.id))
       .toEqual(["latest", "compatible"]);
+    expect(getProgressCohort([unverified, wrongProvider, wrongCategory, compatible, latest])).toMatchObject({
+      excludedCount: 3,
+      reason: expect.stringContaining("2 compatible Logo reviews"),
+    });
   });
 });

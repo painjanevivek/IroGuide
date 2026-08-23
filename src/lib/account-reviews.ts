@@ -1,4 +1,4 @@
-import { documentId, limit, orderBy, type DocumentData, type QueryConstraint, type QueryDocumentSnapshot } from "firebase/firestore";
+import { documentId, limit, orderBy, startAfter, type DocumentData, type QueryConstraint, type QueryDocumentSnapshot } from "firebase/firestore";
 import { categoryLabels, reviewOutputSchema, reviewSourceImageSchema, type ReviewCategory, type ReviewOutput, type ReviewSourceImage } from "@/domain/review";
 import type { ProgressReview } from "@/domain/progress";
 import { getReviewTrustState, type ReviewTrustState } from "@/domain/review-storage";
@@ -12,15 +12,17 @@ export type AccountStoredReview = ReviewOutput & ProgressReview & {
   sourceImage?: ReviewSourceImage;
   syncState?: StoredReviewDocument["syncState"];
   trustState: ReviewTrustState;
+  userId?: string;
 };
 
 export const DEFAULT_ACCOUNT_REVIEW_LIMIT = 12;
 export const ACCOUNT_REVIEW_QUERY_LIMIT = 30;
 
-export function accountReviewQueryConstraints(): QueryConstraint[] {
+export function accountReviewQueryConstraints(cursor?: QueryDocumentSnapshot<DocumentData>): QueryConstraint[] {
   return [
     orderBy("savedAt", "desc"),
     orderBy(documentId(), "desc"),
+    ...(cursor ? [startAfter(cursor)] : []),
     limit(ACCOUNT_REVIEW_QUERY_LIMIT),
   ];
 }
@@ -45,6 +47,7 @@ export function toAccountStoredReview(id: string, data: DocumentData): AccountSt
     : undefined;
   const parsedSourceImage = reviewSourceImageSchema.safeParse(data.sourceImage);
   const syncState = data.syncState === "local" || data.syncState === "cloud" ? data.syncState : undefined;
+  const userId = typeof data.userId === "string" ? data.userId : undefined;
   return {
     ...parsed.data,
     category,
@@ -58,6 +61,7 @@ export function toAccountStoredReview(id: string, data: DocumentData): AccountSt
       review: parsed.data,
       status: data.status,
     }),
+    ...(userId ? { userId } : {}),
   };
 }
 
@@ -91,17 +95,28 @@ export function isAccountReviewPublishable(review: AccountStoredReview) {
 }
 
 export function getProgressEvidence(reviews: AccountStoredReview[]) {
+  return getProgressCohort(reviews).evidence;
+}
+
+export function getProgressCohort(reviews: AccountStoredReview[]) {
   const verified = reviews
     .filter((review) => review.trustState === "server-verified" && review.category)
     .sort(sortReviewsNewestFirst);
   const anchor = verified[0];
-  if (!anchor?.category) return [];
+  if (!anchor?.category) return { evidence: [], excludedCount: reviews.length, reason: "No server-verified review with category provenance is available." } as const;
   const anchorDimensions = getDimensionSignature(anchor);
 
-  return verified.filter((review) => review.category === anchor.category
+  const evidence = verified.filter((review) => review.category === anchor.category
     && review.provider === anchor.provider
     && review.rubricVersion === anchor.rubricVersion
     && getDimensionSignature(review) === anchorDimensions);
+  return {
+    evidence,
+    excludedCount: reviews.length - evidence.length,
+    reason: evidence.length < 2
+      ? "Add one more compatible, server-verified review to unlock trend and recurring-area claims."
+      : `${evidence.length} compatible ${anchor.categoryLabel ?? anchor.category} reviews use ${anchor.provider} and rubric ${anchor.rubricVersion}.`,
+  } as const;
 }
 
 function sortReviewsNewestFirst(left: AccountStoredReview, right: AccountStoredReview) {

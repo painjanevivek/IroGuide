@@ -18,7 +18,7 @@ import { useLaunchCapabilities } from "@/features/capabilities/launch-capabiliti
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
-import { getProgressEvidence, mergeAccountReviews } from "@/lib/account-reviews";
+import { getProgressCohort, mergeAccountReviews } from "@/lib/account-reviews";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
@@ -97,7 +97,8 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  const progress = calculateProgress(getProgressEvidence(reviews));
+  const progressCohort = getProgressCohort(reviews);
+  const progress = calculateProgress(progressCohort.evidence);
   const recentReview = getRecentReviewSummary(reviews);
   const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
@@ -177,14 +178,14 @@ export function Dashboard() {
           )}
           <section aria-label="Design progress summary">
             <Stagger className="progress-grid">
-              <StaggerItem><article><span>Total reviews</span><strong>{progress.totalReviews}</strong><p>Critiques saved to your workspace</p></article></StaggerItem>
-              <StaggerItem><article className="metric-violet"><span>Average score</span><strong>{progress.averageScore}<small>/10</small></strong><p>{progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article></StaggerItem>
-              <StaggerItem><article><span>Strongest area</span><strong className="metric-word">{progress.strongest?.label}</strong><p>{progress.strongest?.score}/10 average</p></article></StaggerItem>
-              <StaggerItem><article className="metric-coral"><span>Practice next</span><strong className="metric-word">{progress.weakest?.label}</strong><p>{progress.weakest?.score}/10 average</p></article></StaggerItem>
+              <StaggerItem><article><span>Comparable reviews</span><strong>{progress.totalReviews}</strong><p>{progressCohort.excludedCount > 0 ? `${progressCohort.excludedCount} incompatible or unverified excluded` : "Server-verified evidence cohort"}</p></article></StaggerItem>
+              <StaggerItem><article className="metric-violet"><span>Average score</span><strong>{progress.totalReviews > 0 ? <>{progress.averageScore}<small>/10</small></> : "—"}</strong><p>{progress.totalReviews === 0 ? "No compatible verified evidence" : progress.scoreChange === null ? "Build a baseline with one more review" : `${progress.scoreChange >= 0 ? "+" : ""}${progress.scoreChange} since your first review`}</p></article></StaggerItem>
+              <StaggerItem><article><span>Strongest area</span><strong className="metric-word">{progress.strongest?.label ?? "More evidence"}</strong><p>{progress.strongest ? `${progress.strongest.score}/10 compatible average` : "Needs 2 compatible reviews"}</p></article></StaggerItem>
+              <StaggerItem><article className="metric-coral"><span>Practice next</span><strong className="metric-word">{progress.weakest?.label ?? "Baseline first"}</strong><p>{progress.weakest ? `${progress.weakest.score}/10 compatible average` : "No unsupported recommendation"}</p></article></StaggerItem>
             </Stagger>
           </section>
           <Reveal delay={0.12}>
-            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">PERSONALIZED PRACTICE</span><h2>One useful constraint.</h2><p>{progress.lesson}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}</div><Link href="/review/new">{aiCritique ? "Practice with a new design" : "Review availability"} <ArrowRight /></Link></section>
+            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">VERIFIED LEARNING EVIDENCE</span><h2>{progress.evidenceState === "comparable" ? "One useful constraint." : "Build a trustworthy baseline."}</h2><p>{progress.evidenceState === "comparable" ? progress.lesson : progressCohort.reason}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}{progress.recurringIssues.length > 0 && <ul className="insight-list">{progress.recurringIssues.map((issue) => <li key={issue.category}>{issue.category} recurred in {issue.count} compatible reviews.</li>)}</ul>}</div><Link href="/review/new">{aiCritique ? "Practice with a new design" : "Review availability"} <ArrowRight /></Link></section>
           </Reveal>
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>

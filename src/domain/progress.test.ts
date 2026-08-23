@@ -22,7 +22,8 @@ describe("calculateProgress", () => {
 
     expect(summary.averageScore).toBe(7.4);
     expect(summary.scoreChange).toBeNull();
-    expect(summary.strongest?.label).toBe("Hierarchy");
+    expect(summary.strongest).toBeNull();
+    expect(summary.evidenceState).toBe("baseline");
     expect(summary.insights[0]).toContain("baseline");
   });
 
@@ -35,6 +36,7 @@ describe("calculateProgress", () => {
           { label: "Color", score: 8 },
           { label: "Hierarchy", score: 5 },
         ],
+        issues: [{ category: "Hierarchy" }],
       },
       {
         overallScore: 6,
@@ -43,12 +45,15 @@ describe("calculateProgress", () => {
           { label: "Color", score: 7 },
           { label: "Hierarchy", score: 4 },
         ],
+        issues: [{ category: "Hierarchy" }],
       },
     ]);
 
     expect(summary.scoreChange).toBe(1);
     expect(summary.strongest?.label).toBe("Color");
     expect(summary.weakest?.label).toBe("Hierarchy");
+    expect(summary.evidenceState).toBe("comparable");
+    expect(summary.recurringIssues).toEqual([{ category: "Hierarchy", count: 2 }]);
     expect(summary.insights).toContain("Your overall score changed by +1 points from first to latest review.");
     expect(summary.insights).toContain("Hierarchy is your recurring weak spot at 4.5/10 average.");
   });
