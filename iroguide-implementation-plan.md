@@ -597,6 +597,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** all Community gates in Section 16 pass and the launch decision is separately approved.
 
+**Implementation record (2026-08-24):** the Community safety workstream is complete as a preparation and enforcement gate, not as an activation. Strict contracts define the public projection, reports, moderation actions, consent state, and a machine-testable launch decision across sixteen implementation/operating proofs plus named ownership and separate approvals. The safety specification covers author/comment deletion, block behavior, appeals, immutable audit events, abuse limits, deletion propagation, hot-counter repair, incident response, and controlled rollout. Existing UI/API/rules denials remain authoritative. Because moderation staffing, operational tooling, load evidence, end-to-end workflows, and approvals do not yet exist, the Phase 5 activation criterion intentionally remains unsatisfied and Community remains closed.
+
 ### Phase 6: Monetization
 
 **Objective:** Introduce payment only after value, cost, support, and safety are demonstrated.
@@ -829,7 +831,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Portfolio copy could imply outcomes or authorship not established by the review data.
 
-- [ ] `TASK-015` — Specify Community safety and moderation
+- [x] `TASK-015` — Specify Community safety and moderation
   - Purpose: Define the gate required before activating existing Community functionality.
   - Dependencies: Retention evidence and policy direction.
   - Expected output: Public projection, consent, author edit/delete, comment delete, report, block, moderator removal, appeals, audit log, abuse, deletion propagation, hot-counter strategy, and incident contracts.
