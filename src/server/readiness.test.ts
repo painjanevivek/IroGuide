@@ -6,6 +6,7 @@ const freeCapabilities: LaunchCapabilities = {
   profile: "free",
   aiCritique: false,
   bugReportEmail: false,
+  community: false,
   sourceImageStorage: false,
 };
 
@@ -13,12 +14,14 @@ const fullCapabilities: LaunchCapabilities = {
   profile: "full",
   aiCritique: true,
   bugReportEmail: true,
+  community: false,
   sourceImageStorage: true,
 };
 
 const healthyChecks = {
   accountStorage: true,
   bugReportEmail: true,
+  clientIdentity: true,
   firebaseProjectMatch: true,
   liveVision: true,
   sourceImageStorage: true,
@@ -37,7 +40,7 @@ describe("readiness contract", () => {
     })).toMatchObject({ ok: true, capabilities: freeCapabilities });
   });
 
-  it.each(["accountStorage", "firebaseProjectMatch"] as const)("requires core check %s in free mode", (check) => {
+  it.each(["accountStorage", "clientIdentity", "firebaseProjectMatch"] as const)("requires core check %s in free mode", (check) => {
     const result = buildReadiness({
       capabilities: freeCapabilities,
       checks: {

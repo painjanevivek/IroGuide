@@ -10,10 +10,10 @@ import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
 
 const PROJECT_ID = "demo-iroguide-rules";
 const REVIEW_ID = "review-alpha";
-const DRAFT_ID = "draft-alpha";
 const COMMUNITY_POST_ID = "post-alpha";
 const OWNER_UID = "user-a";
 const OTHER_UID = "user-b";
+const DRAFT_ID = `${OWNER_UID}_active`;
 
 let testEnv: RulesTestEnvironment;
 
@@ -107,9 +107,11 @@ describe("Firebase security rules", () => {
     await assertFails(testEnv.unauthenticatedContext().firestore().doc(`reviewDrafts/${DRAFT_ID}`).get());
   });
 
-  it("allows only bounded owner-authored draft and imported records", async () => {
+  it("allows only the exact UID-bound active draft path", async () => {
     await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set(validDraftRecord()));
-    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/import-alpha").set(validImportedRecord()));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/import-alpha").set(validImportedRecord()));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc("reviewDrafts/arbitrary").set(validDraftRecord()));
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${OTHER_UID}_active`).set(validDraftRecord()));
 
     await assertFails(authenticatedFirestore(OTHER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set(validDraftRecord()));
 
@@ -117,6 +119,13 @@ describe("Firebase security rules", () => {
       ...validDraftRecord(),
       userId: OTHER_UID,
     }));
+
+    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set({
+      ...validDraftRecord(),
+      step: 3,
+    }, { merge: true }));
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(`reviewDrafts/${DRAFT_ID}`).delete());
+    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).delete());
   });
 
   it("rejects trust claims and unexpected fields in draft storage", async () => {
@@ -148,7 +157,7 @@ describe("Firebase security rules", () => {
     }));
   });
 
-  it("allows signed-in users to read public community data but not write it directly", async () => {
+  it("denies live community reads and writes while the capability is gated", async () => {
     await seedFirestoreDocument(`communityPosts/${COMMUNITY_POST_ID}`, {
       authorId: OWNER_UID,
       visibility: "public",
@@ -160,8 +169,8 @@ describe("Firebase security rules", () => {
       body: "Useful feedback",
     });
 
-    await assertSucceeds(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}`).get());
-    await assertSucceeds(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-alpha`).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}`).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-alpha`).get());
     await assertFails(testEnv.unauthenticatedContext().firestore().doc(`communityPosts/${COMMUNITY_POST_ID}`).get());
     await assertFails(authenticatedFirestore(OWNER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}`).update({ "stats.likes": 999 }));
     await assertFails(authenticatedFirestore(OTHER_UID).doc(`communityPosts/${COMMUNITY_POST_ID}/comments/comment-beta`).set({
@@ -171,7 +180,7 @@ describe("Firebase security rules", () => {
     }));
   });
 
-  it("keeps community interactions private to their owner and server-written", async () => {
+  it("denies community interaction reads and writes while gated", async () => {
     const interactionPath = `communityPosts/${COMMUNITY_POST_ID}/interactions/${OWNER_UID}`;
     await seedFirestoreDocument(`communityPosts/${COMMUNITY_POST_ID}`, {
       authorId: OWNER_UID,
@@ -180,7 +189,7 @@ describe("Firebase security rules", () => {
     });
     await seedFirestoreDocument(interactionPath, { userId: OWNER_UID, liked: true });
 
-    await assertSucceeds(authenticatedFirestore(OWNER_UID).doc(interactionPath).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(interactionPath).get());
     await assertFails(authenticatedFirestore(OTHER_UID).doc(interactionPath).get());
     await assertFails(authenticatedFirestore(OWNER_UID).doc(interactionPath).set({ userId: OWNER_UID, liked: false }));
   });

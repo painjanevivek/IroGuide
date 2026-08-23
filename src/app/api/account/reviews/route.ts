@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { enforceSameOriginRequest } from "@/server/api-security";
+import { enforceSameOriginRequest, requireTrustedClientKey } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyRecentFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
-import { deleteReviewDataForUser } from "@/server/review-storage";
+import { deleteReviewDataForUser, ReviewDeletionIncompleteError } from "@/server/review-storage";
 
 const REVIEW_PURGE_RATE_LIMIT = { limit: 6, windowMs: 10 * 60 * 1000 };
 
@@ -22,8 +22,10 @@ export async function DELETE(request: Request) {
 
   try {
     const decodedToken = await verifyRecentFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+    const identity = requireTrustedClientKey(request, context, "account_reviews_delete");
+    if ("response" in identity) return identity.response;
     const rateLimit = await checkRateLimit({
-      key: `account-reviews-delete:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+      key: `account-reviews-delete:${decodedToken.uid}:${identity.key}`,
       ...REVIEW_PURGE_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {
@@ -37,6 +39,7 @@ export async function DELETE(request: Request) {
     const result = await deleteReviewDataForUser(decodedToken.uid);
     logRequestEvent("info", "account_reviews_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
+      feedbackDeleted: result.feedbackDeleted,
       reviewsDeleted: result.reviewsDeleted,
       sourceImagesDeleted: result.sourceImagesDeleted,
       user: toLogSafeUserId(decodedToken.uid),
@@ -44,6 +47,15 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ deleted: true, ...result }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
+    if (error instanceof ReviewDeletionIncompleteError) {
+      logRequestEvent("error", "account_reviews_delete.cleanup_incomplete", context, {
+        failedOperations: error.result.failures.length,
+      });
+      return NextResponse.json(
+        { deleted: false, ...error.result },
+        { status: 503, headers: jsonHeaders(context) },
+      );
+    }
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "account_reviews_delete.admin_unavailable", context);
       return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });

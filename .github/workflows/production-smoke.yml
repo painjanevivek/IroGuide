@@ -37,23 +37,23 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-smoke-${{ github.event_name == 'deployment_status' && 'staging' || inputs.target }}
+  group: production-smoke-${{ github.event_name == 'deployment_status' && github.event.deployment.environment || inputs.target }}
   cancel-in-progress: true
 
 jobs:
   smoke:
-    name: ${{ github.event_name == 'workflow_dispatch' && inputs.target == 'production' && 'Production smoke gate' || 'Staging smoke gate' }}
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'staging')
+    name: ${{ ((github.event_name == 'workflow_dispatch' && inputs.target == 'production') || (github.event_name == 'deployment_status' && github.event.deployment.environment == 'production')) && 'Production smoke gate' || 'Staging smoke gate' }}
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && (github.event.deployment.environment == 'staging' || github.event.deployment.environment == 'production'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      SMOKE_TARGET: ${{ github.event_name == 'deployment_status' && 'staging' || inputs.target }}
+      SMOKE_TARGET: ${{ github.event_name == 'deployment_status' && github.event.deployment.environment || inputs.target }}
       STAGING_SMOKE_BASE_URL: ${{ vars.IROGUIDE_STAGING_URL || secrets.IROGUIDE_STAGING_URL }}
       PRODUCTION_SMOKE_BASE_URL: ${{ vars.IROGUIDE_PRODUCTION_URL || secrets.IROGUIDE_PRODUCTION_URL }}
       SMOKE_REPORT_PATH: artifacts/production-smoke-report.json
       SMOKE_REQUIRE_READY: ${{ github.event_name == 'deployment_status' && 'true' || inputs.require_ready }}
-      SMOKE_AUTHENTICATED_REVIEW: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_authenticated_review }}
-      SMOKE_FIREBASE_RULES: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_firebase_rules }}
+      SMOKE_AUTHENTICATED_REVIEW: ${{ github.event_name == 'deployment_status' && github.event.deployment.environment == 'staging' && 'true' || github.event_name == 'deployment_status' && 'false' || inputs.run_authenticated_review }}
+      SMOKE_FIREBASE_RULES: ${{ github.event_name == 'deployment_status' && github.event.deployment.environment == 'staging' && 'true' || github.event_name == 'deployment_status' && 'false' || inputs.run_firebase_rules }}
       SMOKE_SECURITY_HEADERS: ${{ github.event_name == 'deployment_status' && 'true' || inputs.run_security_headers }}
       SMOKE_LAUNCH_PROFILE: ${{ vars.IROGUIDE_LAUNCH_PROFILE || 'free' }}
       NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
@@ -92,14 +92,16 @@ jobs:
           if [ -z "${smoke_base_url}" ]; then
             missing+=("${url_name}")
           fi
-          if [ -z "${NEXT_PUBLIC_FIREBASE_API_KEY}" ]; then
-            missing+=("secrets.NEXT_PUBLIC_FIREBASE_API_KEY")
+          if [ "${SMOKE_AUTHENTICATED_REVIEW}" = "true" ] || [ "${SMOKE_FIREBASE_RULES}" = "true" ]; then
+            if [ -z "${NEXT_PUBLIC_FIREBASE_API_KEY}" ]; then
+              missing+=("secrets.NEXT_PUBLIC_FIREBASE_API_KEY")
+            fi
+            if [ -z "${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" ]; then
+              missing+=("vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID or secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID")
+            fi
           fi
-          if [ -z "${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" ]; then
-            missing+=("vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID or secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID")
-          fi
-          if [ -z "${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" ] && [ -z "${FIREBASE_ADMIN_STORAGE_BUCKET}" ]; then
-            missing+=("vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, vars.FIREBASE_ADMIN_STORAGE_BUCKET, or secrets.FIREBASE_ADMIN_STORAGE_BUCKET")
+          if [ "${SMOKE_FIREBASE_RULES}" = "true" ] && [ -z "${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" ] && [ -z "${FIREBASE_ADMIN_STORAGE_BUCKET}" ]; then
+            missing+=("vars.IROGUIDE_FIREBASE_STORAGE_BUCKET or its secret equivalent")
           fi
 
           has_admin_bundle=false
@@ -112,7 +114,7 @@ jobs:
             has_admin_split=true
           fi
 
-          if [ "${has_admin_bundle}" != "true" ] && [ "${has_admin_split}" != "true" ]; then
+          if { [ "${SMOKE_AUTHENTICATED_REVIEW}" = "true" ] || [ "${SMOKE_FIREBASE_RULES}" = "true" ]; } && [ "${has_admin_bundle}" != "true" ] && [ "${has_admin_split}" != "true" ]; then
             missing+=("secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_BASE64, secrets.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON, or split vars.FIREBASE_ADMIN_PROJECT_ID/secrets.FIREBASE_ADMIN_PROJECT_ID with secrets.FIREBASE_ADMIN_CLIENT_EMAIL and secrets.FIREBASE_ADMIN_PRIVATE_KEY")
           fi
 

@@ -39,6 +39,8 @@ type SecurityGateResult = {
   response: NextResponse;
 };
 
+type ClientIdentityResult = { key: string } | { response: NextResponse };
+
 const JSON_CONTENT_TYPES = new Set(["application/json"]);
 
 export function enforceSameOriginRequest(
@@ -136,8 +138,10 @@ export async function enforceRateLimit({
   request,
   windowMs,
 }: RateLimitOptions): Promise<RateLimitCheck> {
+  const identity = requireTrustedClientKey(request, context, eventPrefix);
+  if ("response" in identity) return identity;
   const result = await checkRateLimit({
-    key: `${key}:${getClientKey(request, "unknown")}`,
+    key: `${key}:${identity.key}`,
     limit,
     windowMs,
   });
@@ -149,6 +153,23 @@ export async function enforceRateLimit({
     response: NextResponse.json(
       { error: message },
       { status: 429, headers: jsonHeaders(context, getRateLimitHeaders(result)) },
+    ),
+  };
+}
+
+export function requireTrustedClientKey(
+  request: Request,
+  context: RequestContext,
+  eventPrefix: string,
+): ClientIdentityResult {
+  const key = getClientKey(request);
+  if (key) return { key };
+
+  logRequestEvent("error", `${eventPrefix}.client_identity_unavailable`, context);
+  return {
+    response: NextResponse.json(
+      { error: "This deployment is not ready to identify clients safely." },
+      { status: 503, headers: jsonHeaders(context) },
     ),
   };
 }

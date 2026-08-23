@@ -8,12 +8,12 @@ export type ReviewCategory = (typeof reviewCategories)[number];
 
 export const feedbackModes = ["friendly", "mentor", "direct"] as const;
 
-const maxImageBase64Length = Math.ceil((10 * 1024 * 1024 * 4) / 3) + 16;
+const maxImageBase64Length = Math.ceil((4 * 1024 * 1024 * 4) / 3) + 16;
 
 export const reviewFileSchema = z.object({
   name: z.string().min(1).max(180),
   type: z.enum(["image/jpeg", "image/png", "image/webp"]),
-  size: z.number().int().positive().max(10 * 1024 * 1024),
+  size: z.number().int().positive().max(4 * 1024 * 1024),
 });
 
 export const reviewBriefSchema = z.object({
@@ -32,7 +32,7 @@ export const reviewImageSchema = z.object({
 export const reviewSourceImageSchema = z.object({
   storagePath: z.string().min(1),
   contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
-  size: z.number().int().positive().max(10 * 1024 * 1024),
+  size: z.number().int().positive().max(4 * 1024 * 1024),
   originalName: z.string().min(1).max(180),
   uploadedAt: z.string().min(1),
 });

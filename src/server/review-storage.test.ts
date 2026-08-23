@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import { createImportedReviewDocument } from "@/domain/review-storage";
 import type { ReviewRequest } from "@/domain/review";
-import { deleteReviewDataForUser, saveReviewForUser, syncReviewDocumentsForUser } from "./review-storage";
+import { deleteReviewDataForUser, ReviewDeletionIncompleteError, saveReviewForUser, syncReviewDocumentsForUser } from "./review-storage";
 
 const firestoreMock = vi.hoisted(() => {
   type QueryDoc = { ref: { path: string } };
@@ -13,10 +13,11 @@ const firestoreMock = vi.hoisted(() => {
   const batchDelete = vi.fn();
   const batch = vi.fn(() => ({ commit, delete: batchDelete }));
   const get = vi.fn<() => Promise<QuerySnapshot>>(() => Promise.resolve({ docs: [], empty: true }));
-  const where = vi.fn(() => ({ get }));
+  const limit = vi.fn(() => ({ get }));
+  const where = vi.fn(() => ({ limit }));
   const collection = vi.fn(() => ({ doc, where }));
 
-  return { batch, batchDelete, collection, commit, doc, get, set, where };
+  return { batch, batchDelete, collection, commit, doc, get, limit, set, where };
 });
 
 const firestoreFieldValueMock = vi.hoisted(() => ({
@@ -69,6 +70,7 @@ describe("review storage", () => {
     firestoreMock.commit.mockClear();
     firestoreMock.doc.mockClear();
     firestoreMock.get.mockReset();
+    firestoreMock.limit.mockClear();
     firestoreMock.set.mockClear();
     firestoreMock.where.mockClear();
     firestoreFieldValueMock.serverTimestamp.mockClear();
@@ -185,12 +187,15 @@ describe("review storage", () => {
     }), { merge: true });
   });
 
-  it("deletes Firestore account data without contacting Storage in free mode", async () => {
+  it("deletes historical Storage data even after switching to free mode", async () => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
 
     const result = await deleteReviewDataForUser("verified-user");
 
-    expect(storageMock.getFiles).not.toHaveBeenCalled();
+    expect(storageMock.getFiles).toHaveBeenCalledWith({
+      maxResults: 100,
+      prefix: "users/verified-user/reviews/",
+    });
     expect(result.sourceImagesDeleted).toBe(0);
   });
 
@@ -210,8 +215,38 @@ describe("review storage", () => {
     expect(firestoreMock.where).toHaveBeenCalledWith("userId", "==", "verified-user");
     expect(firestoreMock.batchDelete).toHaveBeenCalledTimes(3);
     expect(firestoreMock.commit).toHaveBeenCalledTimes(2);
-    expect(storageMock.getFiles).toHaveBeenCalledWith({ prefix: "users/verified-user/reviews/" });
+    expect(storageMock.getFiles).toHaveBeenCalledWith({ maxResults: 100, prefix: "users/verified-user/reviews/" });
     expect(storageMock.fileDelete).toHaveBeenCalledTimes(2);
-    expect(result).toEqual({ draftsDeleted: 1, reviewsDeleted: 2, sourceImagesDeleted: 2 });
+    expect(result).toEqual({
+      draftsDeleted: 1,
+      failures: [],
+      feedbackDeleted: 0,
+      reviewsDeleted: 2,
+      sourceImagesDeleted: 2,
+      status: "complete",
+    });
+  });
+
+  it("returns retryable state and keeps other cleanup attempts visible after a partial failure", async () => {
+    vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    storageMock.getFiles.mockRejectedValueOnce(new Error("storage unavailable"));
+
+    const deletion = deleteReviewDataForUser("verified-user");
+
+    await expect(deletion).rejects.toBeInstanceOf(ReviewDeletionIncompleteError);
+    await expect(deletion).rejects.toMatchObject({
+      result: {
+        draftsDeleted: 0,
+        feedbackDeleted: 0,
+        reviewsDeleted: 0,
+        sourceImagesDeleted: 0,
+        status: "retry-required",
+        retryToken: expect.any(String),
+        failures: [{ operation: "source-images", reason: "error" }],
+      },
+    });
+    expect(firestoreMock.collection).toHaveBeenCalledWith("reviews");
+    expect(firestoreMock.collection).toHaveBeenCalledWith("reviewDrafts");
+    expect(firestoreMock.collection).toHaveBeenCalledWith("reviewFeedback");
   });
 });

@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import { randomUUID } from "node:crypto";
 import type { ReviewCategory, ReviewOutput, ReviewRequest, ReviewSourceImage } from "@/domain/review";
 import {
   createImportedReviewDocument,
@@ -22,9 +23,25 @@ export type ReviewSaveResult = {
 
 export type ReviewDeleteResult = {
   draftsDeleted: number;
+  failures: ReviewDeleteFailure[];
+  feedbackDeleted: number;
   reviewsDeleted: number;
+  retryToken?: string;
   sourceImagesDeleted: number;
+  status: "complete" | "retry-required";
 };
+
+export type ReviewDeleteFailure = {
+  operation: "drafts" | "feedback" | "reviews" | "source-images";
+  reason: string;
+};
+
+export class ReviewDeletionIncompleteError extends Error {
+  constructor(readonly result: ReviewDeleteResult) {
+    super("Review data deletion is incomplete and can be retried safely.");
+    this.name = "ReviewDeletionIncompleteError";
+  }
+}
 
 export async function saveReviewForUser({
   category,
@@ -94,15 +111,30 @@ type ReviewSyncDocumentInput = ImportedReviewDocument | {
 
 export async function deleteReviewDataForUser(userId: string): Promise<ReviewDeleteResult> {
   const db = await getFirebaseAdminFirestore();
-  const capabilities = getServerLaunchCapabilities();
-  const [reviewsDeleted, draftsDeleted, sourceImagesDeleted] = await Promise.all([
+  const operations = await Promise.allSettled([
     deleteDocumentsForUser(db, REVIEWS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_DRAFTS_COLLECTION, userId),
-    capabilities.sourceImageStorage ? deleteReviewSourceImagesForUser(userId) : Promise.resolve(0),
     deleteDocumentsForUser(db, REVIEW_FEEDBACK_COLLECTION, userId),
-  ]);
+    // Deletion is intentionally independent of the current creation capability:
+    // a free-profile account may still own images created under a former profile.
+    deleteReviewSourceImagesForUser(userId),
+  ] as const);
+  const names: ReviewDeleteFailure["operation"][] = ["reviews", "drafts", "feedback", "source-images"];
+  const failures = operations.flatMap((operation, index) => operation.status === "rejected"
+    ? [{ operation: names[index], reason: toDeletionFailureReason(operation.reason) }]
+    : []);
+  const result: ReviewDeleteResult = {
+    reviewsDeleted: getSettledCount(operations[0]),
+    draftsDeleted: getSettledCount(operations[1]),
+    feedbackDeleted: getSettledCount(operations[2]),
+    sourceImagesDeleted: getSettledCount(operations[3]),
+    failures,
+    status: failures.length === 0 ? "complete" : "retry-required",
+    ...(failures.length > 0 ? { retryToken: randomUUID() } : {}),
+  };
 
-  return { draftsDeleted, reviewsDeleted, sourceImagesDeleted };
+  if (failures.length > 0) throw new ReviewDeletionIncompleteError(result);
+  return result;
 }
 
 async function writeReviewDocument(document: TrustedStoredReviewDocument) {
@@ -197,18 +229,21 @@ function getSyncInputDocumentId(input: ReviewSyncDocumentInput | undefined) {
 }
 
 async function deleteDocumentsForUser(db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>, collectionName: string, userId: string) {
-  const snapshot = await db.collection(collectionName).where("userId", "==", userId).get();
-  if (snapshot.empty) return 0;
-
   let deleted = 0;
-  for (let start = 0; start < snapshot.docs.length; start += FIRESTORE_BATCH_LIMIT) {
+  while (true) {
+    const snapshot = await db.collection(collectionName)
+      .where("userId", "==", userId)
+      .limit(FIRESTORE_BATCH_LIMIT)
+      .get();
+    if (snapshot.empty) break;
+
     const batch = db.batch();
-    const docs = snapshot.docs.slice(start, start + FIRESTORE_BATCH_LIMIT);
-    for (const document of docs) {
+    for (const document of snapshot.docs) {
       batch.delete(document.ref);
     }
     await batch.commit();
-    deleted += docs.length;
+    deleted += snapshot.docs.length;
+    if (snapshot.docs.length < FIRESTORE_BATCH_LIMIT) break;
   }
 
   return deleted;
@@ -216,7 +251,25 @@ async function deleteDocumentsForUser(db: Awaited<ReturnType<typeof getFirebaseA
 
 async function deleteReviewSourceImagesForUser(userId: string) {
   const bucket = await getFirebaseAdminStorageBucket();
-  const [files] = await bucket.getFiles({ prefix: getUserReviewSourceImagePrefix(userId) });
-  await Promise.all(files.map((file) => file.delete({ ignoreNotFound: true })));
-  return files.length;
+  let deleted = 0;
+  while (true) {
+    const [files] = await bucket.getFiles({
+      maxResults: 100,
+      prefix: getUserReviewSourceImagePrefix(userId),
+    });
+    if (files.length === 0) break;
+    await Promise.all(files.map((file) => file.delete({ ignoreNotFound: true })));
+    deleted += files.length;
+    if (files.length < 100) break;
+  }
+  return deleted;
+}
+
+function getSettledCount(result: PromiseSettledResult<number>) {
+  return result.status === "fulfilled" ? result.value : 0;
+}
+
+function toDeletionFailureReason(error: unknown) {
+  if (!(error instanceof Error)) return "unknown";
+  return error.name.replace(/[^a-z0-9_-]/gi, "-").toLowerCase().slice(0, 80) || "error";
 }

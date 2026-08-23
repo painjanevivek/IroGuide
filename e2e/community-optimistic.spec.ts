@@ -7,6 +7,7 @@ const testPassword = process.env.E2E_PASSWORD ?? "iroguide-e2e-password";
 const e2ePostId = "e2e-community-optimistic";
 
 test.describe("community optimistic interactions", () => {
+  test.skip(true, "Community is intentionally gated until retention and safety requirements are approved.");
   test.skip(useFirebaseFlow, "Local E2E community fixtures are required for deterministic optimistic checks.");
 
   test("rolls back a failed reaction, retries, and reconciles comments after reload", async ({ page }) => {

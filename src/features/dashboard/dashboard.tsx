@@ -18,7 +18,7 @@ import { useLaunchCapabilities } from "@/features/capabilities/launch-capabiliti
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
-import { mergeAccountReviews } from "@/lib/account-reviews";
+import { getProgressEvidence, mergeAccountReviews } from "@/lib/account-reviews";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
@@ -97,7 +97,7 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  const progress = calculateProgress(reviews);
+  const progress = calculateProgress(getProgressEvidence(reviews));
   const recentReview = getRecentReviewSummary(reviews);
   const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);

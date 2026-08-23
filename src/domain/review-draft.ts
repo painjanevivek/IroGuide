@@ -11,7 +11,7 @@ export const reviewDraftSchema = z.object({
   file: z.object({
     name: z.string().min(1).max(180),
     type: z.enum(["image/jpeg", "image/png", "image/webp"]),
-    size: z.number().int().positive().max(10 * 1024 * 1024),
+    size: z.number().int().positive().max(4 * 1024 * 1024),
   }).optional(),
   brief: z.object({
     audience: z.string().max(300),

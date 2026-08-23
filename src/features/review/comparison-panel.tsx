@@ -9,7 +9,7 @@ import type { ReviewOutput } from "@/domain/review";
 import { useAuth } from "@/features/auth/auth-provider";
 import { postJsonWithFallback } from "@/lib/api-client";
 
-const MAX_SIZE = 10 * 1024 * 1024;
+const MAX_SIZE = 4 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const COMPARISON_STEPS = [
   { title: "Checking revision", detail: "Confirming the revised image metadata and signed-in session." },
@@ -37,7 +37,7 @@ export function ComparisonPanel({ review, originalPreview }: { review: ReviewOut
     setComparison(null);
     if (!candidate) return;
     if (!ACCEPTED.includes(candidate.type)) { setError("Choose a PNG, JPEG, or WebP revised image."); return; }
-    if (candidate.size > MAX_SIZE) { setError("This revision is larger than the 10 MB limit."); return; }
+    if (candidate.size > MAX_SIZE) { setError("This revision is larger than the 4 MB limit."); return; }
     if (candidate.size === 0) { setError("This revision appears to be empty."); return; }
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     const nextPreview = URL.createObjectURL(candidate);

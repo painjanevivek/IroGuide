@@ -53,6 +53,7 @@ async function main() {
 
   await expectStatus("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }, 401);
   await expectStatus("/api/reviews/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{\"documents\":[]}" }, 401);
+  await expectStatus("/api/community", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }, 404);
   const smokeExpectations = await checkReadiness();
 
   if (runFirebaseRules) {

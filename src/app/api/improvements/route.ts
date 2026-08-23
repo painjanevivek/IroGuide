@@ -5,6 +5,7 @@ import { improvementRequestSchema } from "@/domain/improvement";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
+import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
 const IMPROVEMENT_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 };
 
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   if ("response" in rateLimit) return rateLimit.response;
 
   try {
-    const body: unknown = await request.json();
+    const body = await readJsonBody(request, REQUEST_BODY_LIMITS.reviewExtensionJson);
     const parsed = improvementRequestSchema.parse(body);
     logRequestEvent("info", "improvement.created", context, {
       provider: "demo",
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(createDemoImprovementPlan(parsed), { headers: jsonHeaders(context) });
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }

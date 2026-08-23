@@ -18,10 +18,10 @@ vi.mock("@/server/community-storage", () => ({
 }));
 
 import { requireVerifiedFirebaseUser } from "@/server/api-security";
-import { CommunityMutationError, mutateCommunity } from "@/server/community-storage";
+import { mutateCommunity } from "@/server/community-storage";
 import { POST } from "./route";
 
-describe("community publication errors", () => {
+describe("community launch gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireVerifiedFirebaseUser).mockResolvedValue({
@@ -30,17 +30,15 @@ describe("community publication errors", () => {
     });
   });
 
-  it("returns 409 for an owned review without trusted provenance", async () => {
-    vi.mocked(mutateCommunity).mockRejectedValue(
-      new CommunityMutationError("This critique is private but cannot be published as trusted.", 409),
-    );
-
+  it("returns unavailable before authentication or mutation work", async () => {
     const response = await POST(createRequest());
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
-      error: "This critique is private but cannot be published as trusted.",
+      error: "Community is not available in the current launch profile.",
     });
+    expect(requireVerifiedFirebaseUser).not.toHaveBeenCalled();
+    expect(mutateCommunity).not.toHaveBeenCalled();
   });
 });
 

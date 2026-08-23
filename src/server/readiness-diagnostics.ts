@@ -3,6 +3,7 @@ import { getFirebaseAdminProjectId, isFirebaseAdminConfigured, isFirebaseAdminSt
 import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 import { buildReadiness } from "@/server/readiness";
 import { getReviewProviderStatus } from "@/server/review-provider";
+import { isClientIdentityConfigured } from "@/server/observability";
 
 /**
  * Detailed configuration diagnostics are privileged operational information.
@@ -16,6 +17,7 @@ export function getReadinessDiagnostics() {
   const checks = {
     accountStorage: isFirebaseAdminConfigured(),
     bugReportEmail: isBugReportEmailConfigured(),
+    clientIdentity: isClientIdentityConfigured(),
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
     sourceImageStorage: isFirebaseAdminStorageConfigured(),

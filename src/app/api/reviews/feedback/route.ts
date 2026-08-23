@@ -5,6 +5,7 @@ import { enforceRateLimit, enforceSameOriginRequest, requireContentType, require
 import { ReviewFeedbackAuthorizationError, saveReviewFindingFeedback } from "@/server/review-feedback";
 import { createRequestContext, jsonHeaders, logRequestEvent } from "@/server/observability";
 import { getRateLimitHeaders } from "@/server/rate-limit";
+import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
 const FEEDBACK_RATE_LIMIT = { limit: 20, windowMs: 60_000 };
 
@@ -30,11 +31,16 @@ export async function POST(request: Request) {
   if ("response" in rateLimit) return rateLimit.response;
 
   try {
-    const feedback = reviewFindingFeedbackSchema.parse(await request.json());
+    const feedback = reviewFindingFeedbackSchema.parse(await readJsonBody(request, REQUEST_BODY_LIMITS.communityJson));
     const saved = await saveReviewFindingFeedback(auth.user.uid, feedback);
     logRequestEvent("info", "review_feedback.saved", context, { verdict: feedback.verdict, reason: feedback.reason ?? "none" });
     return NextResponse.json({ feedback: saved }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit.result)) });
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
+    }
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Feedback details are invalid." }, { status: 400, headers: jsonHeaders(context) });
     }
