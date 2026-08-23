@@ -555,6 +555,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** no paid provider or disabled storage request occurs; permitted account capabilities remain functional; all release gates pass.
 
+**Implementation record (2026-08-24):** free-profile denials now have adversarial coverage across provider routes, Community, storage, email, body budgets, ownership rules, progress evidence, and deployment identity. Account route tests prove cleanup precedes identity deletion and partial failures remain retryable. Privileged readiness separates capability approval from account, traffic-identity, distributed rate-limit, and request-budget health; public readiness remains boolean-only. Auth client storage and review-draft persistence were extracted into focused services without changing UI behavior. `docs/free-launch-release-runbook.md` defines deployment checks, alerts, privacy boundaries, recovery, and rollback; `docs/phase-2-verification-report.md` separates reproducible local evidence from the per-deployment staging gate.
+
 ### Phase 3: Trusted Provider and Learning-Loop Preparation
 
 **Objective:** Prepare the highest-value product differentiators without activating production provider spend.
@@ -733,7 +735,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Excessive disabling could make the product feel broken instead of intentionally staged.
 
-- [ ] `TASK-005` — Complete free-profile denial-path coverage
+- [x] `TASK-005` — Complete free-profile denial-path coverage
   - Purpose: Prove that paid or disabled services cannot be invoked through client bypasses.
   - Dependencies: RISK-001 through RISK-008, TASK-002, and TASK-004.
   - Expected output: Unit, route, rules, Playwright, and smoke coverage for critique, source images, email, Community, request budgets, draft ownership, progress eligibility, and deployment identity.
@@ -742,7 +744,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline.
   - Risks: Environment-specific tests may pass locally while deployment configuration differs.
 
-- [ ] `TASK-006` — Validate permitted account behavior
+- [x] `TASK-006` — Validate permitted account behavior
   - Purpose: Protect auth, drafts, trusted review text, profile controls, deletion, and bug-report storage in free mode.
   - Dependencies: TASK-005.
   - Expected output: End-to-end free-profile account verification report.
@@ -751,7 +753,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline.
   - Risks: Storage-disabled states may produce confusing partial review cards.
 
-- [ ] `TASK-007` — Strengthen readiness and operational observability
+- [x] `TASK-007` — Strengthen readiness and operational observability
   - Purpose: Distinguish configuration, capability approval, and runtime health.
   - Dependencies: TASK-002.
   - Expected output: Updated diagnostics, privacy-safe events, deletion/job state, trusted-proxy status, request-budget status, alert conditions, and operator runbook.
@@ -760,7 +762,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline.
   - Risks: Logging too much can create privacy exposure; logging too little hides failures.
 
-- [ ] `TASK-008` — Reduce orchestration complexity in high-risk components
+- [x] `TASK-008` — Reduce orchestration complexity in high-risk components
   - Purpose: Make later capability work safer in `AuthProvider`, `ReviewStudio`, and `CommunityBoard`.
   - Dependencies: Stable behavior tests from TASK-005 and TASK-006.
   - Expected output: Focused hooks/services/state modules with unchanged user behavior.

@@ -8,6 +8,7 @@ import {
   CloudCog,
   Database,
   Eye,
+  Gauge,
   KeyRound,
   MailCheck,
   RefreshCw,
@@ -23,14 +24,25 @@ type ReadinessPayload = {
     profile: "free" | "full" | "development";
     aiCritique: boolean;
     bugReportEmail: boolean;
+    community: boolean;
     sourceImageStorage: boolean;
   };
   checks: {
     accountStorage: boolean;
     bugReportEmail: boolean;
+    clientIdentity: boolean;
     firebaseProjectMatch: boolean;
     liveVision: boolean;
+    rateLimitAdapter: boolean;
+    requestBudgets: boolean;
     sourceImageStorage: boolean;
+  };
+  operations: {
+    communityGate: "closed" | "open";
+    deletionFailureMode: "retry-required";
+    distributedRateLimitConfigured: boolean;
+    rateLimitMode: "deny" | "distributed" | "local";
+    requestBodyRoutes: number;
   };
   reviewProvider: {
     activeProvider: string;
@@ -168,7 +180,7 @@ export function ReadinessDiagnostics() {
 
   if (!diagnostics) return null;
 
-  const { firebaseChecks, supportChecks, liveReviewChecks, failingChecks, passingCount, totalCount } = diagnostics;
+  const { firebaseChecks, supportChecks, liveReviewChecks, operationalChecks, failingChecks, passingCount, totalCount } = diagnostics;
   const readinessLabel = state.payload.ok ? "Ready for launch checks" : "Needs setup";
   const statusIcon = state.payload.ok ? <CheckCircle2 /> : <AlertTriangle />;
 
@@ -241,6 +253,12 @@ export function ReadinessDiagnostics() {
           icon={<MailCheck />}
           checks={supportChecks}
         />
+        <DiagnosticGroup
+          title="Traffic safety"
+          eyebrow="IDENTITY AND BUDGETS"
+          icon={<Gauge />}
+          checks={operationalChecks}
+        />
       </div>
 
       <div className="diagnostics-details">
@@ -266,6 +284,18 @@ export function ReadinessDiagnostics() {
             <div>
               <dt>Bug report email</dt>
               <dd>{state.payload.checks.bugReportEmail ? "Configured" : "Missing"}</dd>
+            </div>
+            <div>
+              <dt>Rate-limit mode</dt>
+              <dd>{state.payload.operations.rateLimitMode}</dd>
+            </div>
+            <div>
+              <dt>Community gate</dt>
+              <dd>{state.payload.operations.communityGate}</dd>
+            </div>
+            <div>
+              <dt>Deletion failure state</dt>
+              <dd>{state.payload.operations.deletionFailureMode}</dd>
             </div>
           </dl>
         </div>
@@ -413,12 +443,43 @@ function buildDiagnostics(payload: ReadinessPayload) {
     },
   ];
 
-  const allChecks = [...firebaseChecks, ...liveReviewChecks, ...supportChecks];
+  const operationalChecks: DiagnosticItem[] = [
+    {
+      id: "client-identity",
+      label: "Trusted client identity",
+      passed: payload.checks.clientIdentity,
+      detail: payload.checks.clientIdentity
+        ? "Security-sensitive rate limits use a platform-trusted client identity."
+        : "This production runtime has no trusted client identity adapter.",
+      fix: "Run on Vercel or configure IROGUIDE_TRUST_PROXY and an approved proxy header before accepting production traffic.",
+    },
+    {
+      id: "rate-limit-adapter",
+      label: "Rate-limit adapter",
+      passed: payload.checks.rateLimitAdapter,
+      detail: payload.checks.rateLimitAdapter
+        ? `Traffic protection is operating in ${payload.operations.rateLimitMode} mode.`
+        : "Production traffic is denied because the distributed limiter is unavailable.",
+      fix: "Configure valid UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN values, then verify the readiness endpoint before launch.",
+    },
+    {
+      id: "request-budgets",
+      label: "Request-body budgets",
+      passed: payload.checks.requestBudgets,
+      detail: payload.checks.requestBudgets
+        ? `${payload.operations.requestBodyRoutes} request categories have explicit byte budgets.`
+        : "One or more request-body budgets are invalid.",
+      fix: "Restore positive, finite limits in REQUEST_BODY_LIMITS and run the bounded-body adversarial tests.",
+    },
+  ];
+
+  const allChecks = [...firebaseChecks, ...liveReviewChecks, ...supportChecks, ...operationalChecks];
 
   return {
     firebaseChecks,
     supportChecks,
     liveReviewChecks,
+    operationalChecks,
     failingChecks: allChecks.filter((check) => !check.passed),
     passingCount: allChecks.filter((check) => check.passed).length,
     totalCount: allChecks.length,
@@ -474,12 +535,22 @@ function isReadinessPayload(value: unknown): value is ReadinessPayload {
     && (value.capabilities.profile === "free" || value.capabilities.profile === "full" || value.capabilities.profile === "development")
     && typeof value.capabilities.aiCritique === "boolean"
     && typeof value.capabilities.bugReportEmail === "boolean"
+    && typeof value.capabilities.community === "boolean"
     && typeof value.capabilities.sourceImageStorage === "boolean"
     && typeof value.checks.accountStorage === "boolean"
     && typeof value.checks.bugReportEmail === "boolean"
+    && typeof value.checks.clientIdentity === "boolean"
     && typeof value.checks.firebaseProjectMatch === "boolean"
     && typeof value.checks.liveVision === "boolean"
+    && typeof value.checks.rateLimitAdapter === "boolean"
+    && typeof value.checks.requestBudgets === "boolean"
     && typeof value.checks.sourceImageStorage === "boolean"
+    && isRecord(value.operations)
+    && (value.operations.communityGate === "closed" || value.operations.communityGate === "open")
+    && value.operations.deletionFailureMode === "retry-required"
+    && typeof value.operations.distributedRateLimitConfigured === "boolean"
+    && (value.operations.rateLimitMode === "deny" || value.operations.rateLimitMode === "distributed" || value.operations.rateLimitMode === "local")
+    && typeof value.operations.requestBodyRoutes === "number"
     && typeof value.reviewProvider.activeProvider === "string"
     && typeof value.reviewProvider.configuredMode === "string"
     && typeof value.reviewProvider.endpointConfigured === "boolean"

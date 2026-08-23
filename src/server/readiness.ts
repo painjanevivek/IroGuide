@@ -6,6 +6,8 @@ export type ReadinessChecks = Readonly<{
   clientIdentity: boolean;
   firebaseProjectMatch: boolean;
   liveVision: boolean;
+  rateLimitAdapter: boolean;
+  requestBudgets: boolean;
   sourceImageStorage: boolean;
 }>;
 
@@ -16,7 +18,11 @@ export function buildReadiness({
   capabilities: LaunchCapabilities;
   checks: ReadinessChecks;
 }) {
-  const coreReady = checks.accountStorage && checks.clientIdentity && checks.firebaseProjectMatch;
+  const coreReady = checks.accountStorage
+    && checks.clientIdentity
+    && checks.firebaseProjectMatch
+    && checks.rateLimitAdapter
+    && checks.requestBudgets;
   const optionalReady = (!capabilities.aiCritique || checks.liveVision)
     && (!capabilities.bugReportEmail || checks.bugReportEmail)
     && (!capabilities.sourceImageStorage || checks.sourceImageStorage);

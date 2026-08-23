@@ -8,6 +8,14 @@ export const REQUEST_BODY_LIMITS = Object.freeze({
   reviewSyncMultipart: 4_450_000,
 });
 
+export function getRequestBodyBudgetStatus() {
+  const budgets = Object.values(REQUEST_BODY_LIMITS);
+  return {
+    configuredRoutes: budgets.length,
+    ready: budgets.every((budget) => Number.isSafeInteger(budget) && budget > 0),
+  } as const;
+}
+
 export class RequestBodyTooLargeError extends Error {
   readonly status = 413;
 

@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -19,7 +18,6 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { postFormDataWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
-import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { cacheLocalReviewSourceImage } from "@/lib/review-source-image-cache";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
@@ -29,6 +27,7 @@ import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
 import { ReviewFindingFeedback } from "./review-finding-feedback";
 import { ReviewExtensionsUnavailable, ReviewUnavailable } from "./review-unavailable";
+import { deleteActiveReviewDraft, loadActiveReviewDraft, saveActiveReviewDraft } from "./review-draft-service";
 
 const MAX_SIZE = 4 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -164,12 +163,9 @@ function ReviewStudioFlow() {
     let active = true;
     hasLoadedDraftRef.current = true;
 
-    void getDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)))
-      .then((snapshot) => {
-        if (!active || !snapshot.exists()) return;
-        const parsed = reviewDraftSchema.safeParse(snapshot.data());
-        if (!parsed.success) return;
-        const restoredDraft = parsed.data;
+    void loadActiveReviewDraft(user.uid)
+      .then((restoredDraft) => {
+        if (!active || !restoredDraft) return;
         if (file || hasBriefContent(brief)) return;
         hasNavigatedRef.current = true;
         setCategory(restoredDraft.category);
@@ -205,11 +201,7 @@ function ReviewStudioFlow() {
       if (!parsed.success) return;
 
       setDraftStatus("Saving draft...");
-      void setDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)), {
-        ...parsed.data,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true })
+      void saveActiveReviewDraft(parsed.data)
         .then(() => setDraftStatus("Draft saved to dashboard"))
         .catch(() => setDraftStatus("Draft save will retry"));
     }, DRAFT_SAVE_DELAY_MS);
@@ -586,15 +578,6 @@ async function cacheCompletedReviewForDashboard(userId: string, review: ReviewOu
         sourceImage,
         message: "Saved privately on this device as unverified. Rerun the critique when account saving is available to create a trusted copy.",
       };
-}
-
-async function deleteActiveReviewDraft(userId: string) {
-  if (isE2ELocalAuthEnabled()) return;
-  await deleteDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(userId)));
-}
-
-function getActiveReviewDraftId(userId: string) {
-  return `${userId}_active`;
 }
 
 function hasBriefContent(brief: { audience: string; purpose: string; style: string; goal: string; concern: string }) {
