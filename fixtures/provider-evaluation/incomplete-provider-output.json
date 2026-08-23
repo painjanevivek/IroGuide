@@ -1,0 +1,18 @@
+{
+  "overallScore": 8,
+  "summary": "The hierarchy needs refinement.",
+  "strengths": ["The layout is restrained."],
+  "scores": [{ "label": "Hierarchy", "score": 8 }],
+  "rubricVersion": "website-v1",
+  "issues": [
+    {
+      "category": "Hierarchy",
+      "score": 6,
+      "priority": "high",
+      "observation": "The first read is unclear."
+    }
+  ],
+  "annotations": [],
+  "checklist": [],
+  "followUps": []
+}

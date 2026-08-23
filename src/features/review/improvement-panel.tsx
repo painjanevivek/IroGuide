@@ -68,8 +68,8 @@ export function ImprovementPanel({ review }: { review: ReviewOutput }) {
       <div className="improvement-heading">
         <div>
           <p className="eyebrow light">Optional improvement tools</p>
-          <h2>Turn critique into a brief.</h2>
-          <p>Keep creative control. Generate an ordered plan and a prompt you can hand to a designer or another tool.</p>
+          <h2>Turn critique into a derived action brief.</h2>
+          <p>Keep creative control. This deterministic tool reorganizes the existing critique; it does not analyze the image again or generate new advice.</p>
         </div>
         <WandSparkles />
       </div>
@@ -78,17 +78,17 @@ export function ImprovementPanel({ review }: { review: ReviewOutput }) {
           <div>
             <Sparkles className="sparkle-blink-glow" />
             <strong>No automatic redesign</strong>
-            <p>IroGuide will first translate the critique into a controlled implementation plan. Image generation remains unavailable until a real provider is configured.</p>
+            <p>IroGuide can translate existing critique evidence into an ordered brief. The result is labeled as derived guidance, while image generation and new AI analysis remain separate capabilities.</p>
           </div>
           <button type="button" className="button button-lime" onClick={generate} disabled={loading}>
-            {loading ? <><LoaderCircle className="spin" /> Building plan...</> : <>Generate improvement plan <Sparkles /></>}
+            {loading ? <><LoaderCircle className="spin" /> Deriving brief...</> : <>Create derived action brief <Sparkles /></>}
           </button>
           {error && <p role="alert">{error}</p>}
         </div>
       ) : (
         <div className="improvement-output" aria-busy={!revealComplete}>
           <p className="improvement-generation-status" role="status" aria-live="polite">
-            {revealComplete ? "Improvement plan ready." : `Drafting section ${Math.min(visibleItemCount + 1, totalRevealItems)} of ${totalRevealItems}...`}
+            {revealComplete ? "Derived action brief ready." : `Deriving section ${Math.min(visibleItemCount + 1, totalRevealItems)} of ${totalRevealItems}...`}
           </p>
           <div className="improvement-steps">
             {visibleSteps.map((step) => (

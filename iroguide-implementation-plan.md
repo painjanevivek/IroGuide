@@ -569,6 +569,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** malformed provider output fails closed; primary and fallback calls share a deadline and idempotency boundary; redirects/resolved addresses obey egress policy; contracts are testable without a live provider; no new capability is exposed in free production.
 
+**Implementation record (2026-08-24):** provider-neutral, versioned comparison and follow-up contracts now define issue outcomes, confidence thresholds, evidence requirements, owner-context enforcement, idempotency keys, and aggregate payload limits. The improvement feature is explicitly a deterministic derived action brief with source-review provenance rather than new AI analysis. A durable review-job activation contract aligns with the existing upload/provider ADRs, and the provider-independent evaluation suite supplies executable scenarios, human scoring thresholds, blocking failures, and an activation checklist. All work remains preparation-only; free production capabilities are unchanged.
+
 ### Phase 4: Retention
 
 **Objective:** Turn repeated trusted reviews into visible learning value.
@@ -771,7 +773,7 @@ No new integration is approved by this plan.
   - Relevant visual: Trusted Review Pipeline.
   - Risks: Premature abstraction or large refactors could delay readiness.
 
-- [ ] `TASK-009` — Define the live revision-comparison contract
+- [x] `TASK-009` — Define the live revision-comparison contract
   - Purpose: Prepare the central critique-to-improvement differentiator.
   - Dependencies: RISK-007, RISK-009, trusted review provenance, and TASK-008 where relevant.
   - Expected output: Versioned request/output schema, issue-matching rules, uncertainty handling, and fixtures.
@@ -780,7 +782,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Score deltas can mislead if rubric, provider, or input context changes.
 
-- [ ] `TASK-010` — Define the contextual follow-up contract
+- [x] `TASK-010` — Define the contextual follow-up contract
   - Purpose: Make future questions useful, bounded, and review-scoped.
   - Dependencies: Trusted review ownership and provider-neutral message schema.
   - Expected output: Versioned conversation contract, rate-limit policy, persistence decision, and failure states.
@@ -789,7 +791,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Unbounded context creates cost, latency, and privacy risk.
 
-- [ ] `TASK-011` — Clarify improvement-plan semantics
+- [x] `TASK-011` — Clarify improvement-plan semantics
   - Purpose: Remove ambiguity between deterministic derived guidance and provider-generated advice.
   - Dependencies: TASK-002.
   - Expected output: Product naming decision, schema adjustment if needed, and accurate provider/provenance labeling.
@@ -798,7 +800,7 @@ No new integration is approved by this plan.
   - Relevant visual: Core Learning Loop.
   - Risks: Renaming without data-contract cleanup could leave inconsistent stored outputs.
 
-- [ ] `TASK-012` — Build a provider-independent evaluation suite
+- [x] `TASK-012` — Build a provider-independent evaluation suite
   - Purpose: Define quality before future live activation.
   - Dependencies: TASK-009 through TASK-011.
   - Expected output: Approved sample set, rubric/evidence checks, invalid and incomplete output fixtures, provenance-compatibility fixtures, and human-review guide.
