@@ -611,6 +611,8 @@ No new integration is approved by this plan.
 
 **Acceptance criteria:** payment state cannot bypass capability or ownership enforcement; billing and provider costs are observable and recoverable.
 
+**Implementation record (2026-08-24):** Phase 6 concluded with the evidence-based `NO-GO` required by the plan. `evaluateActivationDecision` makes live-provider approval depend on repeat value, quality evaluation, budget, legal/support ownership, durable jobs, direct uploads, deletion recovery, positive cost caps, and tested rollback; monetization additionally depends on provider approval and complete pricing, entitlement, webhook, tax, and cancellation specifications. The decision record documents blockers, future cost/rollback limits, incident order, and reconsideration triggers. No billing provider, checkout, entitlement, paid plan, or provider capability was activated.
+
 ## 10. Detailed Task Breakdown
 
 ### Phase 0 workstream — must complete before product tasks
@@ -840,7 +842,7 @@ No new integration is approved by this plan.
   - Relevant visual: Delivery Roadmap.
   - Risks: Moderation obligations may exceed available operating capacity.
 
-- [ ] `TASK-016` — Re-evaluate provider and monetization activation
+- [x] `TASK-016` — Re-evaluate provider and monetization activation
   - Purpose: Make a later evidence-based decision about live critique and billing.
   - Dependencies: RISK-005, RISK-008, RISK-009, observed demand, approved budget, legal review, evaluation suite, and operational readiness.
   - Expected output: Go/no-go decision record and, only if approved, separate implementation specifications.
