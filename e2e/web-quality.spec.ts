@@ -64,8 +64,13 @@ test.describe("public web quality", () => {
 
   test("offers a labelled, keyboard-operable critique preview with a review route", async ({ page }) => {
     await page.goto("/");
+    await expect.poll(() => page.locator("html").getAttribute("data-motion-enhanced")).toMatch(/^(basic|smooth)$/);
     await page.getByRole("link", { name: "Explore an example critique" }).click();
-    await expect(page.locator("#critique-preview")).toBeInViewport();
+    await expect(page).toHaveURL(/#critique-preview$/);
+    await expect.poll(() => page.locator("#critique-preview").evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.bottom > 0 && bounds.top < window.innerHeight;
+    })).toBe(true);
 
     const focusInsight = page.getByRole("button", { name: /Locate friction/i });
     await focusInsight.focus();

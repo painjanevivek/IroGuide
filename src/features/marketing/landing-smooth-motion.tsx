@@ -15,6 +15,16 @@ type LandingSmoothMotionProps = {
   children: ReactNode;
 };
 
+function getAnchorTarget(hash: string) {
+  if (!hash.startsWith("#") || hash.length === 1) return null;
+
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return null;
+  }
+}
+
 export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -29,6 +39,7 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
     const motionDisabled = reducedMotion || isSmallViewport;
     let smoother: ScrollSmoother | null = null;
     let observer: Observer | null = null;
+    let initialAnchorFrame: number | null = null;
 
     document.documentElement.dataset.motionEnhanced = motionDisabled ? "basic" : "smooth";
 
@@ -44,6 +55,14 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
         ignoreMobileResize: true,
       });
       document.documentElement.dataset.gsapSmoother = "active";
+
+      const initialTarget = getAnchorTarget(window.location.hash);
+
+      if (initialTarget) {
+        initialAnchorFrame = window.requestAnimationFrame(() => {
+          smoother?.scrollTo(initialTarget, false, "top 96px");
+        });
+      }
     }
 
     const handleAnchorClick = (event: MouseEvent) => {
@@ -53,10 +72,13 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
       const hash = link.getAttribute("href");
       if (!hash || hash === "#") return;
 
-      const target = document.querySelector(hash);
+      const target = getAnchorTarget(hash);
       if (!target) return;
 
       event.preventDefault();
+      if (window.location.hash !== hash) {
+        window.history.pushState(null, "", hash);
+      }
 
       if (motionDisabled) {
         target.scrollIntoView({ behavior: "auto", block: "start" });
@@ -64,7 +86,7 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
       }
 
       if (smoother) {
-        smoother.scrollTo(target, true, "top 96px");
+        smoother.scrollTo(target, false, "top 96px");
         return;
       }
 
@@ -96,6 +118,9 @@ export function LandingSmoothMotion({ children }: LandingSmoothMotionProps) {
 
     return () => {
       document.removeEventListener("click", handleAnchorClick);
+      if (initialAnchorFrame !== null) {
+        window.cancelAnimationFrame(initialAnchorFrame);
+      }
       observer?.kill();
       smoother?.kill();
       delete document.documentElement.dataset.gsapSmoother;

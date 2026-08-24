@@ -85,7 +85,7 @@ export function LandingPage() {
           <div className="hero-actions">
             <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" disabledLabel="Review availability" eventName="hero_review_design_click" />
             <LandingHeroAuthButton />
-            <Link className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></Link>
+            <a className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></a>
           </div>
           <div className="micro-proof">
             <span><Check size={15} /> Context-aware</span>
