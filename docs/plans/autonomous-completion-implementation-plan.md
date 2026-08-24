@@ -223,7 +223,7 @@ fix(release): record deployed free-profile verification
 - [x] `AUT-0204` Create an operator-only aggregate report for sign-in completion, dashboard return, documentation engagement, review-availability interest, deletion success, and case-study interest.
 - [x] `AUT-0205` Add a bounded feedback/research-consent workflow that does not imply live critique availability.
 - [x] `AUT-0206` Prepare cohort scripts, interview prompts, consent text, and an evidence template for beginner designers, freelancers, and UI/UX designers.
-- [ ] `AUT-0207` Run accessibility, responsive, performance, and content-honesty verification on the deployed free experience.
+- [x] `AUT-0207` Run accessibility, responsive, performance, and content-honesty verification on the deployed free experience.
 - [x] `AUT-0208` Produce a go/no-go evidence report for funding a limited provider evaluation.
 
 ### Required external inputs
@@ -250,11 +250,12 @@ feat(insights): add privacy-safe free-launch evidence
 
 ### Execution record — 2026-08-24
 
-- **Outcome:** Technically complete except deployed accessibility/performance verification (`AUT-0207`). Participant research remains gate-closed until the owner approves a consented cohort; prepared scripts are not counted as participant evidence.
+- **Outcome:** Technically complete and deployed. Participant research remains gate-closed until the owner approves a consented cohort; prepared scripts are not counted as participant evidence.
 - **Collection boundary:** The first-party adapter defaults to `noop`. Firestore mode requires an explicit setting, a 32-character-or-longer HMAC secret, privileged readiness, consent, schema validation, deterministic sampling, and idempotent writes.
 - **Privacy:** Client payloads cannot contain email, raw user ID, document ID, image URL, review text, or open creative content. Firestore client access to evidence and research collections is denied.
 - **Operator view:** `/admin/insights` returns aggregates only and labels absent data “not observed.” `/research` accepts categorical answers only and requires explicit research consent.
-- **Verification:** Focused schema/security tests passed; responsive Playwright passed 2/2 at a 390-pixel viewport; `npm run check` passed 244 unit tests and 14 Firebase authorization-rules tests before the production build completed.
+- **Verification:** Focused schema/security tests passed; responsive Playwright passed 2/2 at a 390-pixel viewport; `npm run check` passed 245 unit tests and 14 Firebase authorization-rules tests before the production build completed.
+- **Production evidence:** Merge `8e689e7` is deployed as `dpl_8GYDP1P4Ssyv6eqsLyhkED13KUPn`; automatic Production Smoke run `32689388158` passed. The research route passed mobile, desktop, reduced-motion, no-JavaScript, overflow, and honest-copy checks; measured warm navigation completed in 593 ms desktop and 1,087 ms mobile in the verification run.
 - **Decision:** Limited provider-evaluation funding remains `NO-GO`; production remains `free`, Community remains closed, and collection remains `noop` until the privacy/participant gates are approved.
 
 ## 9. Phase 3 — Implement inactive direct-upload and durable-job infrastructure
