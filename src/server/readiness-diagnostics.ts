@@ -7,6 +7,7 @@ import { isClientIdentityConfigured } from "@/server/observability";
 import { getRateLimitStatus } from "@/server/rate-limit";
 import { getRequestBodyBudgetStatus } from "@/server/request-body";
 import { getProductEvidenceStatus } from "@/server/product-evidence";
+import { getReviewPipelineStatus } from "@/server/review-pipeline-config";
 
 /**
  * Detailed configuration diagnostics are privileged operational information.
@@ -20,6 +21,7 @@ export function getReadinessDiagnostics() {
   const rateLimit = getRateLimitStatus();
   const requestBudgets = getRequestBodyBudgetStatus();
   const productEvidence = getProductEvidenceStatus();
+  const reviewPipeline = getReviewPipelineStatus();
   const checks = {
     accountStorage: isFirebaseAdminConfigured(),
     bugReportEmail: isBugReportEmailConfigured(),
@@ -27,6 +29,7 @@ export function getReadinessDiagnostics() {
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
     productEvidence: productEvidence.ready,
+    reviewPipeline: reviewPipeline.ready,
     rateLimitAdapter: rateLimit.ready,
     requestBudgets: requestBudgets.ready,
     sourceImageStorage: isFirebaseAdminStorageConfigured(),
@@ -40,6 +43,7 @@ export function getReadinessDiagnostics() {
       distributedRateLimitConfigured: rateLimit.distributedConfigured,
       rateLimitMode: rateLimit.mode,
       productEvidenceMode: productEvidence.mode,
+      reviewPipelineMode: reviewPipeline.mode,
       requestBodyRoutes: requestBudgets.configuredRoutes,
     },
     reviewProvider,

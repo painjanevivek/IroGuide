@@ -7,6 +7,7 @@ export type ReadinessChecks = Readonly<{
   firebaseProjectMatch: boolean;
   liveVision: boolean;
   productEvidence: boolean;
+  reviewPipeline: boolean;
   rateLimitAdapter: boolean;
   requestBudgets: boolean;
   sourceImageStorage: boolean;
@@ -23,6 +24,7 @@ export function buildReadiness({
     && checks.clientIdentity
     && checks.firebaseProjectMatch
     && checks.productEvidence
+    && checks.reviewPipeline
     && checks.rateLimitAdapter
     && checks.requestBudgets;
   const optionalReady = (!capabilities.aiCritique || checks.liveVision)
