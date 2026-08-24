@@ -213,6 +213,16 @@ describe("Firebase security rules", () => {
 
     await assertFails(authenticatedStorage(OWNER_UID).ref(nonSourcePath).getMetadata());
   });
+
+  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a"])(
+    "keeps server-owned evidence private at %s",
+    async (path) => {
+      await seedFirestoreDocument(path, { accountHash: "a".repeat(64), environment: "test" });
+      await assertFails(authenticatedFirestore(OWNER_UID).doc(path).get());
+      await assertFails(authenticatedFirestore(OWNER_UID).doc(path).set({ accountHash: "b".repeat(64) }));
+      await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
+    },
+  );
 });
 
 async function seedFirestoreDocument(path: string, data: Record<string, unknown>) {

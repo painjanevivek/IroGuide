@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { ProductEvidencePageView } from "@/components/product-evidence-page-view";
 
 export function ReviewUnavailable() {
   return (
     <main className="review-unavailable-shell">
+      <ProductEvidencePageView event={{ name: "review_availability_opened", source: "review-route" }} />
       <header className="studio-header">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
         <Link href="/dashboard">Dashboard</Link>

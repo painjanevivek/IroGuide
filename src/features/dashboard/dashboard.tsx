@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
@@ -19,6 +19,7 @@ import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
 import { getProgressCohort, mergeAccountReviews } from "@/lib/account-reviews";
+import { captureProductEvidence, hashEvidenceSignature } from "@/lib/product-evidence";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 import { DataControls } from "./data-controls";
 import { RecentReviewPanel } from "./recent-review-panel";
@@ -38,6 +39,35 @@ export function Dashboard() {
   } = useAccountReviews({ user });
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
   const [reviewImageUrls, setReviewImageUrls] = useState<Record<string, string>>({});
+  const evidenceUserRef = useRef("");
+
+  useEffect(() => {
+    if (!user || loading || evidenceUserRef.current === user.uid) return;
+    evidenceUserRef.current = user.uid;
+    const cohort = getProgressCohort(reviews);
+
+    void captureProductEvidence(user, {
+      name: "review_history_opened",
+      eligibleCount: cohort.evidence.length,
+      excludedCount: cohort.excludedCount,
+    });
+
+    const anchor = cohort.evidence[0];
+    if (!anchor || cohort.evidence.length === 0) return;
+    void hashEvidenceSignature([
+      anchor.category,
+      anchor.provider,
+      anchor.rubricVersion,
+      ...anchor.scores.map((score) => score.label).sort(),
+    ]).then((cohortSignature) => captureProductEvidence(user, cohort.evidence.length === 1
+      ? { name: "progress_baseline_seen", cohortSignature, sampleCount: 1 }
+      : {
+          name: "progress_comparable_seen",
+          cohortSignature,
+          sampleCount: cohort.evidence.length,
+          recurringIssueCount: calculateProgress(cohort.evidence).recurringIssues.length,
+        }));
+  }, [loading, reviews, user]);
 
   useEffect(() => {
     if (!user || !sourceImageStorage) {

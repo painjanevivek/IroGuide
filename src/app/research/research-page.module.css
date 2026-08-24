@@ -1,0 +1,52 @@
+.researchMain {
+  width: min(1180px, calc(100% - 2 * var(--gutter)));
+  margin: 0 auto;
+  padding: clamp(4rem, 8vw, 8rem) 0;
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(420px, 1.18fr);
+  gap: clamp(2.5rem, 7vw, 7rem);
+  align-items: start;
+}
+
+.researchIntro {
+  position: sticky;
+  top: 2rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.researchIntro h1 {
+  margin: 0;
+  font: 650 clamp(3.6rem, 7vw, 6.8rem)/.88 var(--font-display);
+  letter-spacing: -.075em;
+}
+
+.researchIntro > p:not(.eyebrow) {
+  max-width: 620px;
+  margin: 0;
+  color: var(--graphite);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.privacyBoundary {
+  display: grid;
+  gap: .4rem;
+  padding: 1.1rem;
+  background: var(--lime);
+  border: 1px solid rgba(9, 9, 15, .12);
+  border-radius: 14px;
+}
+
+.privacyBoundary strong { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+.privacyBoundary span { font-size: .75rem; line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .researchMain { grid-template-columns: 1fr; }
+  .researchIntro { position: static; }
+}
+
+@media (max-width: 540px) {
+  .researchMain { width: min(100% - 2rem, 1180px); padding-block: 3rem; }
+  .researchIntro h1 { font-size: clamp(3.1rem, 16vw, 4.8rem); }
+}

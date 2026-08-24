@@ -4,7 +4,9 @@ export const ANALYTICS_CONSENT_STORAGE_KEY = "iroguide-cookie-consent-v1";
 export const ANALYTICS_CONSENT_EVENT = "iroguide:analytics-consent";
 
 type ConsentState = {
+  acceptedAt?: string;
   state?: string;
+  version?: number;
 };
 
 type AnalyticsParams = Record<string, string | number | boolean | null | undefined>;
@@ -21,14 +23,24 @@ export function getAnalyticsMeasurementId() {
 }
 
 export function hasAnalyticsConsent() {
-  if (typeof window === "undefined") return false;
+  return getAnalyticsConsentReceipt() !== null;
+}
+
+export function getAnalyticsConsentReceipt() {
+  if (typeof window === "undefined") return null;
   try {
     const rawValue = window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY);
-    if (!rawValue) return false;
+    if (!rawValue) return null;
     const parsed = JSON.parse(rawValue) as ConsentState;
-    return parsed.state === "accepted";
+    if (
+      parsed.state !== "accepted"
+      || parsed.version !== 1
+      || typeof parsed.acceptedAt !== "string"
+      || !Number.isFinite(Date.parse(parsed.acceptedAt))
+    ) return null;
+    return { acceptedAt: parsed.acceptedAt, version: 1 as const };
   } catch {
-    return false;
+    return null;
   }
 }
 

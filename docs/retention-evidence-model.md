@@ -12,6 +12,10 @@ History is ordered by `savedAt desc` and document ID `desc`; the query helper ac
 
 These events are definitions for later privacy-reviewed analytics; this phase does not add a new analytics provider.
 
+- `sign_in_completed`: hashed account ID and method enum; no email, provider subject, or profile fields.
+- `documentation_opened`: hashed account ID and approved documentation-section enum.
+- `review_availability_opened`: hashed account ID and approved navigation-source enum; this records interest, not a completed critique.
+- `review_data_deleted`: hashed account ID and deletion-scope enum after a successful server response.
 - `review_history_opened`: hashed account ID, eligible count, excluded count.
 - `progress_baseline_seen`: hashed account ID, cohort signature hash, sample count `1`.
 - `progress_comparable_seen`: hashed account ID, cohort signature hash, sample count, recurring issue count.
@@ -20,6 +24,10 @@ These events are definitions for later privacy-reviewed analytics; this phase do
 - `case_study_blocked_unverified`: hashed account ID and reason enum.
 
 Never emit design images, review text, issue content, category-specific free text, raw user IDs, document IDs, or case-study claims. Retention evaluation should compare cohort-level return rates and completion intervals, not individual creative content.
+
+The first-party adapter is `noop` by default. Firestore collection requires an explicit environment change, a distinct 32-character-or-longer HMAC secret, a reviewed sample rate, and privileged readiness verification. The server derives the environment and HMAC account reference; the browser cannot supply either. Each client event has a UUID deduplication key, and storage writes use an HMAC of the account and UUID so retries cannot create duplicate rows.
+
+The operator report returns only totals, unique pseudonymous-account counts, and categorical research aggregates. An absent event is labelled **not observed**, never converted into a zero-value product claim. Raw rows remain server-only under deny-all Firestore client rules.
 
 ## Private case-study boundary
 
