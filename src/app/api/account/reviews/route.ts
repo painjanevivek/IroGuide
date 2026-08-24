@@ -40,8 +40,10 @@ export async function DELETE(request: Request) {
     logRequestEvent("info", "account_reviews_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
       feedbackDeleted: result.feedbackDeleted,
+      pipelineDocumentsDeleted: result.pipelineDocumentsDeleted,
       reviewsDeleted: result.reviewsDeleted,
       sourceImagesDeleted: result.sourceImagesDeleted,
+      stagingImagesDeleted: result.stagingImagesDeleted,
       user: toLogSafeUserId(decodedToken.uid),
     });
 

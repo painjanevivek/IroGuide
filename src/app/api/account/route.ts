@@ -45,8 +45,10 @@ export async function DELETE(request: Request) {
     logRequestEvent("info", "account_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
       feedbackDeleted: result.feedbackDeleted,
+      pipelineDocumentsDeleted: result.pipelineDocumentsDeleted,
       reviewsDeleted: result.reviewsDeleted,
       sourceImagesDeleted: result.sourceImagesDeleted,
+      stagingImagesDeleted: result.stagingImagesDeleted,
       communityCommentsDeleted: community.commentsDeleted,
       communityInteractionsDeleted: community.interactionsDeleted,
       communityPostsDeleted: community.postsDeleted,

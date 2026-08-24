@@ -294,17 +294,17 @@ feat(insights): add privacy-safe free-launch evidence
 
 ### Tasks
 
-- [ ] `AUT-0301` Add strict upload-session and stored-job schemas with state-transition guards.
-- [ ] `AUT-0302` Implement Firebase rules for exact UID/upload paths, server-only transitions, expiry, and denied cross-owner access.
-- [ ] `AUT-0303` Implement short-lived direct-upload authorization without exposing Admin credentials.
-- [ ] `AUT-0304` Validate stored objects by magic bytes, decoded format, byte size, dimensions, pixel/decompression budget, and digest before provider eligibility.
-- [ ] `AUT-0305` Add lifecycle reconciliation for expired, abandoned, consumed, and partially deleted objects.
-- [ ] `AUT-0306` Implement atomic `(uid, idempotencyKey)` job creation and digest-conflict rejection.
-- [ ] `AUT-0307` Add queue/outbox and worker interfaces with a disabled/no-op production adapter until infrastructure is approved.
-- [ ] `AUT-0308` Preserve the shared provider deadline and transient-only retry classification across queued attempts.
-- [ ] `AUT-0309` Add cancellation, lease expiry, worker crash, duplicate delivery, provider timeout, result-save failure, and reconciliation tests.
-- [ ] `AUT-0310` Add queue age, attempt, latency, permanent failure, orphan, and cleanup-backlog diagnostics without payload content.
-- [ ] `AUT-0311` Add progressive upload/job UI states behind a non-production/internal capability only.
+- [x] `AUT-0301` Add strict upload-session and stored-job schemas with state-transition guards.
+- [x] `AUT-0302` Implement Firebase rules for exact UID/upload paths, server-only transitions, expiry, and denied cross-owner access.
+- [x] `AUT-0303` Implement short-lived direct-upload authorization without exposing Admin credentials.
+- [x] `AUT-0304` Validate stored objects by magic bytes, decoded format, byte size, dimensions, pixel/decompression budget, and digest before provider eligibility.
+- [x] `AUT-0305` Add lifecycle reconciliation for expired, abandoned, consumed, and partially deleted objects.
+- [x] `AUT-0306` Implement atomic `(uid, idempotencyKey)` job creation and digest-conflict rejection.
+- [x] `AUT-0307` Add queue/outbox and worker interfaces with a disabled/no-op production adapter until infrastructure is approved.
+- [x] `AUT-0308` Preserve the shared provider deadline and transient-only retry classification across queued attempts.
+- [x] `AUT-0309` Add cancellation, lease expiry, worker crash, duplicate delivery, provider timeout, result-save failure, and reconciliation tests.
+- [x] `AUT-0310` Add queue age, attempt, latency, permanent failure, orphan, and cleanup-backlog diagnostics without payload content.
+- [x] `AUT-0311` Add progressive upload/job UI states behind a non-production/internal capability only.
 - [ ] `AUT-0312` Run emulator, route, concurrency, failure-injection, and browser tests; verify free production cannot create upload sessions or jobs.
 
 ### Acceptance

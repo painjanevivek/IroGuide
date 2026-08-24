@@ -13,6 +13,7 @@ import { createTrustedReviewDocument } from "./review-provenance";
 const REVIEWS_COLLECTION = "reviews";
 const REVIEW_DRAFTS_COLLECTION = "reviewDrafts";
 const REVIEW_FEEDBACK_COLLECTION = "reviewFeedback";
+const REVIEW_PIPELINE_COLLECTIONS = ["reviewUploadSessions", "reviewJobs", "reviewJobOutbox"] as const;
 const FIRESTORE_BATCH_LIMIT = 450;
 
 export type ReviewSaveResult = {
@@ -26,13 +27,15 @@ export type ReviewDeleteResult = {
   failures: ReviewDeleteFailure[];
   feedbackDeleted: number;
   reviewsDeleted: number;
+  pipelineDocumentsDeleted: number;
   retryToken?: string;
   sourceImagesDeleted: number;
+  stagingImagesDeleted: number;
   status: "complete" | "retry-required";
 };
 
 export type ReviewDeleteFailure = {
-  operation: "drafts" | "feedback" | "reviews" | "source-images";
+  operation: "drafts" | "feedback" | "pipeline-documents" | "reviews" | "source-images" | "staging-images";
   reason: string;
 };
 
@@ -45,17 +48,20 @@ export class ReviewDeletionIncompleteError extends Error {
 
 export async function saveReviewForUser({
   category,
+  documentId,
   review,
   sourceImage,
   userId,
 }: {
   category: ReviewCategory;
+  documentId?: string;
   review: ReviewOutput;
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
   const capabilities = getServerLaunchCapabilities();
-  const baseDocument = createTrustedReviewDocument({ userId, review, category });
+  const createdDocument = createTrustedReviewDocument({ userId, review, category });
+  const baseDocument = documentId ? { ...createdDocument, id: documentId } : createdDocument;
   const persistedSourceImage = sourceImage && capabilities.sourceImageStorage
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
     : undefined;
@@ -115,11 +121,20 @@ export async function deleteReviewDataForUser(userId: string): Promise<ReviewDel
     deleteDocumentsForUser(db, REVIEWS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_DRAFTS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_FEEDBACK_COLLECTION, userId),
+    deleteReviewPipelineDocumentsForUser(db, userId),
     // Deletion is intentionally independent of the current creation capability:
     // a free-profile account may still own images created under a former profile.
     deleteReviewSourceImagesForUser(userId),
+    deleteReviewStagingImagesForUser(userId),
   ] as const);
-  const names: ReviewDeleteFailure["operation"][] = ["reviews", "drafts", "feedback", "source-images"];
+  const names: ReviewDeleteFailure["operation"][] = [
+    "reviews",
+    "drafts",
+    "feedback",
+    "pipeline-documents",
+    "source-images",
+    "staging-images",
+  ];
   const failures = operations.flatMap((operation, index) => operation.status === "rejected"
     ? [{ operation: names[index], reason: toDeletionFailureReason(operation.reason) }]
     : []);
@@ -127,7 +142,9 @@ export async function deleteReviewDataForUser(userId: string): Promise<ReviewDel
     reviewsDeleted: getSettledCount(operations[0]),
     draftsDeleted: getSettledCount(operations[1]),
     feedbackDeleted: getSettledCount(operations[2]),
-    sourceImagesDeleted: getSettledCount(operations[3]),
+    pipelineDocumentsDeleted: getSettledCount(operations[3]),
+    sourceImagesDeleted: getSettledCount(operations[4]),
+    stagingImagesDeleted: getSettledCount(operations[5]),
     failures,
     status: failures.length === 0 ? "complete" : "retry-required",
     ...(failures.length > 0 ? { retryToken: randomUUID() } : {}),
@@ -209,10 +226,6 @@ function getReviewSourceImagePath(userId: string, documentId: string, mimeType: 
   return `users/${userId}/reviews/${documentId}/source.${getImageExtension(mimeType)}`;
 }
 
-function getUserReviewSourceImagePrefix(userId: string) {
-  return `users/${userId}/reviews/`;
-}
-
 function getImageExtension(mimeType: ReviewSourceImageUpload["image"]["mimeType"]) {
   if (mimeType === "image/jpeg") return "jpg";
   if (mimeType === "image/png") return "png";
@@ -250,12 +263,20 @@ async function deleteDocumentsForUser(db: Awaited<ReturnType<typeof getFirebaseA
 }
 
 async function deleteReviewSourceImagesForUser(userId: string) {
+  return deleteStoragePrefix(`users/${userId}/reviews/`);
+}
+
+async function deleteReviewStagingImagesForUser(userId: string) {
+  return deleteStoragePrefix(`users/${userId}/review-uploads/`);
+}
+
+async function deleteStoragePrefix(prefix: string) {
   const bucket = await getFirebaseAdminStorageBucket();
   let deleted = 0;
   while (true) {
     const [files] = await bucket.getFiles({
       maxResults: 100,
-      prefix: getUserReviewSourceImagePrefix(userId),
+      prefix,
     });
     if (files.length === 0) break;
     await Promise.all(files.map((file) => file.delete({ ignoreNotFound: true })));
@@ -263,6 +284,14 @@ async function deleteReviewSourceImagesForUser(userId: string) {
     if (files.length < 100) break;
   }
   return deleted;
+}
+
+async function deleteReviewPipelineDocumentsForUser(
+  db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>,
+  userId: string,
+) {
+  const results = await Promise.all(REVIEW_PIPELINE_COLLECTIONS.map((collection) => deleteDocumentsForUser(db, collection, userId)));
+  return results.reduce((total, count) => total + count, 0);
 }
 
 function getSettledCount(result: PromiseSettledResult<number>) {
