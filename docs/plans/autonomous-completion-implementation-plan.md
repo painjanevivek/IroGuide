@@ -204,7 +204,7 @@ fix(release): record deployed free-profile verification
 ### Execution record — 2026-08-24
 
 - **Outcome:** Gate-closed. Public free production is deployed and verified; privileged readiness and the disposable verified-email account journey remain blocked by missing operator credentials.
-- **Production:** Merge `b81276d` resolves through `https://iroguide.com` to immutable deployment `dpl_5E87Fs5gDym5EfQMyr4qbyPBiuR4`.
+- **Production:** Merge `3d62296` resolves through `https://iroguide.com` to immutable deployment `dpl_4TBXnYe7BuEEF6arajL8fbzqqyPo`; automatic Production Smoke run `32687191585` passed and uploaded its report.
 - **Staging:** `https://iro-guide-staging-vivek-painjanes-projects.vercel.app` resolves to Preview `dpl_67ciVP3q6wws4cTc6HT3d3zx9rDC`, deployed from a clean `b81276d` worktree with the explicit `free` profile.
 - **Verification:** Production smoke passed 16/16; DAST passed 38/38; public readiness returned only `{ "ok": true }`; Community mutation returned the gated `404`; anonymous review and admin readiness preserved their authentication boundaries.
 - **Runtime evidence:** Readiness logged a successful structured event; Community mutation logged `community_mutation.capability_blocked`; no source-image Storage request was observed during the public free journey.
