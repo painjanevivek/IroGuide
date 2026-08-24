@@ -214,7 +214,7 @@ describe("Firebase security rules", () => {
     await assertFails(authenticatedStorage(OWNER_UID).ref(nonSourcePath).getMetadata());
   });
 
-  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a", "reviewUploadSessions/upload-a", "reviewJobs/job-a", "reviewJobOutbox/event-a"])(
+  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a", "reviewUploadSessions/upload-a", "reviewJobs/job-a", "reviewJobOutbox/event-a", "providerUsageReservations/reservation-a", "providerUsageAggregates/day-a"])(
     "keeps server-owned evidence private at %s",
     async (path) => {
       await seedFirestoreDocument(path, { accountHash: "a".repeat(64), environment: "test" });

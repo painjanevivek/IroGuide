@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createDemoReview } from "@/domain/demo-review";
 import { critiqueRubricVersion, validateGroundedFindings } from "@/domain/critique-rubrics";
 import { categoryLabels, reviewIssueSchema, reviewOutputSchema, type ReviewOutput, type ReviewRequest } from "@/domain/review";
+import { commitProviderUsage, getProviderControlStatus, reserveProviderUsage } from "./provider-controls";
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions";
 const LIVE_PROVIDER_MODES = new Set(["live", "vision", "openrouter"]);
@@ -72,8 +73,10 @@ export class ReviewProviderUnavailableError extends Error {
 
 type ReviewProvider = {
   name: ReviewOutput["provider"] | "unavailable";
-  createReview: (request: ReviewRequest) => Promise<ReviewOutput>;
+  createReview: (request: ReviewRequest, context?: ProviderExecutionContext) => Promise<ReviewOutput>;
 };
+
+type ProviderExecutionContext = { reservationKey: string; userId: string };
 
 const demoReviewProvider: ReviewProvider = {
   name: "demo",
@@ -89,7 +92,7 @@ const unavailableReviewProvider: ReviewProvider = {
 
 const liveVisionReviewProvider: ReviewProvider = {
   name: "live",
-  async createReview(request) {
+  async createReview(request, context) {
     if (!request.image) {
       throw new ReviewProviderUnavailableError("Live vision critique requires uploaded image bytes.");
     }
@@ -103,12 +106,37 @@ const liveVisionReviewProvider: ReviewProvider = {
     const fallbackModel = process.env.OPENROUTER_FALLBACK_MODEL?.trim();
     const deadlineAt = Date.now() + PROVIDER_DEADLINE_MS;
     const jobId = randomUUID();
+    const production = process.env.NODE_ENV === "production";
+    if (production && !context) throw new ReviewProviderUnavailableError("Live review execution requires an owner-bound reservation.");
+    const reservation = production && context ? await reserveProviderUsage(context) : null;
+    const startedAt = Date.now();
+    let fallbackUsed = false;
+    let outcome: "completed" | "failed" | "invalid-output" = "failed";
 
     try {
-      return await createOpenRouterReview(request, apiKey, model, deadlineAt, jobId);
+      try {
+        const review = await createOpenRouterReview(request, apiKey, model, deadlineAt, jobId);
+        outcome = "completed";
+        return review;
+      } catch (error) {
+        const fallbackAllowed = !production || getProviderControlStatus().fallbackEnabled;
+        if (!(error instanceof ReviewProviderCallError) || !error.retryable || !fallbackAllowed || !fallbackModel || fallbackModel === model) throw error;
+        fallbackUsed = true;
+        const review = await createOpenRouterReview(request, apiKey, fallbackModel, deadlineAt, jobId);
+        outcome = "completed";
+        return review;
+      }
     } catch (error) {
-      if (!(error instanceof ReviewProviderCallError) || !error.retryable || !fallbackModel || fallbackModel === model) throw error;
-      return createOpenRouterReview(request, apiKey, fallbackModel, deadlineAt, jobId);
+      const message = error instanceof Error ? error.message.toLowerCase() : "";
+      outcome = message.includes("invalid review") || message.includes("evidence contract") ? "invalid-output" : "failed";
+      throw error;
+    } finally {
+      if (reservation) await commitProviderUsage(reservation, {
+        costMicros: null,
+        fallbackUsed,
+        latencyMs: Date.now() - startedAt,
+        outcome,
+      });
     }
   },
 };
@@ -157,19 +185,7 @@ async function createOpenRouterReview(
   const payload: unknown = await response.json();
   const parsedPayload = openRouterResponseSchema.parse(payload) as OpenRouterChoicePayload;
   const content = parsedPayload.choices?.[0]?.message?.content;
-  const parsedReview = liveReviewResponseSchema.safeParse(prepareLiveReviewPayload(parseProviderJson(content)));
-  if (!parsedReview.success) {
-    throw new Error("Live vision critique returned an invalid review.");
-  }
-
-  if (request.category === "ui" || request.category === "website") {
-    const validationErrors = validateGroundedFindings(request.category, parsedReview.data.issues);
-    if (validationErrors.length > 0) {
-      throw new Error(`Live vision critique violated the evidence contract: ${validationErrors.join(" ")}`);
-    }
-  }
-
-  return normalizeLiveReview(parsedReview.data);
+  return normalizeProviderReviewOutput(parseProviderJson(content), request.category);
 }
 
 function getOpenRouterHeaders(apiKey: string) {
@@ -268,7 +284,7 @@ function parseProviderJson(content: unknown) {
   throw new Error("Live vision critique returned non-JSON content.");
 }
 
-function prepareLiveReviewPayload(payload: unknown): unknown {
+export function prepareLiveReviewPayload(payload: unknown): unknown {
   if (!isRecord(payload) || !Array.isArray(payload.issues)) return payload;
 
   return {
@@ -294,13 +310,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function normalizeLiveReview(payload: LiveReviewPayload): ReviewOutput {
+function normalizeLiveReview(
+  payload: LiveReviewPayload,
+  idFactory: () => string = randomUUID,
+  now: () => Date = () => new Date(),
+): ReviewOutput {
   return {
     ...payload,
-    id: payload.id ?? `live-${randomUUID()}`,
-    createdAt: payload.createdAt ?? new Date().toISOString(),
+    id: payload.id ?? `live-${idFactory()}`,
+    createdAt: payload.createdAt ?? now().toISOString(),
     provider: "live",
   };
+}
+
+export function normalizeProviderReviewOutput(
+  payload: unknown,
+  category: ReviewRequest["category"],
+  dependencies: { idFactory?: () => string; now?: () => Date } = {},
+) {
+  const parsedReview = liveReviewResponseSchema.safeParse(prepareLiveReviewPayload(payload));
+  if (!parsedReview.success) throw new Error("Live vision critique returned an invalid review.");
+  if (category === "ui" || category === "website") {
+    const validationErrors = validateGroundedFindings(category, parsedReview.data.issues);
+    if (validationErrors.length > 0) {
+      throw new Error(`Live vision critique violated the evidence contract: ${validationErrors.join(" ")}`);
+    }
+  }
+  return normalizeLiveReview(parsedReview.data, dependencies.idFactory, dependencies.now);
 }
 
 const endpointReviewProvider: ReviewProvider = {
@@ -324,12 +360,7 @@ const endpointReviewProvider: ReviewProvider = {
     }
 
     const payload: unknown = await response.json();
-    const parsed = liveReviewResponseSchema.safeParse(prepareLiveReviewPayload(payload));
-    if (!parsed.success) {
-      throw new Error("Live vision critique returned an invalid review.");
-    }
-
-    return normalizeLiveReview(parsed.data);
+    return normalizeProviderReviewOutput(payload, request.category);
   },
 };
 
@@ -385,18 +416,19 @@ function isBlockedOutboundHost(hostname: string) {
     || (first === 192 && second === 168);
 }
 
-export async function createReview(request: ReviewRequest): Promise<ReviewOutput> {
-  return getReviewProvider().createReview(request);
+export async function createReview(request: ReviewRequest, context?: ProviderExecutionContext): Promise<ReviewOutput> {
+  return getReviewProvider().createReview(request, context);
 }
 
 export function getReviewProvider() {
   const configuredMode = process.env.IROGUIDE_REVIEW_PROVIDER?.trim().toLowerCase();
   const production = process.env.NODE_ENV === "production";
+  const controls = getProviderControlStatus();
 
   if (configuredMode === "demo") return production ? unavailableReviewProvider : demoReviewProvider;
   if (configuredMode === "endpoint") return production ? unavailableReviewProvider : endpointReviewProvider;
-  if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return liveVisionReviewProvider;
-  if (process.env.OPENROUTER_API_KEY?.trim()) return liveVisionReviewProvider;
+  if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return production && !controls.enabled ? unavailableReviewProvider : liveVisionReviewProvider;
+  if (process.env.OPENROUTER_API_KEY?.trim()) return production && !controls.enabled ? unavailableReviewProvider : liveVisionReviewProvider;
   return production ? unavailableReviewProvider : demoReviewProvider;
 }
 
@@ -405,6 +437,7 @@ export function getReviewProviderStatus() {
   const openRouterConfigured = Boolean(process.env.OPENROUTER_API_KEY?.trim());
   const endpointConfigured = Boolean(process.env.IROGUIDE_VISION_REVIEW_ENDPOINT?.trim());
   const activeProvider = getReviewProvider().name;
+  const controls = getProviderControlStatus();
   let endpointReady = false;
   if (process.env.NODE_ENV !== "production" && endpointConfigured) {
     try {
@@ -413,7 +446,7 @@ export function getReviewProviderStatus() {
       endpointReady = false;
     }
   }
-  const liveReady = activeProvider === "live" && (openRouterConfigured || endpointReady);
+  const liveReady = activeProvider === "live" && (openRouterConfigured || endpointReady) && (!productionMode() || controls.enabled);
 
   return {
     activeProvider,
@@ -421,5 +454,10 @@ export function getReviewProviderStatus() {
     endpointConfigured,
     liveReady,
     openRouterConfigured,
+    controlsReady: controls.ready,
   };
+}
+
+function productionMode() {
+  return process.env.NODE_ENV === "production";
 }

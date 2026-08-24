@@ -6,6 +6,8 @@ export function createReviewJobDocumentId(userId: string, idempotencyKey: string
 }
 
 export function classifyReviewProviderFailure(error: unknown): NonNullable<ReviewJob["failureClass"]> {
+  if (error && typeof error === "object" && "failureClass" in error
+    && (error.failureClass === "policy" || error.failureClass === "rate-limit")) return error.failureClass;
   const message = error instanceof Error ? error.message.toLowerCase() : "";
   if (message.includes("deadline") || message.includes("timed out") || message.includes("timeout")) return "deadline";
   if (message.includes("429") || message.includes("rate")) return "rate-limit";
