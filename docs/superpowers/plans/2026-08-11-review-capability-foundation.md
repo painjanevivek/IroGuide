@@ -1,5 +1,7 @@
 # Review Capability Foundation Implementation Plan
 
+> **Superseded on 2026-08-24:** The completed foundation from this plan was merged through PR #24 at `ba6e9e5`. Remaining work is tracked in `docs/plans/autonomous-completion-implementation-plan.md`. This document is retained as implementation and verification history.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the review/critic system fail closed, avoid unavailable paid operations, stop users before they enter an unusable workflow, and prevent the UI, APIs, readiness endpoint, persistence layer, and smoke tests from drifting apart.
