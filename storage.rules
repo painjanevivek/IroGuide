@@ -24,5 +24,11 @@ service firebase.storage {
       allow read: if ownsUserPath(userId);
       allow write: if false;
     }
+
+    match /users/{userId}/review-uploads/{uploadId}/source {
+      // The server issues a short-lived GCS V4 signed URL after authorization.
+      // Firebase client SDK access remains denied before and after that write.
+      allow read, write: if false;
+    }
   }
 }

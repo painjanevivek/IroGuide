@@ -45,17 +45,20 @@ export class ReviewDeletionIncompleteError extends Error {
 
 export async function saveReviewForUser({
   category,
+  documentId,
   review,
   sourceImage,
   userId,
 }: {
   category: ReviewCategory;
+  documentId?: string;
   review: ReviewOutput;
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
   const capabilities = getServerLaunchCapabilities();
-  const baseDocument = createTrustedReviewDocument({ userId, review, category });
+  const createdDocument = createTrustedReviewDocument({ userId, review, category });
+  const baseDocument = documentId ? { ...createdDocument, id: documentId } : createdDocument;
   const persistedSourceImage = sourceImage && capabilities.sourceImageStorage
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
     : undefined;

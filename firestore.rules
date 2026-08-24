@@ -130,5 +130,17 @@ service cloud.firestore {
     match /researchFeedback/{responseId} {
       allow read, write: if false;
     }
+
+    match /reviewUploadSessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    match /reviewJobs/{jobId} {
+      allow read, write: if false;
+    }
+
+    match /reviewJobOutbox/{eventId} {
+      allow read, write: if false;
+    }
   }
 }

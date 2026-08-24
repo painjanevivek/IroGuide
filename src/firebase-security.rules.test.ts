@@ -214,7 +214,7 @@ describe("Firebase security rules", () => {
     await assertFails(authenticatedStorage(OWNER_UID).ref(nonSourcePath).getMetadata());
   });
 
-  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a"])(
+  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a", "reviewUploadSessions/upload-a", "reviewJobs/job-a", "reviewJobOutbox/event-a"])(
     "keeps server-owned evidence private at %s",
     async (path) => {
       await seedFirestoreDocument(path, { accountHash: "a".repeat(64), environment: "test" });
@@ -223,6 +223,17 @@ describe("Firebase security rules", () => {
       await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
     },
   );
+
+  it("denies Firebase client access to direct-upload staging objects", async () => {
+    const path = `users/${OWNER_UID}/review-uploads/upload-a/source`;
+    await seedStorageObject(path, "image/png");
+    await assertFails(authenticatedStorage(OWNER_UID).ref(path).getMetadata());
+    await assertFails(Promise.resolve(authenticatedStorage(OWNER_UID).ref(path).put(
+      new Uint8Array([1, 2, 3]),
+      { contentType: "image/png" },
+    )));
+    await assertFails(authenticatedStorage(OTHER_UID).ref(path).getMetadata());
+  });
 });
 
 async function seedFirestoreDocument(path: string, data: Record<string, unknown>) {
