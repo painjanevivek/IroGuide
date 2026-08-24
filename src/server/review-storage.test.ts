@@ -221,8 +221,10 @@ describe("review storage", () => {
       draftsDeleted: 1,
       failures: [],
       feedbackDeleted: 0,
+      pipelineDocumentsDeleted: 0,
       reviewsDeleted: 2,
       sourceImagesDeleted: 2,
+      stagingImagesDeleted: 0,
       status: "complete",
     });
   });

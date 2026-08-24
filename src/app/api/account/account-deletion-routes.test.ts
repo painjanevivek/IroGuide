@@ -56,8 +56,10 @@ const completeDeletion = {
   draftsDeleted: 1,
   failures: [],
   feedbackDeleted: 2,
+  pipelineDocumentsDeleted: 0,
   reviewsDeleted: 3,
   sourceImagesDeleted: 4,
+  stagingImagesDeleted: 0,
   status: "complete" as const,
 };
 
