@@ -13,7 +13,13 @@ import { createTrustedReviewDocument } from "./review-provenance";
 const REVIEWS_COLLECTION = "reviews";
 const REVIEW_DRAFTS_COLLECTION = "reviewDrafts";
 const REVIEW_FEEDBACK_COLLECTION = "reviewFeedback";
-const REVIEW_PIPELINE_COLLECTIONS = ["reviewUploadSessions", "reviewJobs", "reviewJobOutbox"] as const;
+const REVIEW_PIPELINE_COLLECTIONS = [
+  "reviewUploadSessions",
+  "reviewJobs",
+  "reviewJobOutbox",
+  "providerUsageReservations",
+  "providerUsageAggregates",
+] as const;
 const FIRESTORE_BATCH_LIMIT = 450;
 
 export type ReviewSaveResult = {

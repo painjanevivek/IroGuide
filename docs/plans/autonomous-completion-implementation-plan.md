@@ -329,12 +329,12 @@ fix(reliability): reconcile abandoned uploads and review jobs
 
 ### Tasks Codex performs before budget approval
 
-- [ ] `AUT-0401` Validate every checked-in evaluation fixture and expected rubric/evidence region.
-- [ ] `AUT-0402` Add deterministic evaluation runner output, blinded comparison sheets, latency/cost capture, and result hashing.
-- [ ] `AUT-0403` Add strict normalization tests proving repair never invents evidence.
-- [ ] `AUT-0404` Add model/provider adapters behind the existing server interface without enabling them in free production.
-- [ ] `AUT-0405` Add per-account quota, global daily/monthly hard caps, provider kill switch, and fallback kill switch.
-- [ ] `AUT-0406` Add spend, latency, output-invalid, retry, fallback, and deletion alerts.
+- [x] `AUT-0401` Validate every checked-in evaluation fixture and expected rubric/evidence region.
+- [x] `AUT-0402` Add deterministic evaluation runner output, blinded comparison sheets, latency/cost capture, and result hashing.
+- [x] `AUT-0403` Add strict normalization tests proving repair never invents evidence.
+- [x] `AUT-0404` Add model/provider adapters behind the existing server interface without enabling them in free production.
+- [x] `AUT-0405` Add per-account quota, global daily/monthly hard caps, provider kill switch, and fallback kill switch.
+- [x] `AUT-0406` Add spend, latency, output-invalid, retry, fallback, and deletion alerts.
 
 ### Owner gate `GATE-PROVIDER-01`
 

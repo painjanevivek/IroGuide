@@ -41,3 +41,16 @@ These are hypotheses, not launch claims.
 - Passing evaluation scenarios with two reviewers and no blocking output failures.
 
 Credentials alone do not reopen this decision.
+
+## Phase 4 technical reassessment
+
+The pre-approval implementation is now complete, but the decision remains `NO-GO`:
+
+- The three seed paths were found to reference nonexistent PNG files. They now reference the owned WebP assets and are bound to checked-in SHA-256 digests.
+- The validator decodes every registered image under a pixel budget and rejects false ownership, hash, adjudication, evidence-region, or reviewer claims.
+- The evaluation artifact runner produces stable result hashes, provider-blinded sheets, latency percentiles, and explicit cost-coverage state without making provider calls.
+- Production live execution additionally requires an off kill switch, explicit live-enable flag, four positive quota/cost caps, and a 32+ character ledger HMAC key.
+- Reservations are atomic and idempotent. Unknown provider cost is conservatively committed at the approved per-review maximum.
+- Fallback has an independent default-off switch; spend, latency, invalid-output, failure, fallback, and stale-reservation diagnostics contain no prompt, image, or review content.
+
+There are still zero adjudicated cases, no two named human reviewers, no approved data-use terms, no support owner, and no approved budget. Therefore `AUT-0410` through `AUT-0415` remain blocked by `GATE-PROVIDER-01` and no live calls were made.

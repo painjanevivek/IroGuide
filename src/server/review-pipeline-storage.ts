@@ -355,7 +355,7 @@ export async function runReviewJob(id: string, workerId: string, now = new Date(
         type: upload.expectedContentType,
       },
       image: { dataBase64: bytes.toString("base64"), mimeType: upload.expectedContentType },
-    });
+    }, { reservationKey: `${leased.id}:${leased.attempt}`, userId: leased.userId });
   } catch (error) {
     const failureClass = classifyReviewProviderFailure(error);
     await failLeasedJob(document.ref, leased, workerId, failureClass, new Date());

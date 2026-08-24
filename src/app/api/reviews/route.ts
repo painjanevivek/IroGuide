@@ -6,6 +6,7 @@ import { enforceSameOriginRequest, requireContentType, requireTrustedClientKey }
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
+import { ProviderControlError } from "@/server/provider-controls";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       );
     }
     const parsed = await parseReviewRequest(request);
-    const review = await createReview(parsed);
+    const review = await createReview(parsed, { reservationKey: context.requestId, userId: decodedToken.uid });
     const persistence = await saveReviewToAccount(decodedToken.uid, review, parsed);
     logRequestEvent("info", "review.created", context, {
       category: parsed.category,
@@ -99,6 +100,13 @@ export async function POST(request: Request) {
     if (error instanceof ReviewProviderUnavailableError) {
       logRequestEvent("error", "review.provider_unavailable", context);
       return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });
+    }
+    if (error instanceof ProviderControlError) {
+      logRequestEvent("warn", "review.provider_control_blocked", context, { failureClass: error.failureClass });
+      return NextResponse.json(
+        { error: "Live review capacity is not available right now." },
+        { status: error.failureClass === "rate-limit" ? 429 : 503, headers: jsonHeaders(context) },
+      );
     }
     logRequestEvent("error", "review.failed", context);
     return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500, headers: jsonHeaders(context) });

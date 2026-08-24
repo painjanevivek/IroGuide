@@ -142,5 +142,13 @@ service cloud.firestore {
     match /reviewJobOutbox/{eventId} {
       allow read, write: if false;
     }
+
+    match /providerUsageReservations/{reservationId} {
+      allow read, write: if false;
+    }
+
+    match /providerUsageAggregates/{aggregateId} {
+      allow read, write: if false;
+    }
   }
 }

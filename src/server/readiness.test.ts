@@ -25,6 +25,7 @@ const healthyChecks = {
   firebaseProjectMatch: true,
   liveVision: true,
   productEvidence: true,
+  providerControls: true,
   reviewPipeline: true,
   rateLimitAdapter: true,
   requestBudgets: true,
@@ -44,7 +45,7 @@ describe("readiness contract", () => {
     })).toMatchObject({ ok: true, capabilities: freeCapabilities });
   });
 
-  it.each(["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "reviewPipeline", "rateLimitAdapter", "requestBudgets"] as const)("requires core check %s in free mode", (check) => {
+  it.each(["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "providerControls", "reviewPipeline", "rateLimitAdapter", "requestBudgets"] as const)("requires core check %s in free mode", (check) => {
     const result = buildReadiness({
       capabilities: freeCapabilities,
       checks: {

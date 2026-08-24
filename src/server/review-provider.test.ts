@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createReview, getReviewProvider, getReviewProviderStatus, ReviewProviderUnavailableError } from "./review-provider";
+import { createReview, getReviewProvider, getReviewProviderStatus, normalizeProviderReviewOutput, prepareLiveReviewPayload, ReviewProviderUnavailableError } from "./review-provider";
 import type { ReviewRequest } from "@/domain/review";
 
 const request: ReviewRequest = {
@@ -141,6 +141,25 @@ describe("review provider routing", () => {
     vi.stubEnv("OPENROUTER_API_KEY", "test-key");
 
     await expect(createReview(request)).rejects.toBeInstanceOf(ReviewProviderUnavailableError);
+  });
+
+  it("normalizes only structural metadata and never fabricates missing evidence", () => {
+    const withoutIssueId = {
+      ...liveReviewPayload,
+      issues: liveReviewPayload.issues.map((issue) => Object.fromEntries(Object.entries(issue).filter(([key]) => key !== "id"))),
+    };
+    const prepared = prepareLiveReviewPayload(withoutIssueId) as typeof liveReviewPayload;
+    expect(prepared.issues[0]?.id).toBe("issue-1");
+    expect(prepared.issues[0]?.evidenceDescription).toBe(liveReviewPayload.issues[0]?.evidenceDescription);
+    const normalized = normalizeProviderReviewOutput(prepared, "logo", {
+      idFactory: () => "deterministic-id",
+      now: () => new Date("2026-08-24T00:00:00.000Z"),
+    });
+    expect(normalized).toMatchObject({ id: "live-deterministic-id", createdAt: "2026-08-24T00:00:00.000Z", provider: "live" });
+
+    const incomplete = structuredClone(withoutIssueId) as Record<string, unknown> & { issues: Array<Record<string, unknown>> };
+    delete incomplete.issues[0]?.evidenceDescription;
+    expect(() => normalizeProviderReviewOutput(incomplete, "logo")).toThrow("invalid review");
   });
 
   it("sends uploaded image pixels to the configured OpenRouter vision model", async () => {
