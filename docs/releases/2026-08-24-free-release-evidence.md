@@ -2,9 +2,9 @@
 
 ## Release identity
 
-- Source merge: `b81276d95d134f6ce1705677490d8d60de0ce6de`
-- Production deployment: `dpl_5E87Fs5gDym5EfQMyr4qbyPBiuR4`
-- Immutable production URL: `https://iro-guide-pskmcbcmx-vivek-painjanes-projects.vercel.app`
+- Source merge: `3d62296c450ac34f6a66fd85192a50f68f4097ab`
+- Production deployment: `dpl_4TBXnYe7BuEEF6arajL8fbzqqyPo`
+- Immutable production URL: `https://iro-guide-i06iymsbc-vivek-painjanes-projects.vercel.app`
 - Public production aliases: `https://iroguide.com`, `https://www.iroguide.com`, and `https://iro-guide.vercel.app`
 - Staging deployment: `dpl_67ciVP3q6wws4cTc6HT3d3zx9rDC`
 - Staging alias: `https://iro-guide-staging-vivek-painjanes-projects.vercel.app`
@@ -43,6 +43,7 @@ Command profile: public, non-destructive, unauthenticated free smoke with securi
 - Anonymous review and sync mutations: `401`.
 - Community mutation: `404` with the closed-profile response.
 - Production alias resolved to the immutable deployment above before the run.
+- Automatic Production Smoke run `32687191585` passed after deployment and uploaded `production-smoke-report-production`.
 
 ### Deployed DAST
 
