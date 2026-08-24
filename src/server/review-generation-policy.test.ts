@@ -7,6 +7,7 @@ const freeCapabilities: LaunchCapabilities = {
   profile: "free",
   aiCritique: false,
   bugReportEmail: false,
+  community: false,
   sourceImageStorage: false,
 };
 
@@ -14,6 +15,7 @@ const fullCapabilities: LaunchCapabilities = {
   profile: "full",
   aiCritique: true,
   bugReportEmail: true,
+  community: false,
   sourceImageStorage: true,
 };
 

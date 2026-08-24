@@ -6,6 +6,7 @@ import { sendBugReportEmail } from "@/server/bug-report-email";
 import { saveBugReport, updateBugReportEmailStatus } from "@/server/bug-report-storage";
 import { FirebaseAdminUnavailableError } from "@/server/firebase-admin";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
+import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
 const BUG_REPORT_RATE_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
 
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   if ("response" in rateLimit) return rateLimit.response;
 
   try {
-    const parsed = bugReportRequestSchema.parse(await request.json());
+    const parsed = bugReportRequestSchema.parse(await readJsonBody(request, REQUEST_BODY_LIMITS.bugReportJson));
     const report = await saveBugReport({
       ...parsed,
       requestId: context.requestId,
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
       { status: 201, headers: jsonHeaders(context) },
     );
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }

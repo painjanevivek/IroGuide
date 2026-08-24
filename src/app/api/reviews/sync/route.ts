@@ -3,16 +3,17 @@ import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
 import { importedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceSameOriginRequest, requireContentType, requireTrustedClientKey } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { syncReviewDocumentsForUser } from "@/server/review-storage";
+import { getRequestBodyError, readFormDataBody, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
 const syncRequestSchema = z.strictObject({
   documents: z.array(importedReviewDocumentSchema).max(30),
 });
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const SYNC_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
 
@@ -35,8 +36,10 @@ export async function POST(request: Request) {
   try {
     const decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
     verifiedUserId = decodedToken.uid;
+    const identity = requireTrustedClientKey(request, context, "review_sync");
+    if ("response" in identity) return identity.response;
     const rateLimit = await checkRateLimit({
-      key: `review-sync:${decodedToken.uid}:${getClientKey(request, "unknown")}`,
+      key: `review-sync:${decodedToken.uid}:${identity.key}`,
       ...SYNC_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {
@@ -58,6 +61,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "review_sync.admin_unavailable", context);
       return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });
@@ -87,13 +92,13 @@ export async function POST(request: Request) {
 async function parseSyncRequest(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.includes("multipart/form-data")) {
-    const body: unknown = await request.json();
+    const body = await readJsonBody(request, REQUEST_BODY_LIMITS.reviewSyncJson);
     return {
       documents: syncRequestSchema.parse(body).documents,
     };
   }
 
-  const formData = await request.formData();
+  const formData = await readFormDataBody(request, REQUEST_BODY_LIMITS.reviewSyncMultipart);
   const documentValue = formData.get("document");
   if (typeof documentValue !== "string") {
     throw new ReviewSyncValidationError("Review sync details are incomplete or invalid.");
@@ -116,7 +121,7 @@ async function parseSourceImageUpload(image: File) {
     throw new ReviewSyncValidationError("Choose a PNG, JPEG, or WebP image.");
   }
   if (image.size <= 0 || image.size > MAX_IMAGE_SIZE) {
-    throw new ReviewSyncValidationError("Use an image between 1 byte and 10 MB.");
+    throw new ReviewSyncValidationError("Use an image between 1 byte and 4 MB.");
   }
 
   const bytes = new Uint8Array(await image.arrayBuffer());

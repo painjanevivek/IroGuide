@@ -16,12 +16,19 @@ export const improvementRequestSchema = z.object({
 });
 
 export const improvementOutputSchema = z.object({
+  schemaVersion: z.literal(1),
   title: z.string(),
   steps: z.array(improvementStepSchema).min(1),
   prompt: z.string().min(80),
   solvedIssues: z.array(z.string()),
   manualChecks: z.array(z.string()),
   provider: z.literal("demo"),
+  provenance: z.strictObject({
+    kind: z.literal("deterministic-derived"),
+    generatorVersion: z.literal("derived-plan-v1"),
+    sourceReviewId: z.string().min(1),
+    sourceReviewProvider: z.enum(["demo", "live"]),
+  }),
 });
 
 export type ImprovementRequest = z.infer<typeof improvementRequestSchema>;

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, LockKeyhole, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
 import { HeaderAuthLinks } from "@/features/auth/auth-nav";
 import { CommunityBoard } from "@/features/community/community-board";
 import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
 import { siteConfig } from "@/config/site";
+import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 
 export const metadata: Metadata = {
   title: "IroGuide Community - Structured Creative Feedback",
@@ -18,9 +19,12 @@ export const metadata: Metadata = {
     description: "Explore the IroGuide community concept for thoughtful design critique, weekly practice, and more useful creative feedback.",
     url: `${siteConfig.url}/community`,
   },
+  robots: { index: false, follow: false },
 };
 
 export default function CommunityPage() {
+  if (!getServerLaunchCapabilities().community) return <CommunityUnavailable />;
+
   return (
     <div className="community-page">
       <header className="simple-header community-nav">
@@ -68,6 +72,37 @@ export default function CommunityPage() {
           <h2>Build in public.<br /><span>Improve with purpose.</span></h2>
           <p>Start with a private critique, shape the next version, and turn the feedback into a story worth sharing.</p>
           <CommunityPrivateCritiqueLink className="button button-lime button-large" />
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function CommunityUnavailable() {
+  return (
+    <div className="community-page">
+      <header className="simple-header community-nav">
+        <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
+        <nav><HeaderAuthLinks /></nav>
+      </header>
+      <main>
+        <section className="community-hero">
+          <div>
+            <p className="eyebrow light"><LockKeyhole /> Community is gated</p>
+            <h1>Private practice<br /><span>comes first.</span></h1>
+            <p>We are proving that private, structured critique helps designers improve before opening a public sharing space. No Community posts or interactions are available in this launch profile.</p>
+            <div className="preview-notice">
+              <ShieldCheck />
+              <span><strong>An intentional boundary</strong> Your private review history is not published. Community will remain closed until retention, moderation, deletion, and abuse-safety gates are proven.</span>
+            </div>
+            <div className="community-gated-actions">
+              <Link className="button button-lime" href="/dashboard">Open your workspace <ArrowRight size={17} /></Link>
+              <Link className="button-secondary" href="/docs">Read how IroGuide works</Link>
+            </div>
+          </div>
+          <div className="community-orbit" aria-hidden="true">
+            <span>PRIVATE BY DEFAULT</span><span>PROVE THE LOOP</span><span>OPEN RESPONSIBLY</span><div><LockKeyhole /></div>
+          </div>
         </section>
       </main>
     </div>

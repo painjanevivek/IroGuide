@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import type { ReviewRequest } from "@/domain/review";
 import { createStoredReviewDocument } from "@/lib/review-persistence";
-import { isAccountReviewPublishable, mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
+import { getProgressCohort, getProgressEvidence, isAccountReviewPublishable, mergeAccountReviews, toAccountStoredReview } from "./account-reviews";
 
 const request: ReviewRequest = {
   category: "logo",
@@ -35,7 +35,8 @@ describe("account reviews", () => {
     });
 
     expect(toAccountStoredReview(document.id, document)).toMatchObject({
-      category: "Logo",
+      category: "logo",
+      categoryLabel: "Logo",
       documentId: document.id,
       id: review.id,
       overallScore: review.overallScore,
@@ -78,5 +79,25 @@ describe("account reviews", () => {
 
     expect(merged.map((review) => review.id)).toEqual(["shared", "older"]);
     expect(merged[0]?.overallScore).toBe(8);
+  });
+
+  it("uses only compatible server-verified evidence for progress", () => {
+    const baseReview = { ...createDemoReview(request), id: "base", createdAt: "2026-06-20T00:00:00.000Z" };
+    const verified = (id: string, category: "logo" | "poster", provider: "demo" | "live", createdAt = "2026-06-20T00:00:00.000Z") => toAccountStoredReview(id, {
+      ...createStoredReviewDocument({ category, review: { ...baseReview, createdAt, id, provider }, userId: "user-a" }),
+      provenance: { origin: "server", schemaVersion: 1, generatedAt: "2026-06-24T00:00:00.000Z" },
+    })!;
+    const latest = verified("latest", "logo", "demo", "2026-06-24T00:00:00.000Z");
+    const compatible = verified("compatible", "logo", "demo", "2026-06-23T00:00:00.000Z");
+    const wrongCategory = verified("poster", "poster", "demo");
+    const wrongProvider = verified("live", "logo", "live");
+    const unverified = toAccountStoredReview("local", createStoredReviewDocument({ category: "logo", review: { ...baseReview, id: "local" }, userId: "user-a" }))!;
+
+    expect(getProgressEvidence([unverified, wrongProvider, wrongCategory, compatible, latest]).map((review) => review.id))
+      .toEqual(["latest", "compatible"]);
+    expect(getProgressCohort([unverified, wrongProvider, wrongCategory, compatible, latest])).toMatchObject({
+      excludedCount: 3,
+      reason: expect.stringContaining("2 compatible Logo reviews"),
+    });
   });
 });

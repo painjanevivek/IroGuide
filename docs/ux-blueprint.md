@@ -1,7 +1,7 @@
 # IroGuide UX Blueprint
 
-Status: Implementation baseline  
-Phase: 2 — UX planning and user-flow design
+Status: Capability-aware UX baseline
+Last verified: 2026-08-24
 
 ## Experience principles
 
@@ -17,24 +17,23 @@ Phase: 2 — UX planning and user-flow design
 ### Public
 
 - `/` — value, proof, category coverage, mode comparison, example critique, FAQ.
-- `/pricing` — plan comparison and usage limits.
-- `/sign-in` — email and provider entry points.
+- `/pricing` — clearly labeled pricing hypotheses; no checkout.
+- `/auth/sign-in` — Firebase email/Google entry points.
 - `/privacy` and `/terms` — upload ownership, retention, AI processing, deletion.
 
 ### Product
 
 - `/review/new` — upload, category, brief, mode, confirmation.
-- `/review/[id]` — critique, checklist, follow-up, improvement actions.
+- `/dashboard/reviews/[documentId]` — owned critique and capability-aware extensions.
 - `/dashboard` — recent work, aggregate progress, next lesson.
-- `/history` — searchable review archive.
-- `/settings` — profile, privacy, data export, account deletion.
+- `/profile` — profile, privacy, review deletion, and account deletion.
 
 Community, portfolio, and team routes remain outside MVP navigation until their phases are active.
 
 ## Primary journey
 
 1. **Understand:** the landing page demonstrates the what/why/how review structure.
-2. **Start:** “Review my design” opens the review workspace; sign-in is requested only when persistence is needed.
+2. **Start:** capability-aware review actions open the review workspace or its honest unavailable state.
 3. **Upload:** drag, paste, or browse for one supported image.
 4. **Describe:** choose category and provide audience, purpose, style, and goal.
 5. **Tune:** select Beginner, Mentor, or Direct feedback.
@@ -50,7 +49,7 @@ The flow is one responsive workspace with four visible steps rather than four pa
 
 ### Step 1 — Upload
 
-- Accept JPEG, PNG, and WebP up to 10 MB for MVP.
+- Accept JPEG, PNG, and WebP up to 4 MB while uploads transit the Function; a larger limit requires the approved direct-upload design.
 - Validate MIME signature and decoded image, not extension alone.
 - Show accepted formats, limit, privacy status, and keyboard-operable browse action.
 - After selection, show thumbnail, filename, dimensions, size, replace, and remove.
@@ -117,7 +116,7 @@ Each issue card follows the same scan order: category and priority, observed iss
 
 ### Empty state
 
-Explain the value of a first review and link directly to `/review/new`; do not show fake charts.
+Explain the value of a first review. Link to `/review/new` only with an availability-aware label; do not show fake charts.
 
 ### Populated state
 
@@ -153,4 +152,3 @@ Explain the value of a first review and link directly to `/review/new`; do not s
 ## UX acceptance path
 
 A first-time user on mobile must be able to understand the value, select a valid image, complete the minimum brief, choose a mode, survive a simulated review failure without data loss, read the highest-priority correction, and ask a follow-up using only keyboard-equivalent controls.
-

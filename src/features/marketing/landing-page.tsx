@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BookOpen,
   Check,
-  ChevronRight,
   CircleGauge,
   Eye,
   Layers3,
@@ -24,6 +23,7 @@ import { FaqAccordion } from "@/features/marketing/faq-accordion";
 import { LandingScrollHeader } from "@/features/marketing/landing-scroll-header";
 import { LandingSmoothMotion } from "@/features/marketing/landing-smooth-motion";
 import { MorphingExamplePoster } from "@/features/marketing/morphing-example-poster";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 const categories = [
   "Brand identity",
@@ -66,7 +66,7 @@ const modes = [
 
 const faqs = [
   ["Will IroGuide redesign my work automatically?", "No. Critique comes first. You stay in control and can optionally request an improvement plan later."],
-  ["What kinds of design can I review?", "The first release supports logos, posters, social posts, UI screens, websites, book covers, and packaging."],
+  ["What kinds of design will IroGuide review?", "The planned critique contract covers logos, posters, social posts, UI screens, websites, book covers, and packaging. Check review availability before preparing an upload."],
   ["Is my uploaded work private?", "Yes. Work is private by default, never added to a public gallery without permission, and can be deleted."],
   ["Does the score decide whether my design is good?", "No. Scores are navigation aids. The evidence, audience fit, and recommended changes matter more than a single number."],
 ] as const;
@@ -83,7 +83,7 @@ export function LandingPage() {
           <h1><span className="hero-title-line">IroGuide</span><span className="hero-title-line display-accent">Design critique.</span></h1>
           <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
           <div className="hero-actions">
-            <Link className="button button-large" href="/review/new" prefetch={false} data-analytics-event="hero_review_design_click">Review my design <WandSparkles size={19} /></Link>
+            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" disabledLabel="Review availability" eventName="hero_review_design_click" />
             <LandingHeroAuthButton />
             <Link className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></Link>
           </div>
@@ -151,7 +151,7 @@ export function LandingPage() {
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
         <Stagger className="mode-grid" revealOnScroll>
-          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><Link href="/review/new" prefetch={false} data-analytics-event="mode_review_click" data-analytics-label={mode.title}>Try {mode.title} mode <ChevronRight size={17} /></Link></StaggerItem>)}
+          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledLabel="Mode availability" eventName="mode_review_click" /></StaggerItem>)}
         </Stagger>
       </section>
 
@@ -169,7 +169,7 @@ export function LandingPage() {
           <div className="score-bars">
             {[['Composition', 7], ['Typography', 6], ['Hierarchy', 5], ['Color', 8]].map(([label, score]) => <div key={String(label)}><span>{label}</span><i><b style={{width: `${Number(score) * 10}%`}} /></i><strong>{score}</strong></div>)}
           </div>
-          <Link className="button button-dark" href="/review/new" prefetch={false} data-analytics-event="example_review_click">Get feedback on my work <ArrowRight size={18} /></Link>
+          <ReviewLaunchLink className="button button-dark" enabledLabel="Get feedback on my work" disabledLabel="Review availability" eventName="example_review_click" />
         </div>
       </section>
 
@@ -188,7 +188,7 @@ export function LandingPage() {
       <section className="trust-strip section-pad">
         <LockKeyhole size={36} />
         <div><p className="eyebrow light">Your work is still your work</p><h2>Private by default.<br />Useful by design.</h2></div>
-        <p>Uploads are analyzed only to create your critique. Nothing becomes public without explicit permission, and deletion stays within reach.</p>
+        <p>When review processing is enabled, validated uploads are used only for the requested critique. The current free profile sends no new design to a provider, Community is closed, and deletion stays within reach.</p>
       </section>
 
       <section className="faq-section section-pad" id="faq">

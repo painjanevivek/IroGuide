@@ -6,9 +6,11 @@ import { AuthTransitionLink } from "./auth-transition-link";
 import { useAuth } from "./auth-provider";
 import { UserMenu } from "./user-menu";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
+import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 
 export function LandingHeaderActions() {
   const { user, loading } = useAuth();
+  const { community } = useLaunchCapabilities();
 
   if (loading) {
     return (
@@ -22,7 +24,7 @@ export function LandingHeaderActions() {
     return (
       <div className="header-actions">
         <Link className="text-link desktop-only" href="/docs" prefetch={false}>Docs</Link>
-        <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
+        {community && <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>}
         <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
         <UserMenu />
       </div>
@@ -32,7 +34,7 @@ export function LandingHeaderActions() {
   return (
     <div className="header-actions">
       <Link className="text-link desktop-only" href="/docs" prefetch={false}>Docs</Link>
-      <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>
+      {community && <Link className="text-link desktop-only" href="/community" prefetch={false}>Community</Link>}
       <Link className="text-link desktop-only" href="/dashboard" prefetch={false}>Dashboard</Link>
       <AuthTransitionLink className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false} data-analytics-event="nav_sign_in_click">Sign in</AuthTransitionLink>
       <AuthTransitionLink className="button button-small" href="/auth?mode=sign-up" prefetch={false} data-analytics-event="nav_sign_up_click">Sign up <ArrowRight size={16} /></AuthTransitionLink>

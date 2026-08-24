@@ -14,8 +14,10 @@ service cloud.firestore {
       return signedIn() && request.resource.data.userId == request.auth.uid;
     }
 
-    function isPublicCommunityPost() {
-      return resource.data.visibility == "public";
+    function communityEnabled() {
+      // Community remains an explicit launch gate. Rules are deployed closed;
+      // activation requires a reviewed rules change, not a client-side flag.
+      return false;
     }
 
     function ownsReview(reviewId) {
@@ -53,7 +55,7 @@ service cloud.firestore {
         && data.file.keys().hasOnly(["name", "type", "size"])
         && data.file.name is string && data.file.name.size() > 0 && data.file.name.size() <= 180
         && data.file.type in ["image/jpeg", "image/png", "image/webp"]
-        && data.file.size is int && data.file.size > 0 && data.file.size <= 10 * 1024 * 1024
+        && data.file.size is int && data.file.size > 0 && data.file.size <= 4 * 1024 * 1024
       );
     }
 
@@ -69,44 +71,6 @@ service cloud.firestore {
         && hasValidDraftBrief(data.brief)
         && (!("createdAt" in data) || isBoundedDate(data.createdAt))
         && isBoundedDate(data.updatedAt);
-    }
-
-    function hasValidImportedReview(data) {
-      return data is map
-        && data.keys().hasAll(["id", "createdAt", "overallScore", "summary", "strengths", "scores", "rubricVersion", "issues", "annotations", "checklist", "followUps", "provider"])
-        && data.keys().hasOnly(["id", "createdAt", "overallScore", "summary", "strengths", "scores", "rubricVersion", "issues", "annotations", "checklist", "followUps", "provider"])
-        && data.id is string && data.id.size() > 0 && data.id.size() <= 320
-        && data.createdAt is string && data.createdAt.size() <= 64
-        && data.overallScore is number && data.overallScore >= 0 && data.overallScore <= 10
-        && data.summary is string && data.summary.size() <= 4000
-        && data.strengths is list && data.strengths.size() > 0 && data.strengths.size() <= 20
-        && data.scores is list && data.scores.size() <= 20
-        && data.rubricVersion is string && data.rubricVersion.size() > 0 && data.rubricVersion.size() <= 80
-        && data.issues is list && data.issues.size() > 0 && data.issues.size() <= 50
-        && data.annotations is list && data.annotations.size() <= 50
-        && data.checklist is list && data.checklist.size() <= 50
-        && data.followUps is list && data.followUps.size() <= 20
-        && data.provider == "demo";
-    }
-
-    function isValidImportedReview(data) {
-      return data.keys().hasAll(["id", "userId", "origin", "status", "review", "category", "categoryLabel", "savedAt", "updatedAt", "syncState"])
-        && data.keys().hasOnly(["id", "userId", "origin", "status", "review", "category", "categoryLabel", "savedAt", "updatedAt", "syncState"])
-        && data.id is string && data.id.size() > 0 && data.id.size() <= 700
-        && data.origin == "imported"
-        && data.status == "imported"
-        && isReviewCategory(data.category)
-        && data.categoryLabel is string && data.categoryLabel.size() > 0 && data.categoryLabel.size() <= 80
-        && isBoundedDate(data.savedAt)
-        && isBoundedDate(data.updatedAt)
-        && data.syncState in ["local", "cloud"]
-        && hasValidImportedReview(data.review);
-    }
-
-    function isValidReviewDraft(data) {
-      return data is map
-        && data.userId == request.auth.uid
-        && (isValidActiveDraft(data) || isValidImportedReview(data));
     }
 
     match /users/{userId} {
@@ -126,23 +90,28 @@ service cloud.firestore {
 
     match /reviewDrafts/{draftId} {
       allow read: if ownsExistingDocument();
-      allow create: if ownsIncomingDocument() && isValidReviewDraft(request.resource.data);
-      allow update: if ownsExistingDocument() && ownsIncomingDocument() && isValidReviewDraft(request.resource.data);
-      allow delete: if ownsExistingDocument();
+      allow create: if draftId == request.auth.uid + "_active"
+        && ownsIncomingDocument()
+        && isValidActiveDraft(request.resource.data);
+      allow update: if draftId == request.auth.uid + "_active"
+        && ownsExistingDocument()
+        && ownsIncomingDocument()
+        && isValidActiveDraft(request.resource.data);
+      allow delete: if draftId == request.auth.uid + "_active" && ownsExistingDocument();
     }
 
     match /communityPosts/{postId} {
-      allow read: if signedIn() && isPublicCommunityPost();
+      allow read: if communityEnabled() && signedIn() && resource.data.visibility == "public";
       allow create, update, delete: if false;
 
       match /comments/{commentId} {
-        allow read: if signedIn()
+        allow read: if communityEnabled() && signedIn()
           && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
         allow write: if false;
       }
 
       match /interactions/{userId} {
-        allow read: if signedIn()
+        allow read: if communityEnabled() && signedIn()
           && userId == request.auth.uid
           && get(/databases/$(database)/documents/communityPosts/$(postId)).data.visibility == "public";
         allow write: if false;

@@ -4,6 +4,7 @@ export type LaunchCapabilities = Readonly<{
   profile: LaunchProfile;
   aiCritique: boolean;
   bugReportEmail: boolean;
+  community: boolean;
   sourceImageStorage: boolean;
 }>;
 
@@ -17,18 +18,21 @@ const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object
     profile: "free",
     aiCritique: false,
     bugReportEmail: false,
+    community: false,
     sourceImageStorage: false,
   }),
   full: Object.freeze({
     profile: "full",
     aiCritique: true,
     bugReportEmail: true,
+    community: false,
     sourceImageStorage: true,
   }),
   development: Object.freeze({
     profile: "development",
     aiCritique: true,
     bugReportEmail: false,
+    community: false,
     sourceImageStorage: false,
   }),
 });

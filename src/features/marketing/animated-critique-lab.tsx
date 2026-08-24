@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   Flip,
   gsap,
@@ -12,6 +11,7 @@ import {
 } from "@/components/motion/gsap-runtime";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
 import { clampCritiqueBeatIndex, critiqueBeats, getCritiqueBeat } from "@/features/marketing/critique-preview-model";
+import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 export function AnimatedCritiqueLab() {
   const reducedMotion = usePrefersReducedMotion();
@@ -145,9 +145,7 @@ export function AnimatedCritiqueLab() {
         <h2 id="gsap-lab-title" ref={titleRef}>A review path you can feel before you submit.</h2>
         <p>This illustrative preview shows how IroGuide moves from evidence to a useful next move. It is not a critique of your design.</p>
         <p className="gsap-lab-status">Choose an insight to inspect the example in your own time.</p>
-        <Link className="button button-lime" href="/review/new" prefetch={false} data-analytics-event="gsap_lab_review_click">
-          Start a real review <ArrowRight size={18} />
-        </Link>
+        <ReviewLaunchLink className="button button-lime" enabledLabel="Start a real review" disabledLabel="Review availability" eventName="gsap_lab_review_click" />
       </div>
 
       <div className="gsap-lab-panel" aria-labelledby="gsap-lab-title">

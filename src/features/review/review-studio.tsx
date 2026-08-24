@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, FileImage, LockKeyhole, RotateCcw, Sparkles, Upload, X } from "lucide-react";
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AnimatedScoreBar } from "@/components/motion/animated-score-bar";
 import { Reveal } from "@/components/motion/reveal";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -19,7 +18,6 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { postFormDataWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
-import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { cacheReviewDocument, createStoredReviewDocument } from "@/lib/review-persistence";
 import { cacheLocalReviewSourceImage } from "@/lib/review-source-image-cache";
 import { AnalysisStageDisplay } from "./analysis-stage-display";
@@ -29,8 +27,9 @@ import { FollowUpChat } from "./follow-up-chat";
 import { ImprovementPanel } from "./improvement-panel";
 import { ReviewFindingFeedback } from "./review-finding-feedback";
 import { ReviewExtensionsUnavailable, ReviewUnavailable } from "./review-unavailable";
+import { deleteActiveReviewDraft, loadActiveReviewDraft, saveActiveReviewDraft } from "./review-draft-service";
 
-const MAX_SIZE = 10 * 1024 * 1024;
+const MAX_SIZE = 4 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 type Step = 1 | 2 | 3 | 4;
 type DragState = "idle" | "accept" | "reject";
@@ -164,12 +163,9 @@ function ReviewStudioFlow() {
     let active = true;
     hasLoadedDraftRef.current = true;
 
-    void getDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)))
-      .then((snapshot) => {
-        if (!active || !snapshot.exists()) return;
-        const parsed = reviewDraftSchema.safeParse(snapshot.data());
-        if (!parsed.success) return;
-        const restoredDraft = parsed.data;
+    void loadActiveReviewDraft(user.uid)
+      .then((restoredDraft) => {
+        if (!active || !restoredDraft) return;
         if (file || hasBriefContent(brief)) return;
         hasNavigatedRef.current = true;
         setCategory(restoredDraft.category);
@@ -205,11 +201,7 @@ function ReviewStudioFlow() {
       if (!parsed.success) return;
 
       setDraftStatus("Saving draft...");
-      void setDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(user.uid)), {
-        ...parsed.data,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true })
+      void saveActiveReviewDraft(parsed.data)
         .then(() => setDraftStatus("Draft saved to dashboard"))
         .catch(() => setDraftStatus("Draft save will retry"));
     }, DRAFT_SAVE_DELAY_MS);
@@ -243,7 +235,7 @@ function ReviewStudioFlow() {
     setUploadStatus("");
     if (!candidate) return;
     if (!ACCEPTED.includes(candidate.type)) { setFileError("Choose a PNG, JPEG, or WebP image."); return; }
-    if (candidate.size > MAX_SIZE) { setFileError("This file is larger than the 10 MB limit."); return; }
+    if (candidate.size > MAX_SIZE) { setFileError("This file is larger than the 4 MB limit."); return; }
     if (candidate.size === 0) { setFileError("This file appears to be empty."); return; }
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     const nextPreview = URL.createObjectURL(candidate);
@@ -377,7 +369,7 @@ function ReviewStudioFlow() {
         <section className="studio-workspace">
           <div className="workspace-top" aria-live="polite"><span className="mono-label">STEP {step} / 4</span><span>{stepSummaries[step - 1]}</span></div>
           <StepTransition direction={stepDirection} stepKey={step}>
-          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()} data-analytics-event="review_replace_image_click"><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" data-drag-state={dragState} onDragEnter={onDragOver} onDragOver={onDragOver} onDragLeave={() => setDragState("idle")} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>{dragState === "reject" ? "This file type is not supported" : dragState === "accept" ? "Release to add this design" : "Drop your design here"}</h3><p>{dragState === "reject" ? "Use a PNG, JPEG, or WebP image." : "or choose a file from your device"}</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()} data-analytics-event="review_browse_files_click">Browse files</button><span>PNG, JPEG, or WebP · 10 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{uploadStatus && <p className="upload-status" role="status" aria-live="polite"><Check size={16} /> {uploadStatus}</p>}{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}{submitError && !file && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<section className="sample-gallery" aria-labelledby="sample-gallery-title"><header><div><span className="mono-label">Try a sample</span><h3 id="sample-gallery-title">Or choose a critic sample</h3></div><p>Each sample selects its matching feedback mode and gives you a concrete design to critique.</p></header><div className="sample-grid">{sampleDesigns.map((sample) => <button key={sample.mode} type="button" className={`sample-card sample-${sample.mode}`} aria-pressed={selectedSampleMode === sample.mode} onClick={() => void selectSampleDesign(sample)} data-analytics-event="review_sample_select" data-analytics-label={sample.mode}><SampleDesignThumbnail mode={sample.mode} /><span className="sample-card-copy"><strong>{sample.title}</strong><span>{sample.description}</span></span><span className="sample-action">{selectedSampleMode === sample.mode ? "Selected" : "Use sample"}</span></button>)}</div></section><div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => goToStep(2)} data-analytics-event="review_upload_continue_click">Continue <ArrowRight size={17} /></button></div></div>}
+          {step === 1 && <div className="form-panel"><div className="panel-heading"><span>01</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Upload your design</h2><p>We&apos;ll use your brief to critique it—not judge it in a vacuum.</p></div></div>{preview && file ? <div className="upload-preview"><div className="preview-media"><Image src={preview} alt="Selected design preview" fill unoptimized /></div><div className="file-meta"><FileImage /><div><strong>{file.name}</strong><span>{(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.replace("image/", "").toUpperCase()}</span></div><button type="button" aria-label="Remove selected image" onClick={removeFile}><X /></button></div><button type="button" className="button-secondary" onClick={() => inputRef.current?.click()} data-analytics-event="review_replace_image_click"><RotateCcw size={16} /> Replace image</button></div> : <div className="drop-zone" data-drag-state={dragState} onDragEnter={onDragOver} onDragOver={onDragOver} onDragLeave={() => setDragState("idle")} onDrop={onDrop}><div className="upload-icon"><Upload /></div><h3>{dragState === "reject" ? "This file type is not supported" : dragState === "accept" ? "Release to add this design" : "Drop your design here"}</h3><p>{dragState === "reject" ? "Use a PNG, JPEG, or WebP image." : "or choose a file from your device"}</p><button type="button" className="button button-dark" onClick={() => inputRef.current?.click()} data-analytics-event="review_browse_files_click">Browse files</button><span>PNG, JPEG, or WebP · 4 MB maximum</span></div>}<input ref={inputRef} className="sr-only" type="file" accept={ACCEPTED.join(",")} onChange={onInput} />{uploadStatus && <p className="upload-status" role="status" aria-live="polite"><Check size={16} /> {uploadStatus}</p>}{fileError && <p className="form-error" role="alert"><AlertCircle /> {fileError}</p>}{submitError && !file && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<section className="sample-gallery" aria-labelledby="sample-gallery-title"><header><div><span className="mono-label">Try a sample</span><h3 id="sample-gallery-title">Or choose a critic sample</h3></div><p>Each sample selects its matching feedback mode and gives you a concrete design to critique.</p></header><div className="sample-grid">{sampleDesigns.map((sample) => <button key={sample.mode} type="button" className={`sample-card sample-${sample.mode}`} aria-pressed={selectedSampleMode === sample.mode} onClick={() => void selectSampleDesign(sample)} data-analytics-event="review_sample_select" data-analytics-label={sample.mode}><SampleDesignThumbnail mode={sample.mode} /><span className="sample-card-copy"><strong>{sample.title}</strong><span>{sample.description}</span></span><span className="sample-action">{selectedSampleMode === sample.mode ? "Selected" : "Use sample"}</span></button>)}</div></section><div className="panel-actions"><span /><button type="button" className="button" disabled={!file} onClick={() => goToStep(2)} data-analytics-event="review_upload_continue_click">Continue <ArrowRight size={17} /></button></div></div>}
 
           {step === 2 && <div className="form-panel"><div className="panel-heading"><span>02</span><div><h2 ref={stepHeadingRef} tabIndex={-1}>Give us the brief</h2><p>A good critique depends on audience, purpose, and intent.</p></div></div><fieldset className="category-field"><legend>Design category</legend><div className="category-grid">{reviewCategories.map((item) => <label key={item}><input type="radio" name="category" checked={category === item} onChange={() => setCategory(item)} /><span>{categoryLabels[item]}</span></label>)}</div></fieldset><div className="field-grid">{([['audience','Target audience','e.g. Independent designers aged 22–35'],['purpose','Purpose','e.g. Launch a creative conference'],['style','Style direction','e.g. Bold, editorial, energetic'],['goal','Primary goal','e.g. Drive early-bird registrations']] as const).map(([key,label,placeholder]) => <label className="field" key={key}><span>{label} <b>Required</b></span><textarea rows={2} value={brief[key]} placeholder={placeholder} onChange={(event) => { setSubmitError(""); setBrief({...brief, [key]: event.target.value}); }} required /></label>)}</div><label className="field"><span>Specific concern <em>Optional</em></span><textarea rows={3} value={brief.concern} placeholder="What already feels unresolved?" onChange={(event) => { setSubmitError(""); setBrief({...brief, concern: event.target.value}); }} /></label>{submitError && !briefValid && <p className="form-error" role="alert"><AlertCircle /> {submitError}</p>}<div className="panel-actions"><button type="button" className="button-secondary" onClick={() => goToStep(1)}><ArrowLeft size={16} /> Back</button><button type="button" className="button" disabled={!briefValid} onClick={() => goToStep(3)}>Choose feedback <ArrowRight size={17} /></button></div></div>}
 
@@ -586,15 +578,6 @@ async function cacheCompletedReviewForDashboard(userId: string, review: ReviewOu
         sourceImage,
         message: "Saved privately on this device as unverified. Rerun the critique when account saving is available to create a trusted copy.",
       };
-}
-
-async function deleteActiveReviewDraft(userId: string) {
-  if (isE2ELocalAuthEnabled()) return;
-  await deleteDoc(doc(getFirebaseClientFirestore(), "reviewDrafts", getActiveReviewDraftId(userId)));
-}
-
-function getActiveReviewDraftId(userId: string) {
-  return `${userId}_active`;
 }
 
 function hasBriefContent(brief: { audience: string; purpose: string; style: string; goal: string; concern: string }) {

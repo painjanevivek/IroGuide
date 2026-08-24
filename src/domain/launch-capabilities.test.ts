@@ -7,6 +7,7 @@ describe("launch capabilities", () => {
       profile: "free",
       aiCritique: false,
       bugReportEmail: false,
+      community: false,
       sourceImageStorage: false,
     });
   });
@@ -16,6 +17,7 @@ describe("launch capabilities", () => {
       profile: "full",
       aiCritique: true,
       bugReportEmail: true,
+      community: false,
       sourceImageStorage: true,
     });
   });
@@ -25,6 +27,7 @@ describe("launch capabilities", () => {
       profile: "development",
       aiCritique: true,
       bugReportEmail: false,
+      community: false,
       sourceImageStorage: false,
     });
   });
@@ -36,6 +39,7 @@ describe("launch capabilities", () => {
         profile: "free",
         aiCritique: false,
         bugReportEmail: false,
+        community: false,
         sourceImageStorage: false,
       });
     },

@@ -116,6 +116,16 @@ export function resolveRateLimitMode(hasRedis: boolean, env = process.env) {
   return isDistributedRateLimitRequired(env) ? "deny" : "local";
 }
 
+export function getRateLimitStatus() {
+  const distributedConfigured = Boolean(redis);
+  const mode = resolveRateLimitMode(distributedConfigured);
+  return {
+    distributedConfigured,
+    mode,
+    ready: mode !== "deny",
+  } as const;
+}
+
 function getDistributedLimiter(limit: number, windowMs: number) {
   const cacheKey = `${limit}:${windowMs}`;
   const cached = distributedLimiters.get(cacheKey);

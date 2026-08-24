@@ -2,15 +2,16 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
-import { enforceSameOriginRequest, requireContentType } from "@/server/api-security";
+import { enforceSameOriginRequest, requireContentType, requireTrustedClientKey } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
-import { createRequestContext, getClientKey, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
+import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
+import { getRequestBodyError, readFormDataBody, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const REVIEW_AUTH_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 const REVIEW_RATE_LIMIT = { limit: 12, windowMs: 10 * 60 * 1000 };
@@ -30,7 +31,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sign in again before starting a critique." }, { status: 401, headers: jsonHeaders(context) });
   }
 
-  const clientKey = getClientKey(request, "unknown");
+  const identity = requireTrustedClientKey(request, context, "review");
+  if ("response" in identity) return identity.response;
+  const clientKey = identity.key;
   const authRateLimit = await checkRateLimit({
     key: `review-auth:${clientKey}`,
     ...REVIEW_AUTH_RATE_LIMIT,
@@ -74,6 +77,8 @@ export async function POST(request: Request) {
       persistence,
     }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
     if (error instanceof FirebaseAdminUnavailableError) {
       logRequestEvent("error", "review.admin_unavailable", context);
       return NextResponse.json({ error: error.message }, { status: 503, headers: jsonHeaders(context) });
@@ -131,12 +136,12 @@ async function parseReviewRequest(request: Request) {
     return parseMultipartReviewRequest(request);
   }
 
-  const body: unknown = await request.json();
+  const body = await readJsonBody(request, REQUEST_BODY_LIMITS.reviewJson);
   return reviewRequestSchema.parse(body);
 }
 
 async function parseMultipartReviewRequest(request: Request) {
-  const formData = await request.formData();
+  const formData = await readFormDataBody(request, REQUEST_BODY_LIMITS.reviewMultipart);
   const category = getRequiredString(formData, "category");
   const mode = getRequiredString(formData, "mode");
   const brief = parseBrief(getRequiredString(formData, "brief"));
@@ -149,7 +154,7 @@ async function parseMultipartReviewRequest(request: Request) {
     throw new ReviewRequestValidationError("Choose a PNG, JPEG, or WebP image.");
   }
   if (image.size <= 0 || image.size > MAX_IMAGE_SIZE) {
-    throw new ReviewRequestValidationError("Use an image between 1 byte and 10 MB.");
+    throw new ReviewRequestValidationError("Use an image between 1 byte and 4 MB.");
   }
 
   const bytes = new Uint8Array(await image.arrayBuffer());

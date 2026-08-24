@@ -7,6 +7,7 @@ export type ProgressReview = {
   overallScore: number;
   createdAt: string;
   scores: ProgressDimensionScore[];
+  issues?: Array<{ category: string }>;
 };
 
 export type ProgressSummary = {
@@ -17,6 +18,8 @@ export type ProgressSummary = {
   weakest: ProgressDimensionScore | null;
   lesson: string;
   insights: string[];
+  evidenceState: "empty" | "baseline" | "comparable";
+  recurringIssues: Array<{ category: string; count: number }>;
 };
 
 const emptyProgressSummary: ProgressSummary = {
@@ -27,15 +30,18 @@ const emptyProgressSummary: ProgressSummary = {
   weakest: null,
   lesson: "Complete a first review to unlock a personalized practice suggestion.",
   insights: [],
+  evidenceState: "empty",
+  recurringIssues: [],
 };
 
-export function calculateProgress(reviews: ProgressReview[]): ProgressSummary {
+export function calculateProgress(reviews: readonly ProgressReview[]): ProgressSummary {
   if (reviews.length === 0) {
     return emptyProgressSummary;
   }
 
   const chronologicalReviews = [...reviews].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-  const dimensionAverages = getDimensionAverages(reviews);
+  const hasComparableSample = reviews.length >= 2;
+  const dimensionAverages = hasComparableSample ? getDimensionAverages(reviews) : [];
   const weakest = dimensionAverages.length > 0 ? dimensionAverages[dimensionAverages.length - 1] : null;
   const strongest = dimensionAverages[0] ?? null;
   const scoreChange = getScoreChange(chronologicalReviews);
@@ -48,10 +54,24 @@ export function calculateProgress(reviews: ProgressReview[]): ProgressSummary {
     weakest,
     lesson: getPracticeLesson(weakest),
     insights: getProgressInsights({ totalReviews: reviews.length, scoreChange, strongest, weakest }),
+    evidenceState: hasComparableSample ? "comparable" : "baseline",
+    recurringIssues: hasComparableSample ? getRecurringIssues(reviews) : [],
   };
 }
 
-function getDimensionAverages(reviews: ProgressReview[]): ProgressDimensionScore[] {
+function getRecurringIssues(reviews: readonly ProgressReview[]) {
+  const counts = new Map<string, number>();
+  for (const review of reviews) {
+    const categories = new Set(review.issues?.map((issue) => issue.category.trim()).filter(Boolean) ?? []);
+    for (const category of categories) counts.set(category, (counts.get(category) ?? 0) + 1);
+  }
+  return [...counts]
+    .filter(([, count]) => count >= 2)
+    .map(([category, count]) => ({ category, count }))
+    .sort((left, right) => right.count - left.count || left.category.localeCompare(right.category));
+}
+
+function getDimensionAverages(reviews: readonly ProgressReview[]): ProgressDimensionScore[] {
   const dimensions = new Map<string, number[]>();
 
   for (const review of reviews) {
@@ -67,7 +87,7 @@ function getDimensionAverages(reviews: ProgressReview[]): ProgressDimensionScore
   })).sort((a, b) => b.score - a.score);
 }
 
-function getScoreChange(chronologicalReviews: ProgressReview[]): number | null {
+function getScoreChange(chronologicalReviews: readonly ProgressReview[]): number | null {
   const firstReview = chronologicalReviews[0];
   const latestReview = chronologicalReviews.length > 0
     ? chronologicalReviews[chronologicalReviews.length - 1]
@@ -101,8 +121,7 @@ function getProgressInsights({
   if (totalReviews === 1) {
     return [
       "This first critique is your baseline. Complete one more review to unlock trend language.",
-      strongest ? `${strongest.label} is the strongest starting point at ${strongest.score}/10.` : "Add scored dimensions to identify a strength.",
-      weakest ? `${weakest.label} is the first practice area to watch.` : "Add scored dimensions to identify a practice area.",
+      "Strengths and practice recommendations require two compatible, server-verified reviews.",
     ];
   }
 

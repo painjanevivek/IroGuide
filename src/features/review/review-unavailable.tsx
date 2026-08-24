@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, LayoutDashboard, MessageSquareText, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpen, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 export function ReviewUnavailable() {
   return (
@@ -18,7 +18,6 @@ export function ReviewUnavailable() {
         </p>
         <div className="review-unavailable-actions">
           <Link className="button button-dark" href="/dashboard"><LayoutDashboard /> Dashboard <ArrowRight /></Link>
-          <Link className="button-secondary" href="/community"><MessageSquareText /> Community</Link>
           <Link className="button-secondary" href="/docs"><BookOpen /> Read the docs</Link>
         </div>
         <p className="review-unavailable-note">

@@ -16,7 +16,7 @@ const menuItems = [
 
 export function UserMenu() {
   const { user, avatarUrl, loading, signOut } = useAuth();
-  const { aiCritique } = useLaunchCapabilities();
+  const { aiCritique, community } = useLaunchCapabilities();
 
   if (loading) return <span className="auth-status">Checking session...</span>;
   if (!user) return <span className="auth-status">Google sign-in required</span>;
@@ -31,7 +31,7 @@ export function UserMenu() {
           <span>Workspace</span>
           <strong>{getUserLabel(user.displayName, user.email, user.phoneNumber)}</strong>
         </div>
-        {menuItems.map((item, index) => {
+        {menuItems.filter((item) => item.href !== "/community" || community).map((item, index) => {
           const Icon = item.icon;
           const label = item.href === "/review/new" && !aiCritique ? "Review availability" : item.label;
           return (

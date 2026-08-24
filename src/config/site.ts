@@ -43,7 +43,6 @@ export const siteConfig = {
     { label: "Contact", href: "/contact" },
     { label: "Bug report", href: "/contact#bug-report" },
     { label: "Pricing", href: "/pricing" },
-    { label: "Community", href: "/community" },
     { label: "Beta", href: "/beta" },
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },

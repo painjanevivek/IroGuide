@@ -3,6 +3,8 @@ import { ZodError } from "zod";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
 import { CommunityMutationError, mutateCommunity } from "@/server/community-storage";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
+import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
+import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
 
 const COMMUNITY_MUTATION_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 };
 
@@ -10,6 +12,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createPublicRequestContext(request, "api.community.mutate");
+  if (!getServerLaunchCapabilities().community) {
+    logRequestEvent("warn", "community_mutation.capability_blocked", context);
+    return NextResponse.json(
+      { error: "Community is not available in the current launch profile." },
+      { status: 404, headers: jsonHeaders(context) },
+    );
+  }
   const originCheck = enforceSameOriginRequest(request, context, "community_mutation");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "community_mutation");
@@ -31,10 +40,12 @@ export async function POST(request: Request) {
   if ("response" in rateLimit) return rateLimit.response;
 
   try {
-    const result = await mutateCommunity(auth.user, await request.json());
+    const result = await mutateCommunity(auth.user, await readJsonBody(request, REQUEST_BODY_LIMITS.communityJson));
     logRequestEvent("info", "community_mutation.completed", context, { user: auth.userLogId });
     return NextResponse.json(result, { headers: jsonHeaders(context) });
   } catch (error) {
+    const bodyError = getRequestBodyError(error);
+    if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
     }

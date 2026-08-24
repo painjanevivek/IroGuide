@@ -1,217 +1,130 @@
 # IroGuide Technical Architecture
 
-Status: Approved implementation baseline  
-Phase: 4 — Technical architecture planning
+Status: Current implementation baseline
+Last verified: 2026-08-24
 
-## Stack decision
+## Runtime and stack
 
-- **Application:** Next.js 16 App Router, React 19, TypeScript 6 in strict mode.
-- **Styling:** Tailwind CSS 4 plus CSS custom-property design tokens.
-- **Validation:** Zod 4 at every untrusted boundary.
-- **Persistence:** Cloud Firestore accessed through trusted backend repositories.
-- **Authentication:** Firebase Authentication with Google sign-in and backend ID-token verification.
-- **Storage:** private Firebase Storage objects scoped by authenticated user ownership.
-- **AI:** server-only OpenRouter access behind an `AiReviewProvider` interface, using Qwen by default with a Gemini fallback.
-- **Testing:** Vitest and Testing Library for unit/component behavior; Playwright for critical flows.
-- **Observability:** structured server logs, request correlation IDs, error reporting adapter, and privacy-safe product events.
+IroGuide is one integrated Next.js 16 application, not a separate frontend/backend pair.
 
-Dependencies are pinned by the lockfile. Provider SDKs must not be imported from UI or domain modules.
-
-## System boundaries
+- Next.js App Router and React 19 render public and authenticated UI.
+- Route handlers under `src/app/api/**/route.ts` are the server API.
+- TypeScript and Zod define browser-safe domain contracts.
+- Firebase Authentication supplies identity; server routes verify Firebase ID tokens.
+- Firebase Admin accesses Firestore and private Storage from server-only modules.
+- OpenRouter is an optional server-only provider. It is inactive in production `free`.
+- Vitest, Firebase emulators, Playwright, and production smoke form the test layers.
 
 ```mermaid
 flowchart LR
-  Browser["IroGuide website"] --> Auth["Firebase Google login"]
-  Browser --> Storage["Private Firebase Storage upload"]
-  Browser --> API["IroGuide backend"]
-  Auth --> API
-  Storage --> API
-  API --> AI["OpenRouter"]
-  AI --> Validator["Zod response validator"]
-  Validator --> DB["Cloud Firestore"]
-  API --> DB
+  Browser["Browser / React"] --> Auth["Firebase Authentication"]
+  Browser --> Routes["Next.js App Router"]
+  Browser --> Rules["Firestore & Storage Rules"]
+  Routes --> Security["Origin, body, identity & rate-limit gates"]
+  Security --> Admin["Firebase Admin repositories"]
+  Security --> Provider["Optional OpenRouter adapter"]
+  Provider --> Evidence["Strict schema & evidence validation"]
+  Admin --> Firestore["Cloud Firestore"]
+  Admin --> Storage["Private Firebase Storage"]
 ```
 
-For the first deploy, the job boundary may execute synchronously with a hard timeout, but it retains an explicit interface so a durable queue can replace it without changing the review UI or domain service.
-
-## Repository and module layout
+## Module boundaries
 
 ```text
-IroGuide/
-  src/app/             Next.js routes, metadata, and layouts
-  src/features/        review, marketing, dashboard, and portfolio UI
-  src/domain/          browser-safe schemas and view-model logic
-IroGuide-backend/
-  src/domain/          review schemas, rubrics, and quality rules
-  src/services/        AI/provider-facing application services
-  src/app.ts           HTTP composition and API routes
-  src/server.ts        standalone Fastify process
+src/app/                 routes, layouts, route handlers, global styles
+src/features/<area>/     product UI and feature-local orchestration
+src/components/          reusable primitives and motion utilities
+src/domain/              pure schemas, capability rules, rubrics, progress logic
+src/lib/                 browser integrations, persistence adapters, hooks
+src/server/              auth, policy, rate limits, Firebase Admin, providers
+public/                  static public assets
+e2e/                     Playwright user journeys
 ```
 
-The frontend and backend are separate Git repositories and communicate over HTTP.
-The frontend contains no server API routes. Backend domain code does not depend
-on Fastify, Next.js, Firebase, or a provider SDK. Each repository owns its
-dependency lockfile and quality pipeline.
+Client modules never import `src/server/`. Route handlers authenticate and authorize before calling repositories or providers. Firebase client reads remain protected by rules; trusted review writes are server-only.
 
-## Core data model
+## Launch capabilities
 
-### users
+`IROGUIDE_LAUNCH_PROFILE` resolves on the server and is passed to the client provider. Invalid production values fail closed to `free`.
 
-- Firebase Authentication UID as the document ID
-- `email` case-normalized unique value
-- `display_name`, `avatar_url`, `plan`
-- `created_at`, `updated_at`, `deleted_at`
+| Capability | development | free production | full production |
+| --- | --- | --- | --- |
+| AI critique | deterministic local provider | denied | eligible only with provider readiness and entitlement |
+| Source-image storage | off by default | denied for new images | eligible with private Storage readiness |
+| Bug-report email | off | stored, delivery disabled | eligible with verified Resend configuration |
+| Community | gated | gated | gated until separate safety approval |
 
-### design_uploads
+Credentials do not enable a capability. Route-level behavior is in `docs/capability-route-matrix.md`.
 
-- `id`, `user_id`
-- `storage_key` under `users/{userId}/uploads/{uploadId}/original`
-- `original_name`, `mime_type`, `byte_size`, `width`, `height`
-- `sha256`, `category`, `status`
-- `created_at`, `deleted_at`
+## Current data model
 
-### design_briefs
+### `reviews`
 
-- `id`, `upload_id`
-- required: `target_audience`, `purpose`, `style`, `goal`
-- optional: `industry`, `brand_tone`, `platform`, `specific_concern`, `inspiration`
-- `created_at`, `updated_at`
+Server-written trusted review documents containing UID ownership, normalized output, category, provider, timestamps, sync state, optional source-image metadata, and server provenance.
 
-### reviews
+### `reviewDrafts`
 
-- `id`, `user_id`, `upload_id`, `brief_id`
-- `mode`, `status`, `schema_version`, `rubric_version`, `provider_trace_id`
-- `overall_score`, `summary`, `strengths` JSONB, `category_scores` JSONB
-- `checklist` JSONB, `uncertainty`, `created_at`, `completed_at`, `deleted_at`
+The browser may write only `<uid>_active`. Server sync may retain imported, untrusted review copies here. Imported copies cannot claim server provenance, enter progress evidence, or become public.
 
-### review_issues
+### `reviewFeedback`
 
-- `id`, `review_id`, `category`, `score`, `priority`, `position`
-- `observation`, `impact`, `recommendation`, `specific_actions` JSONB
+Server-written, owner-authorized verdicts for individual findings.
 
-### follow_up_messages
+### `bugReports`
 
-- `id`, `review_id`, `user_id`, `role`, `content`
-- `provider_trace_id`, `created_at`
+Server-written reports. Free mode stores reports and records email delivery as intentionally disabled.
 
-### improved_versions
+### Community collections
 
-- `id`, `review_id`, `kind`, `storage_key`, `prompt`, `change_summary` JSONB
-- `created_at`, `deleted_at`
+`communityPosts` and nested comments/interactions exist as inactive implementation material. Firestore reads and client writes are denied while gated.
 
-Firestore collections use `users/{userId}`, `uploads/{uploadId}`,
-`reviews/{reviewId}`, and `reviews/{reviewId}/messages/{messageId}`. Ownership
-checks are mandatory in both Firebase Security Rules and backend repositories.
-Soft deletion supports recovery while a scheduled retention process removes
-database and storage objects permanently.
+## Request and trust boundaries
 
-## HTTP contract
+Every mutation applies the relevant sequence before business work:
 
-All endpoints use authenticated server sessions, JSON problem details for errors, request IDs, bounded bodies, and rate limits.
+1. Same-origin and content-type checks.
+2. Trusted client identity and distributed rate limit.
+3. Firebase token verification and, for destructive actions, recent-login verification.
+4. Server capability and entitlement policy.
+5. Actual-stream byte budget before JSON or multipart parsing.
+6. Zod/domain validation.
+7. UID-scoped repository/provider work.
+8. No-store response headers and privacy-safe structured logs.
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/uploads/presign` | Validate metadata and issue short-lived private upload instructions |
-| `POST` | `/api/uploads/complete` | Verify object metadata and persist an upload |
-| `GET` | `/api/uploads/:id` | Return owned upload metadata and short-lived preview URL |
-| `DELETE` | `/api/uploads/:id` | Delete an owned upload and dependent data |
-| `POST` | `/api/reviews` | Validate brief/mode and begin review generation |
-| `GET` | `/api/reviews/:id` | Return an owned structured review |
-| `GET` | `/api/reviews` | Cursor-paginated owned review history |
-| `DELETE` | `/api/reviews/:id` | Delete an owned review |
-| `POST` | `/api/reviews/:id/follow-ups` | Ask a bounded contextual question |
-| `POST` | `/api/reviews/:id/improvement-plan` | Generate a user-requested plan or prompt |
-| `GET` | `/api/dashboard` | Return owned aggregates and recommendations |
+Vercel uses its protected forwarded-for header. Non-Vercel production must explicitly declare a trusted proxy adapter; otherwise readiness and security rate limits fail closed.
 
-Mutation routes accept an idempotency key. List routes use opaque cursor pagination. Route handlers call domain use cases rather than issuing database/provider operations directly.
+## Review and progress integrity
 
-## Review output schema
+Trusted reviews require server provenance and agreement between stored and nested provider fields. Provider output must contain evidence facts; normalization may assign internal IDs but may not invent scores, findings, evidence, or actions.
 
-```ts
-type ReviewOutput = {
-  schemaVersion: "1";
-  overallScore: number; // 0..10, one decimal maximum
-  summary: string;
-  strengths: Array<{ title: string; evidence: string }>;
-  categoryScores: Record<ReviewCategory, {
-    score: number;
-    rationale: string;
-  }>;
-  issues: Array<{
-    category: ReviewCategory;
-    score: number;
-    priority: "high" | "medium" | "low";
-    observation: string;
-    impact: string;
-    recommendation: string;
-    specificActions: string[];
-  }>;
-  finalChecklist: Array<{
-    label: string;
-    priority: "high" | "medium" | "low";
-    issueIndex: number;
-  }>;
-  followUpSuggestions: string[];
-  uncertainty?: string;
-};
-```
+Account history orders by server `savedAt` descending and document ID descending. Progress uses only server-verified reviews in the newest review's category, rubric, provider, and score-dimension cohort. Local/imported or incompatible reviews remain readable but do not alter learning claims.
 
-The server parses provider output with Zod, checks score/rationale alignment, requires complete what/why/how issue fields, verifies checklist references, and retries one repair pass before returning a safe failure.
+## Images
 
-## AI prompt layers
+The active proxied multipart limit is 4 MB, below the hosting Function ceiling after overhead. New source-image persistence remains off in free production. The future direct-upload state machine and validation contract are in `docs/architecture/0001-direct-private-review-uploads.md`.
 
-1. **System contract:** experienced design mentor role, safety, evidence grounding, output schema.
-2. **Mode policy:** language, depth, and directness; never changes rubric or factual standard.
-3. **Category rubric:** applicable principles, scoring anchors, category-specific checks.
-4. **User brief:** normalized user context wrapped as untrusted content.
-5. **Image input:** short-lived signed reference or provider-supported bytes.
-6. **Consistency pass:** contradictions, unsupported claims, checklist alignment, uncertainty.
+## Provider boundary
 
-Prompts are versioned in source. User text cannot override system instructions or request secrets. Provider responses are not rendered as HTML.
+OpenRouter calls have one 25-second deadline shared by primary and fallback. Only network failures, 408, 429, and 5xx responses may use fallback. Permanent failures and invalid evidence do not retry. Generic endpoint mode is disabled in production; development endpoints require an exact hostname allowlist with redirects disabled.
 
-## Security and privacy
+A durable `(uid, idempotencyKey)` job is required before live paid activation. Its accepted contract is in `docs/architecture/0002-provider-and-network-boundaries.md`; free production never reaches the billed path.
 
-- Validate extension, declared MIME, detected signature, decoded dimensions, and file size.
-- Allow JPEG, PNG, and WebP only in MVP; reject SVG/PDF until isolated processing exists.
-- Use random storage keys, private buckets, short-lived signed URLs, and encryption in transit/at rest.
-- Strip unnecessary image metadata where supported.
-- Apply CSRF protection to session mutations, secure cookies, origin checks, CSP, and security headers.
-- Rate-limit uploads, generation, follow-ups, and auth attempts by user and privacy-safe network key.
-- Never log images, signed URLs, briefs, model prompts, or full model responses in production logs.
-- Do not train, publish, or share from user uploads without separate explicit consent.
-- Make upload, review, export, and account deletion discoverable.
-- Keep secrets server-side and validate required environment variables at startup.
+## Deletion
 
-## Reliability and efficiency
+Review, draft, feedback, and historical image cleanup is idempotent and bounded. Storage cleanup runs regardless of the current creation capability. Partial deletion returns a privacy-safe failure list and retry token; identity deletion occurs only after required cleanup succeeds.
 
-- Bound upload size at 10 MB and image dimensions at a configurable maximum.
-- Hash uploads for integrity and optional per-user duplicate detection.
-- Use abortable provider requests with deadlines, retry only safe transient failures, and prevent duplicate review jobs.
-- Cache immutable signed-neutral metadata, not private image URLs or personalized reviews at shared edges.
-- Stream or poll honest review states; never fabricate progress.
-- Use database indexes on `(user_id, created_at)`, status, and foreign keys.
-- Record schema, rubric, and prompt versions on each review for reproducibility.
+## Reliability and progressive rendering
 
-## Environment contract
+- Route-level server rendering provides the initial public shell.
+- Client-only Firebase and interactive features are explicit.
+- Private collections use limits and deterministic ordering.
+- Long lists and future history expansion use cursor pagination.
+- Loading, empty, unavailable, and error states reveal only the next useful action.
+- Shared-edge caches never store private data, signed URLs, or capability decisions.
+- Provider, body, rate-limit, readiness, and deletion failures are observable without logging private content.
 
-```text
-GOOGLE_APPLICATION_CREDENTIALS=
-FIREBASE_PROJECT_ID=
-FIREBASE_STORAGE_BUCKET=
-OPENROUTER_API_KEY=
-OPENROUTER_MODEL=qwen/qwen3.5-flash-02-23
-OPENROUTER_FALLBACK_MODEL=google/gemini-2.5-flash
-OPENROUTER_SITE_URL=
-OPENROUTER_APP_NAME=IroGuide
-```
+## Configuration and promotion
 
-Local development may use an explicit deterministic demo provider. Production must fail closed if configured with demo AI, in-memory auth, or public storage.
+Use `.env.example` as the contract. Production requires Firebase Admin and matching public/Admin project IDs. Vercel satisfies client identity automatically; other hosts declare a sanitized proxy header. `IROGUIDE_LAUNCH_PROFILE=free` remains the production decision.
 
-## Deployment gates
-
-- Formatting, lint, strict typecheck, unit tests, and production build pass.
-- Database migrations are reviewed and forward-compatible.
-- Critical upload-to-review and deletion paths pass browser tests.
-- Accessibility scan has no serious or critical findings on primary routes.
-- Security headers, rate limits, secret validation, and private storage are verified in staging.
-- Provider timeouts and invalid-response recovery are exercised before release.
+`npm run check` verifies pinned Actions, types, lint, unit tests, Firebase rules, and production build. `npm run test:e2e:free` proves the free-profile UI and Community route. Deployment smoke verifies routes, readiness, auth denial, Community denial, headers, and—when approved—authenticated and rules operations. Reports are retained as workflow artifacts.

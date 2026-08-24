@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { AccountSyncManager } from "./account-sync-manager";
+import { getStoredAvatar, hasStoredFirebaseAuthSession, removeStoredAvatar, storeAvatar } from "./auth-client-storage";
 import { clearE2ELocalUser, createE2ELocalUser, isE2ELocalAuthEnabled, readE2ELocalUser, writeE2ELocalUser } from "@/lib/e2e-local-auth";
 
 type AuthState = {
@@ -352,7 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateAvatar = useCallback((dataUrl: string) => {
     if (!user) return;
     try {
-      localStorage.setItem(getAvatarStorageKey(user.uid), dataUrl);
+      storeAvatar(user.uid, dataUrl);
     } catch {
       setError("The avatar could not be saved in this browser. Try a smaller image.");
       return;
@@ -363,7 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetAvatar = useCallback(() => {
     if (!user) return;
     try {
-      localStorage.removeItem(getAvatarStorageKey(user.uid));
+      removeStoredAvatar(user.uid);
     } catch {
       // Keeping the in-memory fallback is still useful if localStorage is unavailable.
     }
@@ -448,7 +449,7 @@ async function clearLocalReviewData(userId: string) {
 async function clearLocalAccountData(userId: string) {
   await clearLocalReviewData(userId);
   try {
-    localStorage.removeItem(getAvatarStorageKey(userId));
+    removeStoredAvatar(userId);
   } catch {
     // The server-side deletion has already completed; local cleanup is best effort.
   }
@@ -546,18 +547,6 @@ function shouldFallbackToGoogleRedirect(error: unknown) {
     || message.includes("auth/cancelled-popup-request");
 }
 
-function getAvatarStorageKey(uid: string) {
-  return `iroguide:avatar:${uid}`;
-}
-
-function getStoredAvatar(user: User) {
-  try {
-    return localStorage.getItem(getAvatarStorageKey(user.uid)) ?? user.photoURL ?? "";
-  } catch {
-    return user.photoURL ?? "";
-  }
-}
-
 function getProviderIds(user: User | null) {
   return user?.providerData.map((provider) => provider.providerId) ?? [];
 }
@@ -576,16 +565,4 @@ function isAuthSensitivePath(pathname: string) {
     || pathname.startsWith("/profile")
     || pathname.startsWith("/review")
   );
-}
-
-function hasStoredFirebaseAuthSession() {
-  try {
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (key?.startsWith("firebase:authUser:")) return true;
-    }
-  } catch {
-    return false;
-  }
-  return false;
 }

@@ -131,7 +131,8 @@ export function createDemoImprovementPlan(request: ImprovementRequest): Improvem
   const highPriorityIssue = request.review.issues.find((issue) => issue.priority === "high") ?? request.review.issues[0];
 
   return {
-    title: "Focused refinement plan",
+    schemaVersion: 1,
+    title: "Derived action brief",
     steps: [
       {
         order: 1,
@@ -167,6 +168,12 @@ export function createDemoImprovementPlan(request: ImprovementRequest): Improvem
       "No new decorative element competes with the focal point.",
     ],
     provider: "demo",
+    provenance: {
+      kind: "deterministic-derived",
+      generatorVersion: "derived-plan-v1",
+      sourceReviewId: request.review.id,
+      sourceReviewProvider: request.review.provider,
+    },
   };
 }
 

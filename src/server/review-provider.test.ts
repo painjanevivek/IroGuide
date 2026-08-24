@@ -35,13 +35,17 @@ const liveReviewPayload = {
   issues: [
     {
       id: "spacing",
+      rubricId: "test-spacing",
       category: "Craft",
       score: 7.5,
       priority: "medium",
       observation: "The pixel spacing around the mark is uneven.",
+      evidenceKind: "visible",
+      evidenceDescription: "The clear space visibly differs on the left and right edges.",
       impact: "Uneven spacing makes the identity feel less deliberate.",
       recommendation: "Normalize the clear space around the mark.",
       actions: ["Set a consistent clear-space unit."],
+      confidence: 0.86,
     },
   ],
   annotations: [
@@ -172,7 +176,19 @@ describe("review provider routing", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("normalizes salvageable live provider JSON before validating the review", async () => {
+  it("disables the custom endpoint provider in production even when configured", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "endpoint");
+    vi.stubEnv("IROGUIDE_VISION_REVIEW_ENDPOINT", "https://provider.example/review");
+    vi.stubEnv("IROGUIDE_VISION_REVIEW_ALLOWED_HOSTS", "provider.example");
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createReview(requestWithImage)).rejects.toBeInstanceOf(ReviewProviderUnavailableError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects incomplete provider output instead of fabricating critique evidence", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({
       choices: [{
         message: {
@@ -210,17 +226,6 @@ describe("review provider routing", () => {
     vi.stubEnv("OPENROUTER_API_KEY", "test-key");
     vi.stubGlobal("fetch", fetchMock);
 
-    const review = await createReview(requestWithImage);
-
-    expect(review.provider).toBe("live");
-    expect(review.overallScore).toBe(8.5);
-    expect(review.strengths).toEqual(["Strong visual direction with a few craft issues."]);
-    expect(review.issues[0]).toEqual(expect.objectContaining({
-      id: "issue-1",
-      priority: "high",
-      actions: ["Tighten spacing around the central shape."],
-    }));
-    expect(review.annotations).toEqual([]);
-    expect(review.followUps).toEqual(["What should I improve first?"]);
+    await expect(createReview(requestWithImage)).rejects.toThrow("invalid review");
   });
 });

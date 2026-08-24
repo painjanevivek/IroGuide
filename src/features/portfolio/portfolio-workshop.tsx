@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Check, Eye, FileText, LoaderCircle, LockKeyhole, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
+import { createPrivateCaseStudyDraft } from "@/domain/private-case-study";
 import type { AccountStoredReview } from "@/lib/account-reviews";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 
@@ -17,6 +18,7 @@ export function PortfolioWorkshop() {
   const { loading: authLoading, user } = useAuth();
   const { hasCachedOnlyReviews, loadError, loading: reviewsLoading, reviews } = useAccountReviews({ maxReviews: 6, user });
   const source = reviews[0];
+  const caseDraft = user && source ? getPrivateCaseDraft(user.uid, source) : null;
   const loading = authLoading || (Boolean(user) && reviewsLoading);
 
   return (
@@ -65,10 +67,10 @@ export function PortfolioWorkshop() {
           </div>
         </div>
         <div className="portfolio-preview-copy">
-          <p className="eyebrow light"><Eye /> Public-page preview</p>
+          <p className="eyebrow light"><Eye /> Private evidence preview</p>
           <h2>Designed to explain,<br />not decorate.</h2>
-          <p>The eventual public portfolio will let you choose visible projects and hide raw critique. Saved reviews stay private until you explicitly publish a selected case study.</p>
-          <button className="button button-lime" disabled>Publishing comes later</button>
+          <p>{caseDraft ? `${caseDraft.title} traces every displayed claim to your owned review. An outcome stays blank until a trusted comparison supplies evidence.` : "Choose an owned, server-verified review to prepare a traceable private case-study draft."}</p>
+          <button className="button button-lime" disabled>Export and publishing disabled</button>
         </div>
       </section>
     </main>
@@ -107,7 +109,7 @@ function SourceReviewCard({
           <h3>{source.category ?? "Design project"} / {source.overallScore}/10</h3>
           <p>{source.summary}</p>
         </div>
-        <span>{hasCachedOnlyReviews || source.syncState === "local" ? "Syncing" : "Account-backed"}</span>
+        <span>{source.trustState === "server-verified" ? "Verified evidence" : hasCachedOnlyReviews || source.syncState === "local" ? "Private unverified" : "Not evidence-ready"}</span>
       </div>
     );
   }
@@ -148,4 +150,12 @@ function getCaseSteps(source?: AccountStoredReview): CaseStep[] {
 
 function getPrimaryRecommendation(source?: AccountStoredReview) {
   return source?.issues.find((issue) => issue.recommendation.trim())?.recommendation;
+}
+
+function getPrivateCaseDraft(userId: string, source: AccountStoredReview) {
+  try {
+    return createPrivateCaseStudyDraft(userId, source);
+  } catch {
+    return null;
+  }
 }

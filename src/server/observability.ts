@@ -19,18 +19,27 @@ export function createRequestContext(request: Request, route: string): RequestCo
   };
 }
 
-export function getClientKey(request: Request, fallback: string) {
+export function getClientKey(request: Request) {
   const vercelClientIp = getHeaderIp(request, "x-vercel-forwarded-for");
   if (process.env.VERCEL === "1" && vercelClientIp) return vercelClientIp;
+
+  const trustedProxyHeader = getTrustedProxyHeader();
+  if (trustedProxyHeader) return getHeaderIp(request, trustedProxyHeader);
 
   // Production deployments outside Vercel must add a platform-specific trusted
   // adapter before using client IPs for a security decision. Accepting ordinary
   // forwarding headers here would let a caller choose their own rate-limit key.
-  if (process.env.NODE_ENV === "production") return fallback;
+  if (process.env.NODE_ENV === "production") return null;
 
   return getHeaderIp(request, "x-forwarded-for")
     ?? getHeaderIp(request, "x-real-ip")
-    ?? fallback;
+    ?? "development-local";
+}
+
+export function isClientIdentityConfigured() {
+  return process.env.NODE_ENV !== "production"
+    || process.env.VERCEL === "1"
+    || getTrustedProxyHeader() !== null;
 }
 
 export function logRequestEvent(level: LogLevel, event: string, context: RequestContext, fields: LogFields = {}) {
@@ -95,4 +104,10 @@ function getHeaderIp(request: Request, name: string) {
   // IPv4 and IPv6 literals only. This rejects header junk before it can become
   // a Redis key or a rate-limit partition.
   return /^[0-9a-f:.]+$/i.test(value) ? value : null;
+}
+
+function getTrustedProxyHeader() {
+  if (process.env.IROGUIDE_TRUST_PROXY !== "1") return null;
+  const header = process.env.IROGUIDE_TRUSTED_PROXY_HEADER?.trim().toLowerCase();
+  return header === "x-forwarded-for" || header === "x-real-ip" ? header : null;
 }

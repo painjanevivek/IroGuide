@@ -3,6 +3,9 @@ import { getFirebaseAdminProjectId, isFirebaseAdminConfigured, isFirebaseAdminSt
 import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 import { buildReadiness } from "@/server/readiness";
 import { getReviewProviderStatus } from "@/server/review-provider";
+import { isClientIdentityConfigured } from "@/server/observability";
+import { getRateLimitStatus } from "@/server/rate-limit";
+import { getRequestBodyBudgetStatus } from "@/server/request-body";
 
 /**
  * Detailed configuration diagnostics are privileged operational information.
@@ -13,16 +16,28 @@ export function getReadinessDiagnostics() {
   const capabilities = getServerLaunchCapabilities();
   const accountStorageProjectId = getFirebaseAdminProjectId();
   const publicFirebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || null;
+  const rateLimit = getRateLimitStatus();
+  const requestBudgets = getRequestBodyBudgetStatus();
   const checks = {
     accountStorage: isFirebaseAdminConfigured(),
     bugReportEmail: isBugReportEmailConfigured(),
+    clientIdentity: isClientIdentityConfigured(),
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
+    rateLimitAdapter: rateLimit.ready,
+    requestBudgets: requestBudgets.ready,
     sourceImageStorage: isFirebaseAdminStorageConfigured(),
   };
 
   return {
     ...buildReadiness({ capabilities, checks }),
+    operations: {
+      communityGate: capabilities.community ? "open" : "closed",
+      deletionFailureMode: "retry-required",
+      distributedRateLimitConfigured: rateLimit.distributedConfigured,
+      rateLimitMode: rateLimit.mode,
+      requestBodyRoutes: requestBudgets.configuredRoutes,
+    },
     reviewProvider,
   };
 }

@@ -6,6 +6,7 @@ import { categoryLabels, reviewIssueSchema, reviewOutputSchema, type ReviewOutpu
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions";
 const LIVE_PROVIDER_MODES = new Set(["live", "vision", "openrouter"]);
+const PROVIDER_DEADLINE_MS = 25_000;
 
 const liveReviewResponseSchema = reviewOutputSchema.omit({
   id: true,
@@ -100,35 +101,63 @@ const liveVisionReviewProvider: ReviewProvider = {
 
     const model = process.env.OPENROUTER_MODEL?.trim() || defaultOpenRouterModel;
     const fallbackModel = process.env.OPENROUTER_FALLBACK_MODEL?.trim();
+    const deadlineAt = Date.now() + PROVIDER_DEADLINE_MS;
+    const jobId = randomUUID();
 
     try {
-      return await createOpenRouterReview(request, apiKey, model);
+      return await createOpenRouterReview(request, apiKey, model, deadlineAt, jobId);
     } catch (error) {
-      if (!fallbackModel || fallbackModel === model) throw error;
-      return createOpenRouterReview(request, apiKey, fallbackModel);
+      if (!(error instanceof ReviewProviderCallError) || !error.retryable || !fallbackModel || fallbackModel === model) throw error;
+      return createOpenRouterReview(request, apiKey, fallbackModel, deadlineAt, jobId);
     }
   },
 };
 
-async function createOpenRouterReview(request: ReviewRequest, apiKey: string, model: string): Promise<ReviewOutput> {
+async function createOpenRouterReview(
+  request: ReviewRequest,
+  apiKey: string,
+  model: string,
+  deadlineAt: number,
+  jobId: string,
+): Promise<ReviewOutput> {
   if (!request.image) {
     throw new ReviewProviderUnavailableError("Live vision critique requires uploaded image bytes.");
   }
 
-  const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
-    method: "POST",
-    headers: getOpenRouterHeaders(apiKey),
-    body: JSON.stringify(getOpenRouterRequestBody(request, model)),
-  });
+  const remainingMs = deadlineAt - Date.now();
+  if (remainingMs <= 0) throw new ReviewProviderCallError("Live vision critique exceeded its deadline.", false);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), remainingMs);
+  let response: Response;
+  try {
+    response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: "POST",
+      headers: { ...getOpenRouterHeaders(apiKey), "X-IroGuide-Review-Job": jobId },
+      body: JSON.stringify(getOpenRouterRequestBody(request, model)),
+      redirect: "error",
+      signal: controller.signal,
+    });
+  } catch {
+    const timedOut = controller.signal.aborted;
+    throw new ReviewProviderCallError(
+      timedOut ? "Live vision critique exceeded its deadline." : "Live vision critique could not reach its provider.",
+      !timedOut,
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
-    throw new Error(`Live vision critique failed with status ${response.status}.`);
+    throw new ReviewProviderCallError(
+      `Live vision critique failed with status ${response.status}.`,
+      response.status === 408 || response.status === 429 || response.status >= 500,
+    );
   }
 
   const payload: unknown = await response.json();
   const parsedPayload = openRouterResponseSchema.parse(payload) as OpenRouterChoicePayload;
   const content = parsedPayload.choices?.[0]?.message?.content;
-  const parsedReview = liveReviewResponseSchema.safeParse(sanitizeLiveReviewPayload(parseProviderJson(content), request));
+  const parsedReview = liveReviewResponseSchema.safeParse(prepareLiveReviewPayload(parseProviderJson(content)));
   if (!parsedReview.success) {
     throw new Error("Live vision critique returned an invalid review.");
   }
@@ -239,175 +268,26 @@ function parseProviderJson(content: unknown) {
   throw new Error("Live vision critique returned non-JSON content.");
 }
 
-function sanitizeLiveReviewPayload(payload: unknown, request: ReviewRequest): unknown {
-  if (!isRecord(payload)) return payload;
-
-  const issues = sanitizeIssues(payload.issues);
-  const issueIds = new Set(issues.map((issue) => issue.id));
-  const summary = getNonEmptyString(payload.summary) ?? getFallbackSummary(request);
+function prepareLiveReviewPayload(payload: unknown): unknown {
+  if (!isRecord(payload) || !Array.isArray(payload.issues)) return payload;
 
   return {
     ...payload,
-    overallScore: clampScore(payload.overallScore),
-    summary,
-    strengths: sanitizeStringList(payload.strengths, [summary]),
-    scores: sanitizeScores(payload.scores),
-    rubricVersion: getNonEmptyString(payload.rubricVersion) ?? (request.category === "ui" || request.category === "website" ? critiqueRubricVersion : "live-v1"),
-    issues,
-    annotations: sanitizeAnnotations(payload.annotations, issueIds),
-    checklist: sanitizeChecklist(payload.checklist, issues),
-    followUps: sanitizeStringList(payload.followUps, ["What should I improve first?"]),
+    issues: payload.issues.map((issue, index) => isRecord(issue) && !getNonEmptyString(issue.id)
+      ? { ...issue, id: `issue-${index + 1}` }
+      : issue),
   };
 }
 
-function sanitizeIssues(value: unknown): Array<{
-  id: string;
-  rubricId: string;
-  category: string;
-  score: number;
-  priority: "high" | "medium" | "low";
-  observation: string;
-  evidenceKind: "visible" | "brief" | "visual-risk";
-  evidenceDescription: string;
-  impact: string;
-  recommendation: string;
-  actions: string[];
-  confidence: number;
-}> {
-  const sourceIssues = Array.isArray(value) ? value : [];
-  const issues = sourceIssues
-    .filter(isRecord)
-    .map((issue, index) => {
-      const observation = getNonEmptyString(issue.observation) ?? getNonEmptyString(issue.description) ?? "The design needs a clearer visual decision.";
-      const recommendation = getNonEmptyString(issue.recommendation) ?? "Clarify the main focal point and reduce competing elements.";
-      return {
-        id: getNonEmptyString(issue.id) ?? `issue-${index + 1}`,
-        rubricId: getNonEmptyString(issue.rubricId) ?? "legacy-unmapped",
-        category: getNonEmptyString(issue.category) ?? "Clarity",
-        score: clampScore(issue.score),
-        priority: normalizePriority(issue.priority),
-        observation,
-        evidenceKind: normalizeEvidenceKind(issue.evidenceKind),
-        evidenceDescription: truncateString(getNonEmptyString(issue.evidenceDescription) ?? observation, 500),
-        impact: getNonEmptyString(issue.impact) ?? "This can make the design harder to understand quickly.",
-        recommendation,
-        actions: sanitizeStringList(issue.actions, [recommendation]),
-        confidence: clampCoordinate(issue.confidence, 0, 1),
-      };
-    });
-
-  if (issues.length > 0) return issues;
-
-  return [{
-    id: "issue-1",
-    rubricId: "legacy-unmapped",
-    category: "Clarity",
-    score: 6,
-    priority: "medium",
-    observation: "The critique provider did not return a structured issue.",
-    evidenceKind: "visible",
-    evidenceDescription: "The provider did not include localized evidence.",
-    impact: "The next revision still needs one clear improvement direction.",
-    recommendation: "Review the hierarchy, focal point, and readability before the next version.",
-    actions: ["Identify the primary focal point.", "Remove one competing visual element."],
-    confidence: 0.5,
-  }];
-}
-
-function sanitizeScores(value: unknown) {
-  const sourceScores = Array.isArray(value) ? value : [];
-  const scores = sourceScores
-    .filter(isRecord)
-    .map((score) => ({
-      label: getNonEmptyString(score.label) ?? "Overall clarity",
-      score: clampScore(score.score),
-    }));
-
-  return scores.length > 0 ? scores : [{ label: "Overall clarity", score: 6 }];
-}
-
-function sanitizeChecklist(value: unknown, issues: Array<{ recommendation: string; priority: "high" | "medium" | "low" }>) {
-  const sourceItems = Array.isArray(value) ? value : [];
-  const checklist = sourceItems
-    .filter(isRecord)
-    .map((item) => ({
-      label: getNonEmptyString(item.label) ?? getNonEmptyString(item.recommendation) ?? "Review the next design decision.",
-      priority: normalizePriority(item.priority),
-    }));
-
-  if (checklist.length > 0) return checklist;
-  return issues.slice(0, 3).map((issue) => ({ label: issue.recommendation, priority: issue.priority }));
-}
-
-function sanitizeAnnotations(value: unknown, issueIds: Set<string>) {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .filter(isRecord)
-    .map((annotation, index) => {
-      const issueId = getNonEmptyString(annotation.issueId);
-      if (!issueId || !issueIds.has(issueId)) return null;
-      const width = clampCoordinate(annotation.width, 0.02, 1);
-      const height = clampCoordinate(annotation.height, 0.02, 1);
-      return {
-        id: getNonEmptyString(annotation.id) ?? `annotation-${index + 1}`,
-        issueId,
-        label: truncateString(getNonEmptyString(annotation.label) ?? "Review area", 80),
-        description: truncateString(getNonEmptyString(annotation.description) ?? "Area related to this critique point.", 240),
-        x: clampCoordinate(annotation.x, 0, 1 - width),
-        y: clampCoordinate(annotation.y, 0, 1 - height),
-        width,
-        height,
-        confidence: clampCoordinate(annotation.confidence, 0, 1),
-      };
-    })
-    .filter((annotation): annotation is NonNullable<typeof annotation> => annotation !== null);
-}
-
-function sanitizeStringList(value: unknown, fallback: string[]) {
-  const items = Array.isArray(value)
-    ? value.map(getNonEmptyString).filter((item): item is string => Boolean(item))
-    : [];
-
-  return items.length > 0 ? items : fallback;
-}
-
-function normalizePriority(value: unknown): "high" | "medium" | "low" {
-  const priority = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (priority === "high" || priority === "medium" || priority === "low") return priority;
-  return "medium";
-}
-
-function normalizeEvidenceKind(value: unknown): "visible" | "brief" | "visual-risk" {
-  const evidenceKind = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (evidenceKind === "visible" || evidenceKind === "brief" || evidenceKind === "visual-risk") return evidenceKind;
-  return "visible";
-}
-
-function clampScore(value: unknown) {
-  return clampNumber(value, 0, 10, 6);
-}
-
-function clampCoordinate(value: unknown, min: number, max: number) {
-  return clampNumber(value, min, max, min);
-}
-
-function clampNumber(value: unknown, min: number, max: number, fallback: number) {
-  const numberValue = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(numberValue)) return fallback;
-  return Math.min(Math.max(numberValue, min), max);
+class ReviewProviderCallError extends Error {
+  constructor(message: string, readonly retryable: boolean) {
+    super(message);
+    this.name = "ReviewProviderCallError";
+  }
 }
 
 function getNonEmptyString(value: unknown) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
-}
-
-function truncateString(value: string, maxLength: number) {
-  return value.length > maxLength ? value.slice(0, maxLength) : value;
-}
-
-function getFallbackSummary(request: ReviewRequest) {
-  return `This ${categoryLabels[request.category].toLowerCase()} critique focuses on ${request.brief.goal}.`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -435,6 +315,8 @@ const endpointReviewProvider: ReviewProvider = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
+      redirect: "error",
+      signal: AbortSignal.timeout(PROVIDER_DEADLINE_MS),
     });
 
     if (!response.ok) {
@@ -442,7 +324,7 @@ const endpointReviewProvider: ReviewProvider = {
     }
 
     const payload: unknown = await response.json();
-    const parsed = liveReviewResponseSchema.safeParse(sanitizeLiveReviewPayload(payload, request));
+    const parsed = liveReviewResponseSchema.safeParse(prepareLiveReviewPayload(payload));
     if (!parsed.success) {
       throw new Error("Live vision critique returned an invalid review.");
     }
@@ -468,6 +350,14 @@ function getValidatedReviewEndpoint(value: string | undefined) {
 
   if (isBlockedOutboundHost(endpoint.hostname)) {
     throw new ReviewProviderUnavailableError("Live vision critique endpoint host is not allowed.");
+  }
+
+  const allowedHosts = new Set((process.env.IROGUIDE_VISION_REVIEW_ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean));
+  if (!allowedHosts.has(endpoint.hostname.toLowerCase())) {
+    throw new ReviewProviderUnavailableError("Live vision critique endpoint host is not allowlisted.");
   }
 
   endpoint.username = "";
@@ -504,7 +394,7 @@ export function getReviewProvider() {
   const production = process.env.NODE_ENV === "production";
 
   if (configuredMode === "demo") return production ? unavailableReviewProvider : demoReviewProvider;
-  if (configuredMode === "endpoint") return endpointReviewProvider;
+  if (configuredMode === "endpoint") return production ? unavailableReviewProvider : endpointReviewProvider;
   if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return liveVisionReviewProvider;
   if (process.env.OPENROUTER_API_KEY?.trim()) return liveVisionReviewProvider;
   return production ? unavailableReviewProvider : demoReviewProvider;
@@ -515,7 +405,15 @@ export function getReviewProviderStatus() {
   const openRouterConfigured = Boolean(process.env.OPENROUTER_API_KEY?.trim());
   const endpointConfigured = Boolean(process.env.IROGUIDE_VISION_REVIEW_ENDPOINT?.trim());
   const activeProvider = getReviewProvider().name;
-  const liveReady = activeProvider === "live" && (openRouterConfigured || endpointConfigured);
+  let endpointReady = false;
+  if (process.env.NODE_ENV !== "production" && endpointConfigured) {
+    try {
+      endpointReady = Boolean(getValidatedReviewEndpoint(process.env.IROGUIDE_VISION_REVIEW_ENDPOINT));
+    } catch {
+      endpointReady = false;
+    }
+  }
+  const liveReady = activeProvider === "live" && (openRouterConfigured || endpointReady);
 
   return {
     activeProvider,
