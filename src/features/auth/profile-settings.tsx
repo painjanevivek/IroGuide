@@ -6,6 +6,7 @@ import { AlertCircle, ArrowRight, CheckCircle2, ImagePlus, KeyRound, Link2, Load
 import { useAuth } from "./auth-provider";
 import { UserAvatar } from "./user-menu";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
+import { captureProductEvidence } from "@/lib/product-evidence";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const MAX_AVATAR_BYTES = 1024 * 1024;
@@ -139,6 +140,7 @@ export function ProfileSettings() {
     setReviewDeleting(true);
     try {
       const result = await purgeReviewData();
+      void captureProductEvidence(user, { name: "review_data_deleted", scope: "reviews" });
       setReviewConfirm("");
       setDangerMessage(`Deleted ${formatDeletionCount(result.reviewsDeleted, "review")}, ${formatDeletionCount(result.draftsDeleted, "draft")}, and ${formatDeletionCount(result.sourceImagesDeleted, "source image")}.`);
     } catch (deleteError) {

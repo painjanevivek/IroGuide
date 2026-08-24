@@ -122,5 +122,13 @@ service cloud.firestore {
       allow read: if ownsExistingDocument();
       allow write: if false;
     }
+
+    match /productEvidenceEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /researchFeedback/{responseId} {
+      allow read, write: if false;
+    }
   }
 }

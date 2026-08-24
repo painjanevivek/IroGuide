@@ -6,6 +6,7 @@ import { getReviewProviderStatus } from "@/server/review-provider";
 import { isClientIdentityConfigured } from "@/server/observability";
 import { getRateLimitStatus } from "@/server/rate-limit";
 import { getRequestBodyBudgetStatus } from "@/server/request-body";
+import { getProductEvidenceStatus } from "@/server/product-evidence";
 
 /**
  * Detailed configuration diagnostics are privileged operational information.
@@ -18,12 +19,14 @@ export function getReadinessDiagnostics() {
   const publicFirebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || null;
   const rateLimit = getRateLimitStatus();
   const requestBudgets = getRequestBodyBudgetStatus();
+  const productEvidence = getProductEvidenceStatus();
   const checks = {
     accountStorage: isFirebaseAdminConfigured(),
     bugReportEmail: isBugReportEmailConfigured(),
     clientIdentity: isClientIdentityConfigured(),
     firebaseProjectMatch: Boolean(accountStorageProjectId && publicFirebaseProjectId && accountStorageProjectId === publicFirebaseProjectId),
     liveVision: reviewProvider.liveReady,
+    productEvidence: productEvidence.ready,
     rateLimitAdapter: rateLimit.ready,
     requestBudgets: requestBudgets.ready,
     sourceImageStorage: isFirebaseAdminStorageConfigured(),
@@ -36,6 +39,7 @@ export function getReadinessDiagnostics() {
       deletionFailureMode: "retry-required",
       distributedRateLimitConfigured: rateLimit.distributedConfigured,
       rateLimitMode: rateLimit.mode,
+      productEvidenceMode: productEvidence.mode,
       requestBodyRoutes: requestBudgets.configuredRoutes,
     },
     reviewProvider,

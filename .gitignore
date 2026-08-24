@@ -80,5 +80,4 @@ pnpm-debug.log*
 **/tmp/
 *.tmp
 .vercel
-.env.example
 .env*.local

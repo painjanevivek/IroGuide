@@ -43,7 +43,11 @@ describe("analytics consent", () => {
     trackEvent("review_start_submit");
     expect(gtag).not.toHaveBeenCalled();
 
-    localStorage.setItem(ANALYTICS_CONSENT_STORAGE_KEY, JSON.stringify({ state: "accepted" }));
+    localStorage.setItem(ANALYTICS_CONSENT_STORAGE_KEY, JSON.stringify({
+      state: "accepted",
+      acceptedAt: "2026-08-24T00:00:00.000Z",
+      version: 1,
+    }));
 
     expect(hasAnalyticsConsent()).toBe(true);
     trackPageView("https://iroguide.test/review", "Review");

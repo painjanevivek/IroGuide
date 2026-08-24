@@ -1,6 +1,8 @@
 export const REQUEST_BODY_LIMITS = Object.freeze({
   bugReportJson: 32 * 1024,
   communityJson: 64 * 1024,
+  productEvidenceJson: 4 * 1024,
+  researchFeedbackJson: 4 * 1024,
   reviewExtensionJson: 4_450_000,
   reviewJson: 512 * 1024,
   reviewMultipart: 4_450_000,

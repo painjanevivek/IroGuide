@@ -94,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAvatarUrl(getStoredAvatar(credential.user));
             setProviderIds(getProviderIds(credential.user));
             setLoading(false);
+            void recordSignInCompletion(credential.user, "google");
           }).catch((redirectError) => {
             if (!active) return;
             if (getAuthErrorCode(redirectError) === "auth/internal-error") {
@@ -147,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(credential.user);
         setAvatarUrl(getStoredAvatar(credential.user));
         setProviderIds(getProviderIds(credential.user));
+        void recordSignInCompletion(credential.user, "google");
         return Boolean(credential.user);
       } catch (popupError) {
         if (!shouldFallbackToGoogleRedirect(popupError)) throw popupError;
@@ -183,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(credential.user);
       setAvatarUrl(getStoredAvatar(credential.user));
       setProviderIds(getProviderIds(credential.user));
+      void recordSignInCompletion(credential.user, "email");
     } catch (signInError) {
       const message = getAuthErrorMessage(signInError);
       setError(message);
@@ -213,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(credential.user);
       setAvatarUrl(getStoredAvatar(credential.user));
       setProviderIds(getProviderIds(credential.user));
+      void recordSignInCompletion(credential.user, "email");
     } catch (signUpError) {
       const message = getAuthErrorMessage(signUpError);
       setError(message);
@@ -565,4 +569,9 @@ function isAuthSensitivePath(pathname: string) {
     || pathname.startsWith("/profile")
     || pathname.startsWith("/review")
   );
+}
+
+async function recordSignInCompletion(user: User, method: "email" | "google") {
+  const { captureProductEvidence } = await import("@/lib/product-evidence");
+  await captureProductEvidence(user, { name: "sign_in_completed", method });
 }

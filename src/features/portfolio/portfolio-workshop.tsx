@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Check, Eye, FileText, LoaderCircle, LockKeyhole, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import { createPrivateCaseStudyDraft } from "@/domain/private-case-study";
 import type { AccountStoredReview } from "@/lib/account-reviews";
+import { captureProductEvidence } from "@/lib/product-evidence";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 
 type CaseStep = {
@@ -20,6 +22,24 @@ export function PortfolioWorkshop() {
   const source = reviews[0];
   const caseDraft = user && source ? getPrivateCaseDraft(user.uid, source) : null;
   const loading = authLoading || (Boolean(user) && reviewsLoading);
+  const recordedUserRef = useRef("");
+
+  useEffect(() => {
+    if (!user || loading || recordedUserRef.current === user.uid) return;
+    recordedUserRef.current = user.uid;
+    if (caseDraft) {
+      void captureProductEvidence(user, {
+        name: "case_study_draft_prepared",
+        sourceCount: caseDraft.sourceReviewDocumentIds.length,
+        comparisonPresent: caseDraft.sourceComparisonIds.length > 0,
+      });
+      return;
+    }
+    void captureProductEvidence(user, {
+      name: "case_study_blocked_unverified",
+      reason: loadError ? "reviews-unavailable" : source ? "unverified-review" : "no-review",
+    });
+  }, [caseDraft, loadError, loading, source, user]);
 
   return (
     <main>

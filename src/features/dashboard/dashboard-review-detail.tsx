@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { LoaderCircle, LayoutDashboard } from "lucide-react";
@@ -13,6 +13,7 @@ import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getReviewSourceImageDownloadUrl } from "@/lib/firebase/storage";
 import { getCachedReviewDocuments } from "@/lib/review-persistence";
 import { getCachedLocalReviewSourceImage } from "@/lib/review-source-image-cache";
+import { captureProductEvidence, getReviewAgeBucket } from "@/lib/product-evidence";
 
 export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   const { user } = useAuth();
@@ -22,6 +23,17 @@ export function DashboardReviewDetail({ documentId }: { documentId: string }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const recordedDocumentRef = useRef("");
+
+  useEffect(() => {
+    if (!document || !user || recordedDocumentRef.current === document.id) return;
+    recordedDocumentRef.current = document.id;
+    void captureProductEvidence(user, {
+      name: "review_detail_reopened",
+      ageBucket: getReviewAgeBucket(document.savedAt),
+      trustState: document.syncState === "local" ? "local-unverified" : getReviewTrustState(document),
+    });
+  }, [document, user]);
 
   useEffect(() => {
     if (!user) return;

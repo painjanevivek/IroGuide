@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import "@/app/route-styles.css";
 import { siteConfig } from "@/config/site";
+import { ProductEvidencePageView } from "@/components/product-evidence-page-view";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import styles from "./docs-page.module.css";
 
@@ -110,6 +111,7 @@ const advancedPractices = [
 export default function DocsPage() {
   return (
     <div className="simple-page">
+      <ProductEvidencePageView event={{ name: "documentation_opened", section: "overview" }} />
       <header className="simple-header">
         <Link href="/" className="wordmark">
           <span className="wordmark-mark">I</span>
