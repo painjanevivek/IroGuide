@@ -160,19 +160,19 @@ fix(integration): merge the free launch baseline
 
 ### Tasks
 
-- [ ] `AUT-0101` Inventory connected deployment targets and verify which environment is staging versus production.
-- [ ] `AUT-0102` Validate environment names without printing secret values: launch profile, Firebase client/Admin project IDs, Storage bucket, trusted client identity, Upstash, admin allowlist, canonical URL, and smoke-test credentials.
-- [ ] `AUT-0103` Ensure staging and production explicitly set `IROGUIDE_LAUNCH_PROFILE=free`.
-- [ ] `AUT-0104` Confirm paid provider, Community, source-image storage, and email credentials cannot override the launch profile.
-- [ ] `AUT-0105` Deploy a preview/staging candidate from the merged SHA.
+- [x] `AUT-0101` Inventory connected deployment targets and verify which environment is staging versus production.
+- [x] `AUT-0102` Validate environment names without printing secret values: launch profile, Firebase client/Admin project IDs, Storage bucket, trusted client identity, Upstash, admin allowlist, canonical URL, and smoke-test credentials.
+- [x] `AUT-0103` Ensure staging and production explicitly set `IROGUIDE_LAUNCH_PROFILE=free`.
+- [x] `AUT-0104` Confirm paid provider, Community, source-image storage, and email credentials cannot override the launch profile.
+- [x] `AUT-0105` Deploy a preview/staging candidate from the merged SHA.
 - [ ] `AUT-0106` Verify public `/api/readiness` exposes only `{ ok }`; verify privileged `/api/admin/readiness` reports account storage, project match, trusted client identity, rate-limit adapter, request budgets, and capability states.
 - [ ] `AUT-0107` Execute a disposable-account journey: sign up, verify, sign out/in, profile update, dashboard, draft ownership, review-text history, purge history, and account deletion.
 - [ ] `AUT-0108` Verify Community page/API/rules denial, disabled critique UI/API, absent source-image cloud reads, and stored-without-email bug reports.
 - [ ] `AUT-0109` Run deployed DAST, security smoke, and production smoke against staging; save the reports and workflow URLs.
-- [ ] `AUT-0110` Exercise rollback in staging and verify the previously healthy deployment can be restored.
-- [ ] `AUT-0111` Promote the exact verified SHA to production when platform policy permits.
-- [ ] `AUT-0112` Run non-destructive post-deploy readiness, route, security-header, Community-denial, and free-profile smoke tests.
-- [ ] `AUT-0113` Record release evidence, known limitations, rollback deployment, and operator contact.
+- [x] `AUT-0110` Exercise rollback in staging and verify the previously healthy deployment can be restored.
+- [x] `AUT-0111` Promote the exact verified SHA to production when platform policy permits.
+- [x] `AUT-0112` Run non-destructive post-deploy readiness, route, security-header, Community-denial, and free-profile smoke tests.
+- [x] `AUT-0113` Record release evidence, known limitations, rollback deployment, and operator contact.
 
 ### Required external inputs
 
@@ -200,6 +200,16 @@ fix(release): record deployed free-profile verification
 - prove account ownership, deletion recovery, and disabled capability denials
 - attach staging, smoke, DAST, production, and rollback evidence
 ```
+
+### Execution record — 2026-08-24
+
+- **Outcome:** Gate-closed. Public free production is deployed and verified; privileged readiness and the disposable verified-email account journey remain blocked by missing operator credentials.
+- **Production:** Merge `b81276d` resolves through `https://iroguide.com` to immutable deployment `dpl_5E87Fs5gDym5EfQMyr4qbyPBiuR4`.
+- **Staging:** `https://iro-guide-staging-vivek-painjanes-projects.vercel.app` resolves to Preview `dpl_67ciVP3q6wws4cTc6HT3d3zx9rDC`, deployed from a clean `b81276d` worktree with the explicit `free` profile.
+- **Verification:** Production smoke passed 16/16; DAST passed 38/38; public readiness returned only `{ "ok": true }`; Community mutation returned the gated `404`; anonymous review and admin readiness preserved their authentication boundaries.
+- **Runtime evidence:** Readiness logged a successful structured event; Community mutation logged `community_mutation.capability_blocked`; no source-image Storage request was observed during the public free journey.
+- **Rollback:** The staging alias was moved to prior healthy Preview `dpl_G4KEJYpia5AmMtjjRK7LKQJrFCNQ`, readiness passed, and the alias was restored to the candidate with readiness still green.
+- **Remaining gate:** Configure a disposable verified-email smoke identity and inbox plus an authorized admin UID/email before completing `AUT-0106`–`AUT-0109` in full.
 
 ## 8. Phase 2 — Add privacy-safe product evidence without paid AI
 

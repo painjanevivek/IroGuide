@@ -80,7 +80,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "${SMOKE_TARGET}" = "production" ]; then
+          smoke_target="${SMOKE_TARGET,,}"
+
+          if [ "${smoke_target}" = "production" ]; then
             smoke_base_url="${PRODUCTION_SMOKE_BASE_URL}"
             url_name="vars.IROGUIDE_PRODUCTION_URL or secrets.IROGUIDE_PRODUCTION_URL"
           else
@@ -125,6 +127,7 @@ jobs:
           fi
 
           echo "SMOKE_BASE_URL=${smoke_base_url}" >> "${GITHUB_ENV}"
+          echo "SMOKE_TARGET=${smoke_target}" >> "${GITHUB_ENV}"
 
       - name: Install dependencies
         run: npm ci
