@@ -19,7 +19,8 @@
     "smoke:security": "node scripts/prelaunch-dast.mjs",
     "eval:reviews:validate": "node scripts/validate-review-evals.mjs",
     "eval:reviews:unit": "vitest run src/domain/critique-rubrics.test.ts src/domain/review-evaluation-metrics.test.ts src/server/review-evaluation.test.ts",
-    "check": "npm run security:workflow-pins && npm run typecheck && npm run lint && npm test && npm run test:rules && npm run build",
+    "eval:provider:artifacts": "node scripts/provider-evaluation-runner.mjs",
+    "check": "npm run security:workflow-pins && npm run eval:reviews:validate && npm run typecheck && npm run lint && npm test && npm run test:rules && npm run build",
     "smoke:production": "node scripts/production-smoke.mjs"
   },
   "dependencies": {
