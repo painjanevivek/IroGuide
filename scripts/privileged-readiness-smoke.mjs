@@ -10,6 +10,7 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const reportPath = process.env.ADMIN_READINESS_REPORT_PATH ?? "artifacts/privileged-readiness.json";
+const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPASS?.trim();
 
 async function main() {
   const baseUrl = normalizeBaseUrl(requiredEnv("SMOKE_BASE_URL"));
@@ -24,7 +25,11 @@ async function main() {
     await auth.getUser(adminUserId);
     const customToken = await auth.createCustomToken(adminUserId);
     const idToken = await exchangeCustomToken(apiKey, customToken);
-    const response = await fetch(`${baseUrl}/api/admin/readiness`, { headers: { Authorization: `Bearer ${idToken}`, Origin: new URL(baseUrl).origin } });
+    const response = await fetch(`${baseUrl}/api/admin/readiness`, { headers: {
+      Authorization: `Bearer ${idToken}`,
+      Origin: new URL(baseUrl).origin,
+      ...(deploymentProtectionBypass ? { "x-vercel-protection-bypass": deploymentProtectionBypass } : {}),
+    } });
     const payload = await response.json();
     const failures = getPrivilegedReadinessFailures(response.status, payload);
     const report = {

@@ -31,6 +31,7 @@ const runAuthenticatedReview = process.env.SMOKE_AUTHENTICATED_REVIEW !== "false
 const runSecurityHeaders = process.env.SMOKE_SECURITY_HEADERS !== "false";
 const runFirebaseRules = process.env.SMOKE_FIREBASE_RULES !== "false";
 const launchProfile = process.env.SMOKE_LAUNCH_PROFILE ?? "free";
+const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPASS?.trim();
 const publicRoutes = ["/", "/about", "/projects", "/pricing", "/community", "/contact", "/privacy", "/terms", "/.well-known/security.txt", "/security-policy.txt"];
 const securityHeaderRoutes = getListEnv("SMOKE_SECURITY_HEADER_PATHS", ["/", "/api/readiness"]);
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
@@ -97,7 +98,7 @@ async function main() {
 async function expectStatus(path, init, expectedStatus) {
   const name = `${init.method ?? "GET"} ${path}`;
   try {
-    const response = await fetch(`${baseUrl}${path}`, init);
+    const response = await fetch(`${baseUrl}${path}`, { ...init, headers: withDeploymentProtection(init.headers) });
     addResult(name, response.status === expectedStatus, `status=${response.status}`);
   } catch (error) {
     addResult(name, false, getErrorMessage(error));
@@ -107,7 +108,7 @@ async function expectStatus(path, init, expectedStatus) {
 async function checkSecurityHeaders(path) {
   const name = `security headers ${path}`;
   try {
-    const response = await fetch(`${baseUrl}${path}`, { method: "GET" });
+    const response = await fetch(`${baseUrl}${path}`, { method: "GET", headers: withDeploymentProtection() });
     const evaluation = evaluateSecurityHeaders(response.headers, { expectCsp: !path.startsWith("/api/") });
     addResult(name, evaluation.ok, `status=${response.status} ${evaluation.detail}`);
   } catch (error) {
@@ -165,7 +166,7 @@ function getCspDirective(policy, directive) {
 async function checkReadiness() {
   const name = "GET /api/readiness";
   try {
-    const response = await fetch(`${baseUrl}/api/readiness`);
+    const response = await fetch(`${baseUrl}/api/readiness`, { headers: withDeploymentProtection() });
     const payload = await response.json();
     const expectations = getSmokeExpectations(launchProfile);
     const httpReady = requireReady ? response.ok && payload.ok === true : response.status === 200 || response.status === 503;
@@ -348,7 +349,7 @@ async function submitReview(idToken) {
 
   return fetch(`${baseUrl}/api/reviews`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${idToken}` },
+    headers: withDeploymentProtection({ Authorization: `Bearer ${idToken}` }),
     body: form,
   });
 }
@@ -449,6 +450,12 @@ function isCompleteServiceAccount(serviceAccount) {
 
 function normalizePrivateKey(value) {
   return typeof value === "string" ? value.replace(/\\n/g, "\n") : value;
+}
+
+function withDeploymentProtection(headers = {}) {
+  const nextHeaders = new Headers(headers);
+  if (deploymentProtectionBypass) nextHeaders.set("x-vercel-protection-bypass", deploymentProtectionBypass);
+  return nextHeaders;
 }
 
 function addResult(name, ok, detail = "") {

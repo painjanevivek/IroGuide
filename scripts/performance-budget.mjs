@@ -13,8 +13,13 @@ async function main() {
   const baseUrl = normalizeBaseUrl(process.env.PERFORMANCE_BASE_URL ?? process.env.SMOKE_BASE_URL ?? "");
   if (!baseUrl) throw new Error("PERFORMANCE_BASE_URL or SMOKE_BASE_URL is required.");
   const reportPath = process.env.PERFORMANCE_REPORT_PATH ?? "artifacts/performance-budget.json";
+  const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPASS?.trim();
   const browser = await chromium.launch();
-  const context = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1365, height: 768 } });
+  const context = await browser.newContext({
+    reducedMotion: "reduce",
+    viewport: { width: 1365, height: 768 },
+    ...(deploymentProtectionBypass ? { extraHTTPHeaders: { "x-vercel-protection-bypass": deploymentProtectionBypass } } : {}),
+  });
   const samples = [];
 
   try {

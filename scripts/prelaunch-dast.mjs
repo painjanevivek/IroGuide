@@ -8,6 +8,7 @@ const reportPath = process.env.DAST_REPORT_PATH ?? "artifacts/dast-prelaunch-rep
 const requireReady = process.env.DAST_REQUIRE_READY === "true";
 const failOnWarnings = process.env.DAST_FAIL_ON_WARNINGS === "true";
 const externalOrigin = process.env.DAST_EXTERNAL_ORIGIN ?? "https://dast.invalid";
+const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPASS?.trim();
 
 const publicRoutes = [
   "/",
@@ -225,7 +226,9 @@ async function request(path, init) {
   const url = new URL(path, baseUrl);
 
   try {
-    const response = await fetch(url, { ...init, signal: controller.signal });
+    const headers = new Headers(init.headers);
+    if (deploymentProtectionBypass) headers.set("x-vercel-protection-bypass", deploymentProtectionBypass);
+    const response = await fetch(url, { ...init, headers, signal: controller.signal });
     return { ok: true, status: response.status, headers: response.headers, response };
   } catch (error) {
     return {

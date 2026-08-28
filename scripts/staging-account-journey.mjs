@@ -12,6 +12,7 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const reportPath = process.env.ACCOUNT_JOURNEY_REPORT_PATH ?? "artifacts/staging-account-journey.json";
+const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPASS?.trim();
 const results = [];
 
 async function main() {
@@ -147,6 +148,7 @@ async function apiRequest(baseUrl, path, idToken, options = {}) {
     headers: {
       Authorization: `Bearer ${idToken}`,
       Origin: new URL(baseUrl).origin,
+      ...(deploymentProtectionBypass ? { "x-vercel-protection-bypass": deploymentProtectionBypass } : {}),
       ...(options.body ? { "Content-Type": "application/json" } : {}),
     },
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),

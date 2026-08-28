@@ -3,6 +3,7 @@ import { getPrivilegedReadinessFailures } from "./privileged-readiness-smoke.mjs
 import { evaluatePerformanceSample } from "./performance-budget.mjs";
 import { assertNonProductionTarget } from "./staging-account-journey.mjs";
 import { assertStorageMutationApproval } from "./storage-boundary-smoke.mjs";
+import { evaluateRuntimeProofResponse } from "./staging-runtime-proof.mjs";
 
 describe("release smoke safety", () => {
   it("blocks account mutation without explicit approval or on production aliases", () => {
@@ -27,6 +28,12 @@ describe("release smoke safety", () => {
     expect(() => assertStorageMutationApproval("false", "staging")).toThrow(/SMOKE_ALLOW_STORAGE_MUTATION/);
     expect(() => assertStorageMutationApproval("true", "production")).toThrow(/staging/i);
     expect(() => assertStorageMutationApproval("true", "staging")).not.toThrow();
+  });
+
+  it("rejects incomplete or secret-shaped staging runtime evidence", () => {
+    expect(evaluateRuntimeProofResponse("account-journey", 200, { ok: true, results: [{ name: "delete account", ok: true }] }).ok).toBe(true);
+    expect(evaluateRuntimeProofResponse("account-journey", 503, { ok: false }).ok).toBe(false);
+    expect(evaluateRuntimeProofResponse("account-journey", 200, { ok: true, idToken: "secret" }).ok).toBe(false);
   });
 
   it("fails a route when a Core Web Vital or transfer budget regresses", () => {

@@ -25,6 +25,7 @@
     "smoke:account-journey": "node scripts/staging-account-journey.mjs",
     "smoke:admin-readiness": "node scripts/privileged-readiness-smoke.mjs",
     "smoke:storage-boundary": "node scripts/storage-boundary-smoke.mjs",
+    "smoke:staging-runtime": "node scripts/staging-runtime-proof.mjs",
     "perf:budget": "node scripts/performance-budget.mjs"
   },
   "dependencies": {
