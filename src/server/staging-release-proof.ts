@@ -30,7 +30,7 @@ export function isValidStagingProofSecret(supplied: string | null) {
 }
 
 export async function runPrivilegedReadinessProof(context: ProofContext) {
-  const apiKey = requiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY");
+  const apiKey = requiredValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "NEXT_PUBLIC_FIREBASE_API_KEY");
   const adminUid = firstCsvValue(process.env.IROGUIDE_ADMIN_UIDS);
   if (!adminUid) throw new Error("No operator UID is configured for the preview deployment.");
   const auth = await getFirebaseAdminAuth();
@@ -55,7 +55,7 @@ export async function runPrivilegedReadinessProof(context: ProofContext) {
 }
 
 export async function runDisposableAccountProof(context: ProofContext) {
-  const apiKey = requiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY");
+  const apiKey = requiredValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "NEXT_PUBLIC_FIREBASE_API_KEY");
   const auth = await getFirebaseAdminAuth();
   const db = await getFirebaseAdminFirestore();
   const email = `activation-smoke-${Date.now()}-${randomBytes(4).toString("hex")}@iroguide.test`;
@@ -149,7 +149,7 @@ export async function runDisposableAccountProof(context: ProofContext) {
 }
 
 export async function runStorageBoundaryProof() {
-  const apiKey = requiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY");
+  const apiKey = requiredValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "NEXT_PUBLIC_FIREBASE_API_KEY");
   const auth = await getFirebaseAdminAuth();
   const db = await getFirebaseAdminFirestore();
   const bucket = await getFirebaseAdminStorageBucket();
@@ -257,5 +257,5 @@ function result(name: string, ok: boolean, detail = ""): ProofResult {
 
 function isDenied(status: number) { return status === 401 || status === 403 || status === 404; }
 function firstCsvValue(value: string | undefined) { return value?.split(",").map((item) => item.trim()).find(Boolean) ?? ""; }
-function requiredEnv(name: string) { const value = process.env[name]?.trim(); if (!value) throw new Error(`${name} is required.`); return value; }
+function requiredValue(rawValue: string | undefined, name: string) { const value = rawValue?.trim(); if (!value) throw new Error(`${name} is required.`); return value; }
 function requiredString(value: unknown, message: string) { if (typeof value !== "string" || !value) throw new Error(message); return value; }
