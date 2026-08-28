@@ -283,46 +283,46 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Vitest and Playwright; `npm run typecheck`
 **Evidence:** `docs/plans/product-activation/evidence/phase-5/README.md`
 
-- [ ] `ACT-0501` Create a server-derived next-best-action model using capabilities, onboarding, progress, drafts, access, and review history.
+- [X] `ACT-0501` Create a server-derived next-best-action model using capabilities, onboarding, progress, drafts, access, and review history.
   Prerequisites: Phase 4 | Subsystem: `dashboard` | Source: `ACT-0401`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0502` Add a compact first-run checklist with step label, outcome, completion state, and one primary continuation action.
+- [X] `ACT-0502` Add a compact first-run checklist with step label, outcome, completion state, and one primary continuation action.
   Prerequisites: `ACT-0501` | Subsystem: `dashboard` | Source: `ACT-0402`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0503` Add `Continue where you left off` for sample, self-review, brief, review job, checklist, comparison, and case-study states.
+- [X] `ACT-0503` Add `Continue where you left off` for sample, self-review, brief, review job, checklist, comparison, and case-study states.
   Prerequisites: `ACT-0502` | Subsystem: `dashboard` | Source: `ACT-0403`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0504` Show available-now status without repeating blocking banners across every card.
+- [X] `ACT-0504` Show available-now status without repeating blocking banners across every card.
   Prerequisites: `ACT-0503` | Subsystem: `dashboard` | Source: `ACT-0404`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0505` Replace the `No reviews yet` dead end with role-aware sample/brief actions.
+- [X] `ACT-0505` Replace the `No reviews yet` dead end with role-aware sample/brief actions.
   Prerequisites: `ACT-0504` | Subsystem: `dashboard` | Source: `ACT-0405`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0506` Distinguish empty history, filtered-empty, loading, stale cache, partial sync, offline, locked account, and fatal load states.
+- [X] `ACT-0506` Distinguish empty history, filtered-empty, loading, stale cache, partial sync, offline, locked account, and fatal load states.
   Prerequisites: `ACT-0505` | Subsystem: `dashboard` | Source: `ACT-0406`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0507` Preserve existing owned review history and trusted/unverified provenance labels.
+- [X] `ACT-0507` Preserve existing owned review history and trusted/unverified provenance labels.
   Prerequisites: `ACT-0506` | Subsystem: `dashboard` | Source: `ACT-0407`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0508` Add recent activity using privacy-safe categorical titles; avoid leaking brief content into shared screen contexts.
+- [X] `ACT-0508` Add recent activity using privacy-safe categorical titles; avoid leaking brief content into shared screen contexts.
   Prerequisites: `ACT-0507` | Subsystem: `dashboard` | Source: `ACT-0408`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0509` Add clear links to edit preferences, clear learning history, purge reviews, delete account, privacy, and support.
+- [X] `ACT-0509` Add clear links to edit preferences, clear learning history, purge reviews, delete account, privacy, and support.
   Prerequisites: `ACT-0508` | Subsystem: `dashboard` | Source: `ACT-0409`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0510` Ensure header/avatar menus expose text labels, keyboard behavior, escape/outside click, focus return, and long-name handling.
+- [X] `ACT-0510` Ensure header/avatar menus expose text labels, keyboard behavior, escape/outside click, focus return, and long-name handling.
   Prerequisites: `ACT-0509` | Subsystem: `dashboard` | Source: `ACT-0410`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0511` Add skeletons with stable dimensions and error recovery without blanking readable cached data.
+- [X] `ACT-0511` Add skeletons with stable dimensions and error recovery without blanking readable cached data.
   Prerequisites: `ACT-0510` | Subsystem: `dashboard` | Source: `ACT-0411`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0512` Add mobile priority ordering so the next action appears before secondary metrics.
+- [X] `ACT-0512` Add mobile priority ordering so the next action appears before secondary metrics.
   Prerequisites: `ACT-0511` | Subsystem: `dashboard` | Source: `ACT-0412`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0513` Remove concept cards that cannot produce an artifact in the current profile.
+- [X] `ACT-0513` Remove concept cards that cannot produce an artifact in the current profile.
   Prerequisites: `ACT-0512` | Subsystem: `dashboard` | Source: `ACT-0413`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
-- [ ] `ACT-0514` Add browser coverage for every dashboard state matrix row in `contracts.md`.
+- [X] `ACT-0514` Add browser coverage for every dashboard state matrix row in `contracts.md`.
   Prerequisites: `ACT-0513` | Subsystem: `dashboard` | Source: `ACT-0414`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 5 evidence record
 

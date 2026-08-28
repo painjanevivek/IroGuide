@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   deleteSelfReviews: vi.fn(),
   enforceRateLimit: vi.fn(),
   getAccountExperienceBundle: vi.fn(),
+  getDashboardGuide: vi.fn(),
   listDesignBriefs: vi.fn(),
   listSelfReviews: vi.fn(),
   patchAccountExperience: vi.fn(),
@@ -91,12 +92,17 @@ vi.mock("@/server/product-activation-storage", () => {
   };
 });
 
+vi.mock("@/server/dashboard-guide", () => ({
+  getDashboardGuide: mocks.getDashboardGuide,
+}));
+
 import { ActivationConflictError } from "@/server/product-activation-storage";
 import { AccountDeletionInProgressError } from "@/server/account-deletion-lock";
 import { GET as getExperience, PATCH as patchExperience } from "./account/experience/route";
 import { POST as createReview } from "./self-reviews/route";
 import { PUT as putBrief } from "./design-briefs/route";
 import { DELETE as revokeInterest, POST as createInterest } from "./access-interest/route";
+import { GET as getDashboardGuide } from "./dashboard/guide/route";
 
 const storedExperience = {
   userId: "owner",
@@ -121,6 +127,7 @@ describe("product activation API security envelope", () => {
     mocks.enforceRateLimit.mockResolvedValue({ result: allowed });
     mocks.getAccountExperienceBundle.mockResolvedValue({ experience: storedExperience, sampleProgress: [], accessInterest: null });
     mocks.patchAccountExperience.mockResolvedValue({ experience: storedExperience, sampleProgress: [], accessInterest: null });
+    mocks.getDashboardGuide.mockResolvedValue({ schemaVersion: 1, state: "new-account", nextAction: { id: "finish-onboarding" }, checklist: [], recentActivity: [] });
   });
 
   it("fails closed before authentication or persistence work", async () => {
@@ -226,6 +233,14 @@ describe("product activation API security envelope", () => {
     expect(mocks.storage).not.toHaveBeenCalled();
     expect(mocks.email).not.toHaveBeenCalled();
     expect(mocks.community).not.toHaveBeenCalled();
+  });
+
+  it("returns a private no-store dashboard guide for only the verified owner", async () => {
+    const response = await getDashboardGuide(request("/api/dashboard/guide"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(mocks.getDashboardGuide).toHaveBeenCalledWith("owner");
+    expect(await response.json()).toMatchObject({ schemaVersion: 1, state: "new-account" });
   });
 });
 

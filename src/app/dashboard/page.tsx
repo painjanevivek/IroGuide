@@ -14,4 +14,4 @@ export const metadata: Metadata = {
     nocache: true,
   },
 };
-export default function DashboardPage() { return <div className="simple-page"><header className="simple-header"><Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link><nav><Link href="/">Home</Link><UserMenu /><ReviewLaunchLink className="button button-small" enabledLabel="New review" /></nav></header><AuthGate><Dashboard /></AuthGate></div>; }
+export default function DashboardPage() { return <div className="simple-page"><header className="simple-header"><Link href="/" className="wordmark" aria-label="IroGuide home"><span className="wordmark-mark">I</span>IroGuide</Link><nav aria-label="Account and workspace actions"><UserMenu /><ReviewLaunchLink className="button button-small" disabledHref="/learn#practice" disabledLabel="Start learning" enabledLabel="New review" /></nav></header><AuthGate><Dashboard /></AuthGate></div>; }

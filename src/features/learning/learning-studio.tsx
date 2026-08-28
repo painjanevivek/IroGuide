@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BookOpenCheck, ClipboardCheck, FilePenLine, LoaderCircle, RotateCcw, TicketCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 import { loadAccountExperience, type AccountExperienceBundle } from "@/lib/account-experience-client";
@@ -22,9 +23,10 @@ const tools = [
 ] as const;
 
 export function LearningStudio() {
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { guidedLearning } = useLaunchCapabilities();
-  const [activeTool, setActiveTool] = useState<Tool>("sample");
+  const [activeTool, setActiveTool] = useState<Tool>(() => toTool(searchParams.get("tool")));
   const [bundle, setBundle] = useState<AccountExperienceBundle | null>(null);
   const [error, setError] = useState("");
 
@@ -65,4 +67,8 @@ export function LearningStudio() {
       {user && activeTool === "data" ? <LearningHistoryControls onCleared={() => setBundle(null)} user={user} /> : null}
     </div>
   );
+}
+
+function toTool(value: string | null): Tool {
+  return tools.some((tool) => tool.id === value) ? value as Tool : "sample";
 }

@@ -13,7 +13,7 @@ test("stops free-launch users before the critique workflow begins", async ({ pag
   });
 
   await signInWithEmail(page, email, "iroguide-e2e-password");
-  await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /start learning/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /new review|review a design|practice with a new design|continue draft/i })).toHaveCount(0);
 
   await page.locator('summary[aria-label="Open workspace menu"]').first().click();
