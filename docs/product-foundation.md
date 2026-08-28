@@ -1,5 +1,7 @@
 # IroGuide Product Foundation
 
+> Execution note (2026-08-28): the free product is being extended with truthful guided learning under `docs/plans/product-activation/revision.md`. Provider, Community, billing, email, and publishing gates in this foundation remain unchanged.
+
 Status: Current product baseline
 Working product name: **IroGuide**
 Last updated: 2026-08-24
@@ -133,4 +135,3 @@ Every successful review contains:
 - Users can identify the first improvement to make within seconds of opening a review.
 - Failed uploads and failed reviews recover without losing the user's brief.
 - Repeat users show measurable improvement in recurring weak categories.
-

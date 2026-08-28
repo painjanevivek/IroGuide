@@ -1,50 +1,65 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# IroGuide Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Evidence Before Opinion
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Every critique, comparison, progress claim, and product decision MUST be grounded in traceable evidence. The product MUST distinguish illustrative samples, self-review, deterministic previews, and live image analysis. It MUST NOT imply that a user's design was analyzed when no approved provider inspected the image. Human research, legal approval, operating ownership, and production readiness MUST never be fabricated.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Private by Default
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Account data, briefs, uploads, critiques, conversations, comparisons, and case studies MUST remain owner-scoped and non-public unless a separate, explicit, revocable consent flow authorizes publication. Protected routes MUST verify Firebase identity server-side, enforce same-origin mutations, validate bounded inputs, and honor the persistent account-access lock. Logs, analytics, and operator views MUST exclude creative content, tokens, signed URLs, raw user identifiers, and provider payloads unless an approved security incident process requires narrowly scoped access.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Server-Owned Capabilities and Fail-Closed Activation
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Paid, externally billed, safety-sensitive, or public capabilities MUST be controlled by server-owned policy. Client state, credentials, payment redirects, or deployed code alone MUST NOT enable AI critique, source-image creation, email delivery, Community, publishing, or billing. Missing or invalid production configuration MUST fail closed. Every activation MUST have a kill switch, rollback path, evidence gate, and named owner where operating judgment is required.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Accessible, Responsive, Progressive Product Delivery
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+User-visible work MUST target WCAG 2.2 AA, keyboard operation, meaningful focus, screen-reader clarity, reduced motion, reflow at 320 CSS pixels, 200% zoom, touch access, and no horizontal document overflow. Server-rendered purpose, availability, and next actions MUST remain useful before client enhancement. Motion, color, hover, drag, and visual annotations MUST never be the only way to understand or complete a task.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Bounded, Modular, Testable Systems
+
+Business contracts and schemas belong in `src/domain/`, server authorization and integrations in `src/server/`, feature UI in `src/features/`, shared primitives in `src/components/`, and routes in `src/app/`. Inputs, outputs, pagination, attempts, costs, storage, retention, and background work MUST be bounded. Mutations MUST be idempotent where retries are possible. Client components MUST be explicit and MUST NOT import server-only code.
+
+### VI. Complete Ownership, Deletion, and Recovery
+
+Every persisted entity MUST declare ownership, schema version, retention, migration, deletion, and recovery behavior before implementation. Account deletion MUST cover primary and derived data, remain retryable during partial failure, and preserve the access lock until terminal cleanup. Direct operator paths that bypass the lock are prohibited by runbook until the architecture removes the constraint.
+
+### VII. Verified and Reversible Releases
+
+Implementation follows tests-first where practical, focused verification before broad gates, and exact-SHA deployment evidence. A phase is complete only when its acceptance criteria, security/privacy checks, accessibility/responsive checks, and rollback evidence pass. Green code does not substitute for human research, legal review, production credentials, load evidence, or operating ownership.
+
+## Technology and Product Constraints
+
+- The application uses Next.js 16 App Router, React 19, and TypeScript. Relevant local Next.js documentation under `node_modules/next/dist/docs/` MUST be read before framework-sensitive changes.
+- The production launch profile remains `free` until an explicitly approved gate changes it.
+- Beginner designers, freelancers, and UI/UX designers are the primary cohorts.
+- Community, billing, public publishing, paid provider calls, and email delivery remain independently gated.
+- Existing design tokens, visual language, motion utilities, Zod schemas, Firebase boundaries, and observability patterns SHOULD be reused before adding dependencies.
+- New dependencies require a documented need, security review, bundle impact, license review, and rollback plan.
+
+## Development Workflow and Quality Gates
+
+1. Preserve user-owned and unrelated work.
+2. Record the task, requirements, dependencies, and acceptance criteria before implementation.
+3. Write or update focused tests before behavior where practical.
+4. Implement the smallest modular change that satisfies the contract.
+5. Run focused tests, then lint, typecheck, unit, rules, build, and relevant browser/security checks.
+6. Inspect user-visible changes in the in-app browser at required states and viewports.
+7. Review the full diff for secrets, capability bypasses, misleading copy, generated output, and unrelated formatting.
+8. Commit a focused Conventional Commit and push without force only after the phase gate passes.
+
+Required substantial-handoff gate:
+
+```powershell
+npm run check
+```
+
+Additional gates apply for browser, deployed, provider, Community, billing, and destructive-data changes as defined in the controlling plan.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution overrides conflicting project planning documents. Product decisions explicitly approved by the owner may amend it through a separate reviewed change containing rationale, migration impact, and rollback. Technical implementation alone cannot reinterpret or waive a capability gate. Every pull request and release review MUST verify applicable principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-08-28 | **Last Amended**: 2026-08-28

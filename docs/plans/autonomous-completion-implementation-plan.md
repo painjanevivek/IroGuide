@@ -1,5 +1,7 @@
 # IroGuide Autonomous Completion Implementation Plan
 
+> Supersession note (2026-08-28): completed infrastructure and safety evidence in this document remains valid. New product-activation execution follows `docs/plans/product-activation/revision.md` and its authoritative `tasks.md` ledger; no existing capability gate is relaxed.
+
 **Status:** In execution
 
 **Created:** 2026-08-24
