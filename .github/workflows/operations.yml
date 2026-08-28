@@ -39,7 +39,7 @@ jobs:
       - name: Verify immutable workflow pins
         run: npm run security:workflow-pins
       - name: Verify evaluation and capability contracts
-        run: npm run eval:reviews:validate && npm test -- src/domain/launch-capabilities.test.ts src/domain/readiness.test.ts src/server/provider-controls.test.ts src/server/review-pipeline-config.test.ts
+        run: npm run billing:gate && npm run eval:reviews:validate && npm test -- src/domain/launch-capabilities.test.ts src/domain/readiness.test.ts src/server/provider-controls.test.ts src/server/review-pipeline-config.test.ts
       - name: Verify Firebase and Storage rules
         run: npm run test:rules
 

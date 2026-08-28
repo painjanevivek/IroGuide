@@ -689,10 +689,10 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** billing absence check and closed-gate documentation
 **Evidence:** `docs/plans/product-activation/evidence/phase-15/README.md`
 
-- [ ] `ACT-1501` Do not install a billing SDK or advertise purchasable plans before `GATE-BILLING-01`.
+- [X] `ACT-1501` Do not install a billing SDK or advertise purchasable plans before `GATE-BILLING-01`.
   Prerequisites: Provider economics, retention, legal, and business approval | Subsystem: `billing` | Source: `ACT-1401`
   Verify: billing absence check and closed-gate documentation | Evidence: phase 15 evidence record
-- [ ] `ACT-1502` Keep Pricing labeled as research and remove purchase-shaped disabled controls from primary journeys.
+- [X] `ACT-1502` Keep Pricing labeled as research and remove purchase-shaped disabled controls from primary journeys.
   Prerequisites: `ACT-1501` | Subsystem: `billing` | Source: `ACT-1402`
   Verify: billing absence check and closed-gate documentation | Evidence: phase 15 evidence record
 - [ ] `ACT-1503` After approval, write provider-specific ADR and threat model.
