@@ -21,6 +21,7 @@ import { LandingFinalAuthActions, LandingHeroAuthButton } from "@/features/auth/
 import { AnimatedCritiqueLab } from "@/features/marketing/animated-critique-lab";
 import { FaqAccordion } from "@/features/marketing/faq-accordion";
 import { LandingScrollHeader } from "@/features/marketing/landing-scroll-header";
+import { LandingEvidence } from "@/features/marketing/landing-evidence";
 import { LandingSmoothMotion } from "@/features/marketing/landing-smooth-motion";
 import { MorphingExamplePoster } from "@/features/marketing/morphing-example-poster";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
@@ -74,6 +75,7 @@ const faqs = [
 export function LandingPage() {
   return (
     <main className="site-shell">
+      <LandingEvidence />
       <LandingScrollHeader />
 
       <LandingSmoothMotion>

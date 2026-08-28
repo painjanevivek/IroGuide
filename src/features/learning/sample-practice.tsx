@@ -92,7 +92,10 @@ function SamplePracticeState({ bundle, onBundle, sample, stored, user }: {
     const chosen = sample.findings.find((finding) => finding.id === prediction) ?? sample.findings[0];
     const revealedFindingIds = Array.from(new Set([...progress.revealedFindingIds, chosen.id]));
     void persist({ ...progress, activeFindingId: chosen.id, revealedFindingIds });
-    if (user) void captureProductEvidence(user, { name: "sample_finding_revealed", sampleId: sample.id, findingIndex: sample.findings.indexOf(chosen) });
+    if (user) {
+      if (progress.revealedFindingIds.length === 0) void captureProductEvidence(user, { name: "sample_started", sampleId: sample.id, sampleVersion: sample.version });
+      void captureProductEvidence(user, { name: "sample_finding_revealed", sampleId: sample.id, findingIndex: sample.findings.indexOf(chosen) });
+    }
   }
 
   function revealNext() {

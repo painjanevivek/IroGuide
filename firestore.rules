@@ -149,6 +149,10 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /productEvidenceDailyAggregates/{aggregateId} {
+      allow read, write: if false;
+    }
+
     match /researchFeedback/{responseId} {
       allow read, write: if false;
     }

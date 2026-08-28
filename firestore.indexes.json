@@ -75,5 +75,18 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "productEvidenceEvents",
+      "fieldPath": "retentionExpiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "productEvidenceDailyAggregates",
+      "fieldPath": "retentionExpiresAt",
+      "ttl": true,
+      "indexes": []
+    }
+  ]
 }

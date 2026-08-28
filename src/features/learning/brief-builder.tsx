@@ -21,6 +21,7 @@ export function BriefBuilder({ user }: { user: User }) {
   const [saveState, setSaveState] = useState<ActivationSaveState>("saving");
   const [error, setError] = useState("");
   const editVersionRef = useRef(0);
+  const startedEvidenceRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -47,6 +48,10 @@ export function BriefBuilder({ user }: { user: User }) {
     setValues((current) => ({ ...current, [key]: value }));
     setDirty(true);
     setError("");
+    if (!startedEvidenceRef.current) {
+      startedEvidenceRef.current = true;
+      void captureProductEvidence(user, { name: "brief_started", category: key === "category" ? (value ?? "other") as ReviewCategory : values.category ?? "other" });
+    }
   }
 
   const persist = useCallback(async (status: "draft" | "ready") => {

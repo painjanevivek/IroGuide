@@ -332,31 +332,31 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Vitest, API, rules, and authorization tests
 **Evidence:** `docs/plans/product-activation/evidence/phase-6/README.md`
 
-- [ ] `ACT-0601` Implement the allowlisted activation event taxonomy from `contracts.md`.
+- [X] `ACT-0601` Implement the allowlisted activation event taxonomy from `contracts.md`.
   Prerequisites: Phases 2-5 | Subsystem: `evidence-operations` | Source: `ACT-0601`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0602` Reject sensitive/unapproved fields at compile-time where possible and runtime always.
+- [X] `ACT-0602` Reject sensitive/unapproved fields at compile-time where possible and runtime always.
   Prerequisites: `ACT-0601` | Subsystem: `evidence-operations` | Source: `ACT-0602`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0603` Add consent, schema version, environment, deduplication, sampling, and retention behavior.
+- [X] `ACT-0603` Add consent, schema version, environment, deduplication, sampling, and retention behavior.
   Prerequisites: `ACT-0602` | Subsystem: `evidence-operations` | Source: `ACT-0603`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0604` [P] Build operator aggregates for landing-to-sample, sign-up-to-sample, sample completion, brief readiness, access interest, revocation, and seven-day return.
+- [X] `ACT-0604` [P] Build operator aggregates for landing-to-sample, sign-up-to-sample, sample completion, brief readiness, access interest, revocation, and seven-day return.
   Prerequisites: `ACT-0603` | Subsystem: `evidence-operations` | Source: `ACT-0604`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0605` Keep `not observed`, `insufficient sample`, and measured zero distinct.
+- [X] `ACT-0605` Keep `not observed`, `insufficient sample`, and measured zero distinct.
   Prerequisites: `ACT-0604` | Subsystem: `evidence-operations` | Source: `ACT-0605`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0606` Implement owner-scoped versioned JSON account export with bounded pagination and prohibited-field filtering.
+- [X] `ACT-0606` Implement owner-scoped versioned JSON account export with bounded pagination and prohibited-field filtering.
   Prerequisites: `ACT-0605` | Subsystem: `evidence-operations` | Source: `NEW`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0607` Implement operator-only access-interest filtering, approve, decline, expire, and revoke actions.
+- [X] `ACT-0607` Implement operator-only access-interest filtering, approve, decline, expire, and revoke actions.
   Prerequisites: `ACT-0606` | Subsystem: `evidence-operations` | Source: `NEW`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0608` Require reason codes, immutable audit, replay protection, and self-approval denial for access decisions.
+- [X] `ACT-0608` Require reason codes, immutable audit, replay protection, and self-approval denial for access decisions.
   Prerequisites: `ACT-0607` | Subsystem: `evidence-operations` | Source: `NEW`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
-- [ ] `ACT-0609` Enforce 30-day raw-event and 12-month aggregate retention contracts.
+- [X] `ACT-0609` Enforce 30-day raw-event and 12-month aggregate retention contracts.
   Prerequisites: `ACT-0608` | Subsystem: `evidence-operations` | Source: `NEW`
   Verify: focused Vitest, API, rules, and authorization tests | Evidence: phase 6 evidence record
 

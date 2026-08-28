@@ -19,7 +19,7 @@ import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import { getFirebaseClientFirestore } from "@/lib/firebase/firestore";
 import { getFirebaseClientStorage } from "@/lib/firebase/storage";
 import { getProgressCohort, mergeAccountReviews } from "@/lib/account-reviews";
-import { captureProductEvidence, hashEvidenceSignature } from "@/lib/product-evidence";
+import { captureProductEvidence, getReviewAgeBucket, hashEvidenceSignature } from "@/lib/product-evidence";
 import { useAccountReviews } from "@/lib/use-account-reviews";
 import { DataControls } from "./data-controls";
 import { GuidedNextAction } from "./guided-next-action";
@@ -61,6 +61,8 @@ export function Dashboard() {
     if (!user || loading || evidenceUserRef.current === user.uid) return;
     evidenceUserRef.current = user.uid;
     const cohort = getProgressCohort(reviews);
+
+    void captureProductEvidence(user, { name: "workspace_returned", ageBucket: getReviewAgeBucket(user.metadata.creationTime ?? "") });
 
     void captureProductEvidence(user, {
       name: "review_history_opened",

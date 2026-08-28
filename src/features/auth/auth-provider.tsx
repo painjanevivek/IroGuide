@@ -216,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(credential.user);
       setAvatarUrl(getStoredAvatar(credential.user));
       setProviderIds(getProviderIds(credential.user));
+      void recordSignUpCompletion(credential.user);
       void recordSignInCompletion(credential.user, "email");
     } catch (signUpError) {
       const message = getAuthErrorMessage(signUpError);
@@ -575,4 +576,9 @@ function isAuthSensitivePath(pathname: string) {
 async function recordSignInCompletion(user: User, method: "email" | "google") {
   const { captureProductEvidence } = await import("@/lib/product-evidence");
   await captureProductEvidence(user, { name: "sign_in_completed", method });
+}
+
+async function recordSignUpCompletion(user: User) {
+  const { captureProductEvidence } = await import("@/lib/product-evidence");
+  await captureProductEvidence(user, { name: "sign_up_completed", method: "email" });
 }
