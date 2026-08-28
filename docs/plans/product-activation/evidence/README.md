@@ -20,3 +20,4 @@ File names use lowercase kebab case and never include account identifiers, email
 | 9 | `phase-9/README.md` | NO-GO: corpus/readiness controls prepared; paid calls and human adjudication absent |
 | 10 | `phase-10/README.md` | Dependency closed: provider gate is NO-GO; live critique remains unavailable |
 | 11 | `phase-11/README.md` | Dependency closed: no approved live critique or second-review cohort exists |
+| 12 | `phase-12/README.md` | Dependency closed: private portfolio lacks verified review/comparison evidence |
