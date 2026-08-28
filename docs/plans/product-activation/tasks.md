@@ -372,13 +372,13 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-0702` Complete a disposable verified-account journey: create, verify, sign out/in, update, save, purge, and delete.
   Prerequisites: `ACT-0701` | Subsystem: `release-readiness` | Source: `ACT-0702`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0703` Reverify Community page/API/rules denial and absence of free-profile image/provider/email side effects.
+- [X] `ACT-0703` Reverify Community page/API/rules denial and absence of free-profile image/provider/email side effects.
   Prerequisites: `ACT-0702` | Subsystem: `release-readiness` | Source: `ACT-0703`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0704` Run deployed DAST, security smoke, production smoke, and save workflow/deployment URLs.
+- [X] `ACT-0704` Run deployed DAST, security smoke, production smoke, and save workflow/deployment URLs.
   Prerequisites: `ACT-0703` | Subsystem: `release-readiness` | Source: `ACT-0704`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0705` Complete `AUT-0312`: emulator, route, concurrency, failure-injection, browser, and free-production job/upload denial tests.
+- [X] `ACT-0705` Complete `AUT-0312`: emulator, route, concurrency, failure-injection, browser, and free-production job/upload denial tests.
   Prerequisites: `ACT-0704` | Subsystem: `release-readiness` | Source: `ACT-0705`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
 - [ ] `ACT-0706` Exercise real non-production Cloud Storage signed-policy boundaries with an approved bucket.
@@ -390,13 +390,13 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-0708` Run manual keyboard, screen-reader, contrast, 200% zoom, reduced-motion, and physical-device checks.
   Prerequisites: `ACT-0707` | Subsystem: `release-readiness` | Source: `ACT-0708`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0709` Record performance budgets and remediate material regressions.
+- [X] `ACT-0709` Record performance budgets and remediate material regressions.
   Prerequisites: `ACT-0708` | Subsystem: `release-readiness` | Source: `ACT-0709`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0710` Exercise staging rollback to the previous healthy deployment.
+- [X] `ACT-0710` Exercise staging rollback to the previous healthy deployment.
   Prerequisites: `ACT-0709` | Subsystem: `release-readiness` | Source: `ACT-0710`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
-- [ ] `ACT-0711` Record residual constraints, owner, severity, workaround, and removal condition.
+- [X] `ACT-0711` Record residual constraints, owner, severity, workaround, and removal condition.
   Prerequisites: `ACT-0710` | Subsystem: `release-readiness` | Source: `ACT-0711`
   Verify: `npm run check`; `npm run test:e2e`; `npm run test:e2e:free`; DAST and smoke where credentials exist | Evidence: phase 7 evidence record
 

@@ -15,3 +15,4 @@ File names use lowercase kebab case and never include account identifiers, email
 | 4 | `phase-4/README.md` | Passed locally; push recorded in Git history |
 | 5 | `phase-5/README.md` | Passed locally; push recorded in Git history |
 | 6 | `phase-6/README.md` | Passed locally; push recorded in Git history |
+| 7 | `phase-7/README.md` | Gate closed: public proof passed; privileged Firebase and physical-device evidence unavailable |
