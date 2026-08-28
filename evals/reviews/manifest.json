@@ -9,6 +9,8 @@
       "assetPath": "public/samples/form-together-friendly.webp",
       "assetSha256": "9bc83fc6e3d006d01f33ecbbed8c68ee4c3e71410b7529a4cb63c180021878e8",
       "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": ["mentor", "friendly", "direct"],
       "status": "unlabeled"
     },
     {
@@ -17,6 +19,8 @@
       "assetPath": "public/samples/fieldnote-mentor.webp",
       "assetSha256": "24337343a71327b11f61ed64907dc9f9f32b6882fa6bd6c53737c214cbc299a1",
       "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": ["mentor", "friendly", "direct"],
       "status": "unlabeled"
     },
     {
@@ -25,6 +29,8 @@
       "assetPath": "public/samples/signal-noise-direct.webp",
       "assetSha256": "23a4caa1336a2f72a87ed946c15019a5584f5edfad9aa60ca8d1a457c2d7e0ce",
       "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": ["mentor", "friendly", "direct"],
       "status": "unlabeled"
     }
   ]

@@ -17,3 +17,4 @@ File names use lowercase kebab case and never include account identifiers, email
 | 6 | `phase-6/README.md` | Passed locally; push recorded in Git history |
 | 7 | `phase-7/README.md` | Gate closed: public proof passed; privileged Firebase and physical-device evidence unavailable |
 | 8 | `phase-8/README.md` | Gate closed: research kit prepared; participant outreach not authorized |
+| 9 | `phase-9/README.md` | NO-GO: corpus/readiness controls prepared; paid calls and human adjudication absent |

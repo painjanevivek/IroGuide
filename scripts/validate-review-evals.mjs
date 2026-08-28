@@ -2,12 +2,15 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import sharp from "sharp";
+import { evaluationModes, evaluationQualityLevels, supportedReviewCategories, summarizeCoverage, validateCompletedDistribution } from "./lib/review-evaluation-manifest.mjs";
 
 const manifestPath = resolve("evals/reviews/manifest.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-const allowedCategories = new Set(["ui", "website"]);
+const allowedCategories = new Set(supportedReviewCategories);
 const allowedStatuses = new Set(["unlabeled", "in-review", "adjudicated", "retired"]);
 const allowedOwnership = new Set(["purpose-built", "licensed"]);
+const allowedQualityLevels = new Set(evaluationQualityLevels);
+const allowedModes = new Set(evaluationModes);
 const ids = new Set();
 const errors = [];
 
@@ -20,7 +23,11 @@ for (const testCase of manifest.cases ?? []) {
   if (typeof testCase.id !== "string" || !testCase.id) errors.push("Every case needs a non-empty id.");
   else if (ids.has(testCase.id)) errors.push(`Duplicate case id: ${testCase.id}.`);
   else ids.add(testCase.id);
-  if (!allowedCategories.has(testCase.category)) errors.push(`${testCase.id}: category must be ui or website.`);
+  if (!allowedCategories.has(testCase.category)) errors.push(`${testCase.id}: category is not a supported review category.`);
+  if (!allowedQualityLevels.has(testCase.qualityLevel)) errors.push(`${testCase.id}: qualityLevel must be strong, mixed, or weak-ambiguous.`);
+  if (!Array.isArray(testCase.modes) || !testCase.modes.includes("mentor") || new Set(testCase.modes).size !== testCase.modes.length || testCase.modes.some((mode) => !allowedModes.has(mode))) {
+    errors.push(`${testCase.id}: modes must be unique, supported, and always include mentor.`);
+  }
   if (!allowedStatuses.has(testCase.status)) errors.push(`${testCase.id}: invalid status.`);
   if (!allowedOwnership.has(testCase.ownership)) errors.push(`${testCase.id}: ownership must be purpose-built or licensed.`);
   if (typeof testCase.assetPath !== "string" || !testCase.assetPath.startsWith("public/")) errors.push(`${testCase.id}: assetPath must be an owned public asset.`);
@@ -58,6 +65,8 @@ for (const testCase of manifest.cases ?? []) {
   }
 }
 
+errors.push(...validateCompletedDistribution(manifest));
+
 if (errors.length) {
   console.error("Review evaluation manifest is invalid:\n- " + errors.join("\n- "));
   process.exit(1);
@@ -65,3 +74,4 @@ if (errors.length) {
 
 const adjudicatedCount = manifest.cases.filter((testCase) => testCase.status === "adjudicated").length;
 console.log(`Review evaluation manifest valid: ${manifest.cases.length}/${manifest.targetCaseCount} owned cases registered; ${adjudicatedCount} ready to score.`);
+console.log(`Coverage: ${JSON.stringify(summarizeCoverage(manifest))}`);

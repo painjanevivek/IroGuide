@@ -443,13 +443,13 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-0902` [P] Verify ownership, consent, hashes, decoded bounds, expected rubric regions, and scenario status for every asset.
   Prerequisites: `ACT-0901` | Subsystem: `provider-evaluation` | Source: `ACT-0802`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
-- [ ] `ACT-0903` [P] Prepare blinded review sheets and reviewer calibration guidance.
+- [X] `ACT-0903` [P] Prepare blinded review sheets and reviewer calibration guidance.
   Prerequisites: `ACT-0902` | Subsystem: `provider-evaluation` | Source: `ACT-0803`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
-- [ ] `ACT-0904` Verify deterministic runner hashes, score aggregation, unsupported-finding metrics, and cost/latency capture.
+- [X] `ACT-0904` Verify deterministic runner hashes, score aggregation, unsupported-finding metrics, and cost/latency capture.
   Prerequisites: `ACT-0903` | Subsystem: `provider-evaluation` | Source: `ACT-0804`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
-- [ ] `ACT-0905` Confirm primary/fallback adapters remain independently disabled and free production remains unaffected.
+- [X] `ACT-0905` Confirm primary/fallback adapters remain independently disabled and free production remains unaffected.
   Prerequisites: `ACT-0904` | Subsystem: `provider-evaluation` | Source: `ACT-0805`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
 - [ ] `ACT-0906` Run primary and fallback candidates against the complete owned suite.
@@ -467,7 +467,7 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-0910` Exercise kill switch, quota exhaustion, cap exhaustion, provider timeout, invalid output, queue drain, deletion, and rollback.
   Prerequisites: `ACT-0909` | Subsystem: `provider-evaluation` | Source: `ACT-0814`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
-- [ ] `ACT-0911` Produce `GATE-PROVIDER-01` decision; keep production free unless explicit `GO`.
+- [X] `ACT-0911` Produce `GATE-PROVIDER-01` decision; keep production free unless explicit `GO`.
   Prerequisites: `ACT-0910` | Subsystem: `provider-evaluation` | Source: `ACT-0815`
   Verify: `npm run eval:reviews:validate`; `npm run eval:reviews:unit`; approved blinded evaluation | Evidence: phase 9 evidence record
 
