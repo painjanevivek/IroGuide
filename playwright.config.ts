@@ -9,6 +9,7 @@ export default defineConfig({
     timeout: 15_000,
   },
   fullyParallel: false,
+  workers: 1,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
   retries: process.env.CI ? 1 : 0,
   testDir: "./e2e",
@@ -19,7 +20,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${serverPort}`,
+    command: `npm run dev -- --webpack --hostname 127.0.0.1 --port ${serverPort}`,
     env: {
       ...process.env,
       ...(useFirebaseFlow ? {} : {
@@ -37,6 +38,14 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
   ],
 });

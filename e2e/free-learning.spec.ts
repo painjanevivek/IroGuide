@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { waitForAppHydration } from "./auth-helpers";
 
 const guestStorageKey = "iroguide:guest-sample-progress:v1";
 
@@ -18,6 +19,7 @@ test.describe("truthful free learning", () => {
   test("saves and resets bounded guest sample progress", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/learn#practice");
+    await waitForAppHydration(page);
     await dismissCookieNotice(page);
 
     const exercise = page.getByRole("heading", { name: /practice with form together/i });
@@ -85,15 +87,18 @@ test.describe("truthful free learning", () => {
     await captureEvidence(page, "free-learning-complete-desktop.png");
   });
 
-  test("supports keyboard focus, forced colors, reduced motion, and 200 percent zoom", async ({ page }) => {
+  test("supports keyboard focus, forced colors, reduced motion, and 200 percent zoom", async ({ browserName, page }) => {
     await page.setViewportSize({ width: 720, height: 900 });
     await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
     await page.goto("/learn#practice");
+    await waitForAppHydration(page);
     await dismissCookieNotice(page);
     await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
 
-    await page.keyboard.press("Tab");
-    await expect(page.locator(":focus-visible")).toHaveCount(1);
+    const skipLink = page.getByRole("link", { name: "Skip to main content" });
+    if (browserName !== "chromium") await skipLink.focus();
+    else await page.keyboard.press("Tab");
+    await expect(skipLink).toBeFocused();
     await expect(page.getByText(/example critique—not an analysis/i).first()).toBeVisible();
     await expectNoHorizontalDocumentOverflow(page);
   });
@@ -152,6 +157,7 @@ async function mockLearningApis(page: Page) {
 
 async function signIn(page: Page, destination: string) {
   await page.goto(`/auth/sign-in?next=${encodeURIComponent(destination)}`);
+  await waitForAppHydration(page);
   await page.getByLabel(/^Email$/i).fill("learning@iroguide.test");
   await page.getByLabel(/^Password$/i).fill("iroguide-e2e-password");
   await page.getByRole("button", { name: /^sign in/i }).click();

@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
+import { waitForAppHydration } from "./auth-helpers";
 
 const guestStorageKey = "iroguide:guest-sample-progress:v1";
 
@@ -24,6 +25,7 @@ test.describe("role-aware onboarding", () => {
     });
 
     await page.goto("/auth/sign-up?next=%2Fonboarding");
+    await waitForAppHydration(page);
     await page.getByLabel(/^Name$/i).fill("Ada Designer");
     await page.getByLabel(/^Email$/i).fill("onboarding@iroguide.test");
     await page.getByLabel(/^Password$/i).fill("correct-horse-battery-staple");
@@ -91,6 +93,7 @@ test.describe("role-aware onboarding", () => {
 
   test("rejects an external auth return destination", async ({ page }) => {
     await page.goto("/auth/sign-in?next=https%3A%2F%2Fevil.example%2Fsteal");
+    await waitForAppHydration(page);
     await page.getByLabel(/^Email$/i).fill("safe-return@iroguide.test");
     await page.getByLabel(/^Password$/i).fill("iroguide-e2e-password");
     await page.getByRole("button", { name: /^sign in/i }).click();
@@ -118,6 +121,7 @@ test.describe("role-aware onboarding", () => {
 
 async function signIn(page: Page, destination: string) {
   await page.goto(`/auth/sign-in?next=${encodeURIComponent(destination)}`);
+  await waitForAppHydration(page);
   await page.getByLabel(/^Email$/i).fill("resume@iroguide.test");
   await page.getByLabel(/^Password$/i).fill("iroguide-e2e-password");
   await page.getByRole("button", { name: /^sign in/i }).click();

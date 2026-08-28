@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { signInWithEmail } from "./auth-helpers";
 
 test.describe("guided dashboard", () => {
   test("gives a new account one clear artifact-producing next step", async ({ page }) => {
@@ -43,7 +44,7 @@ test.describe("guided dashboard", () => {
     await page.getByRole("link", { name: /start self-review/i }).first().click();
 
     await expect(page).toHaveURL(/\/learn\?tool=self-review#practice/);
-    await expect(page.getByRole("button", { name: "Self-review" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("button", { name: "Self-review", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
   test("keeps action order and controls within a narrow mobile viewport", async ({ page }) => {
@@ -105,11 +106,7 @@ test.describe("guided dashboard", () => {
 });
 
 async function signIn(page: Page) {
-  await page.goto("/auth/sign-in?next=%2Fdashboard");
-  await page.getByLabel(/^Email$/i).fill("dashboard@iroguide.test");
-  await page.getByLabel(/^Password$/i).fill("iroguide-e2e-password");
-  await page.getByRole("button", { name: /^sign in/i }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await signInWithEmail(page, "dashboard@iroguide.test", "iroguide-e2e-password");
 }
 
 async function mockGuide(page: Page, value: ReturnType<typeof guide>) {

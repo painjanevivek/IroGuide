@@ -43,6 +43,7 @@ test("operator insights distinguish disabled collection from measured zero", asy
           feedback: { responseCount: 0, researchConsentCount: 0, byCohort: {}, byClarity: {} },
           from: "2026-07-25T00:00:00.000Z",
           generatedAt: "2026-08-24T00:00:00.000Z",
+          funnels: Object.fromEntries(["landingToSample", "signUpToSample", "sampleCompletion", "briefReadiness", "accessInterest", "accessRevocation", "sevenDayReturn"].map((key) => [key, { denominator: 0, numerator: 0, rate: null, status: "not-observed" }])),
           metrics: {},
           partial: false,
           uniqueAccountCount: 0,
@@ -54,6 +55,7 @@ test("operator insights distinguish disabled collection from measured zero", asy
   await page.goto("/admin/insights");
   await expect(page.getByRole("heading", { name: "Free-launch evidence." })).toBeVisible();
   await expect(page.getByText("Collection is safely disabled")).toBeVisible();
-  await expect(page.getByText("Not observed", { exact: true })).toHaveCount(6);
+  await expect(page.locator('.insights-metrics article[data-observed="false"]')).toHaveCount(12);
+  await expect(page.locator('.insights-funnels article[data-status="not-observed"]')).toHaveCount(7);
   await expect(page.getByText("Observed event total", { exact: true })).toHaveCount(0);
 });

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { waitForAppHydration } from "./auth-helpers";
 
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
 const testEmail = process.env.E2E_EMAIL ?? "designer@iroguide.test";
@@ -8,6 +9,7 @@ test.describe("manual email auth hardening", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/auth/sign-in");
+    await waitForAppHydration(page);
     await expect(page.getByRole("heading", { name: /sign in with your email and password/i })).toBeVisible();
   });
 

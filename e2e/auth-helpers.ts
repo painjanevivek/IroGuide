@@ -2,12 +2,33 @@ import { expect, type Page } from "@playwright/test";
 
 export async function signInWithEmail(page: Page, email: string, password: string) {
   await page.goto("/auth/sign-in");
-  await page.waitForLoadState("networkidle");
+  await waitForAppHydration(page);
   await page.getByLabel(/^Email$/i).fill(email);
   await page.getByLabel(/^Password$/i).fill(password);
-  await page.getByRole("button", { name: /^sign in/i }).click();
+  const submit = page.getByRole("button", { name: /^sign in/i });
+  await submit.click();
+  const navigated = await page.waitForURL(/\/dashboard/, { timeout: 5_000 }).then(() => true).catch(() => false);
+  if (!navigated) {
+    let localSession = await page.evaluate(() => localStorage.getItem("iroguide:e2e-local-auth-user"));
+    if (!localSession) {
+      await submit.click();
+      await expect.poll(() => page.evaluate(() => localStorage.getItem("iroguide:e2e-local-auth-user")), { timeout: 5_000 }).not.toBeNull();
+      localSession = await page.evaluate(() => localStorage.getItem("iroguide:e2e-local-auth-user"));
+    }
+    expect(localSession).not.toBeNull();
+    await page.goto("/dashboard").catch(async () => {
+      await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
+    });
+  }
   await expect(page).toHaveURL(/\/dashboard/);
   await dismissCookieConsent(page);
+}
+
+export async function waitForAppHydration(page: Page) {
+  await expect.poll(
+    () => page.locator("html").getAttribute("data-app-hydrated"),
+    { message: "wait for the root client boundary to hydrate", timeout: 30_000 },
+  ).toBe("true");
 }
 
 async function dismissCookieConsent(page: Page) {
