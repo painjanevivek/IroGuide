@@ -7,6 +7,8 @@ All persisted account data is owner-scoped. Server timestamps are authoritative.
 
 Direct Firebase client reads and writes to every collection introduced in this document are denied. Access occurs through authenticated server APIs that enforce the account lock, ownership, validation, mutation limits, and no-store responses.
 
+Every mutable activation document also carries `schemaVersion`, `revision`, and a bounded internal `recentMutationIds` receipt list. These fields support migrations, optimistic concurrency, and replay safety; `userId` and mutation receipts are removed from ordinary API responses.
+
 ## Guest sample progress
 
 Unsigned visitors may store one bounded envelope in browser storage for at most seven days: sample ID/version, allowlisted revealed finding IDs, allowlisted checked action IDs, categorical reflection, created time, updated time, and schema version. It contains no user identifier, brief text, image, URL, or free-form content. Invalid, expired, oversized, or unknown-version envelopes are discarded. After authentication, merge is monotonic: union allowlisted progress and keep the newer categorical state; account data is never overwritten by an older guest envelope. The guest envelope is cleared only after the server result is read back and verified.
@@ -41,6 +43,8 @@ Initial step IDs: `choose-path`, `inspect-sample`, `practice-rubric`, `prepare-b
 State transitions: `not-started → in-progress → completed`. A completed program may be reset only by explicit user action and retains a privacy-safe completion audit event.
 
 Validation: no free-form biography, employer, client name, demographic trait, or sensitive profile data. Accounts created before this schema receive deterministic defaults on read and persist only after an explicit user mutation.
+
+`primaryRole` and `primaryGoal` are nullable until the user confirms or skips onboarding. `preferredMode` defaults to `mentor`.
 
 ## `sampleCritiqueProgress/{uid_sampleVersion}`
 

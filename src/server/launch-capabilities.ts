@@ -5,5 +5,6 @@ export function getServerLaunchCapabilities() {
   return resolveLaunchCapabilities({
     nodeEnv: process.env.NODE_ENV,
     launchProfile: process.env.IROGUIDE_LAUNCH_PROFILE,
+    guidedLearning: process.env.IROGUIDE_GUIDED_LEARNING_ENABLED,
   });
 }

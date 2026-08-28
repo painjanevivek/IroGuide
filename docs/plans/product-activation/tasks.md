@@ -118,49 +118,49 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Vitest; `npm run test:rules`; `npm run typecheck`
 **Evidence:** `docs/plans/product-activation/evidence/phase-2/README.md`
 
-- [ ] `ACT-0201` Implement schemas from `product-activation/data-model.md` with strict versioning and unknown-key rejection.
+- [X] `ACT-0201` Implement schemas from `product-activation/data-model.md` with strict versioning and unknown-key rejection.
   Prerequisites: Phase 0 | Subsystem: `domain-api-rules` | Source: `ACT-0501`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0202` Implement authenticated same-origin account-experience read/update contracts.
+- [X] `ACT-0202` Implement authenticated same-origin account-experience read/update contracts.
   Prerequisites: `ACT-0201` | Subsystem: `domain-api-rules` | Source: `ACT-0502`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0203` Implement idempotent access-interest create/revoke contracts.
+- [X] `ACT-0203` Implement idempotent access-interest create/revoke contracts.
   Prerequisites: `ACT-0202` | Subsystem: `domain-api-rules` | Source: `ACT-0503`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0204` Add per-account/client mutation limits and bounded body/content-type enforcement.
+- [X] `ACT-0204` Add per-account/client mutation limits and bounded body/content-type enforcement.
   Prerequisites: `ACT-0203` | Subsystem: `domain-api-rules` | Source: `ACT-0504`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0205` Add optimistic version conflict handling and client recovery UI.
+- [X] `ACT-0205` Add optimistic version conflict handling and client recovery UI.
   Prerequisites: `ACT-0204` | Subsystem: `domain-api-rules` | Source: `ACT-0505`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0206` Extend Firestore rules, indexes, Admin boundaries, and access-lock denial to new collections.
+- [X] `ACT-0206` Extend Firestore rules, indexes, Admin boundaries, and access-lock denial to new collections.
   Prerequisites: `ACT-0205` | Subsystem: `domain-api-rules` | Source: `ACT-0506`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0207` Extend purge-learning-history, purge-review-history, and full-account deletion orchestration.
+- [X] `ACT-0207` Extend purge-learning-history, purge-review-history, and full-account deletion orchestration.
   Prerequisites: `ACT-0206` | Subsystem: `domain-api-rules` | Source: `ACT-0507`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0208` Make partial cleanup retry-safe; retain the root access lock until terminal deletion.
+- [X] `ACT-0208` Make partial cleanup retry-safe; retain the root access lock until terminal deletion.
   Prerequisites: `ACT-0207` | Subsystem: `domain-api-rules` | Source: `ACT-0508`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0209` Add migration/default behavior for accounts created before onboarding exists.
+- [X] `ACT-0209` Add migration/default behavior for accounts created before onboarding exists.
   Prerequisites: `ACT-0208` | Subsystem: `domain-api-rules` | Source: `ACT-0509`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0210` Add structured request events without payload, UID, email, or creative content.
+- [X] `ACT-0210` Add structured request events without payload, UID, email, or creative content.
   Prerequisites: `ACT-0209` | Subsystem: `domain-api-rules` | Source: `ACT-0510`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0211` Add cross-user, stale token, replay, duplicate, concurrency, malformed input, oversized body, and adapter-outage tests.
+- [X] `ACT-0211` Add cross-user, stale token, replay, duplicate, concurrency, malformed input, oversized body, and adapter-outage tests.
   Prerequisites: `ACT-0210` | Subsystem: `domain-api-rules` | Source: `ACT-0511`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0212` Add support-safe operator aggregates that cannot expose individual creative or account content.
+- [X] `ACT-0212` Add support-safe operator aggregates that cannot expose individual creative or account content.
   Prerequisites: `ACT-0211` | Subsystem: `domain-api-rules` | Source: `ACT-0512`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0213` Add fail-closed `guidedLearning` capability and the six server-owned activation collections.
+- [X] `ACT-0213` Add fail-closed `guidedLearning` capability and the six server-owned activation collections.
   Prerequisites: `ACT-0212` | Subsystem: `domain-api-rules` | Source: `NEW`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0214` Add seven-day bounded guest sample storage and verified post-auth merge behavior.
+- [X] `ACT-0214` Add seven-day bounded guest sample storage and verified post-auth merge behavior.
   Prerequisites: `ACT-0213` | Subsystem: `domain-api-rules` | Source: `NEW`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
-- [ ] `ACT-0215` Import legacy drafts without deleting the source until the destination write is verified.
+- [X] `ACT-0215` Import legacy drafts without deleting the source until the destination write is verified.
   Prerequisites: `ACT-0214` | Subsystem: `domain-api-rules` | Source: `NEW`
   Verify: focused Vitest; `npm run test:rules`; `npm run typecheck` | Evidence: phase 2 evidence record
 

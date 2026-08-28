@@ -261,6 +261,21 @@ describe("Firebase security rules", () => {
     },
   );
 
+  it.each([
+    `accountExperiences/${OWNER_UID}`,
+    `sampleCritiqueProgress/${OWNER_UID}_form-together-friendly_v1`,
+    `selfReviewSessions/${OWNER_UID}_session-a`,
+    `designBriefDrafts/${OWNER_UID}_brief-a`,
+    `reviewAccessInterests/${OWNER_UID}_provider-alpha-v1`,
+    "reviewAccessDecisionAudit/event-a",
+  ])("denies every client access path to server-owned activation data at %s", async (path) => {
+    await seedFirestoreDocument(path, { schemaVersion: 1, userId: OWNER_UID });
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(path).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(path).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(path).set({ schemaVersion: 1, userId: OWNER_UID }));
+    await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
+  });
+
   it("denies Firebase client access to direct-upload staging objects", async () => {
     const path = `users/${OWNER_UID}/review-uploads/upload-a/source`;
     await seedStorageObject(path, "image/png");

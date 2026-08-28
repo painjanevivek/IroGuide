@@ -5,12 +5,14 @@ export type LaunchCapabilities = Readonly<{
   aiCritique: boolean;
   bugReportEmail: boolean;
   community: boolean;
+  guidedLearning: boolean;
   sourceImageStorage: boolean;
 }>;
 
 type LaunchCapabilityInput = {
   nodeEnv?: string;
   launchProfile?: string;
+  guidedLearning?: string;
 };
 
 const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object.freeze({
@@ -19,6 +21,7 @@ const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object
     aiCritique: false,
     bugReportEmail: false,
     community: false,
+    guidedLearning: false,
     sourceImageStorage: false,
   }),
   full: Object.freeze({
@@ -26,6 +29,7 @@ const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object
     aiCritique: true,
     bugReportEmail: true,
     community: false,
+    guidedLearning: false,
     sourceImageStorage: true,
   }),
   development: Object.freeze({
@@ -33,14 +37,17 @@ const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object
     aiCritique: true,
     bugReportEmail: false,
     community: false,
+    guidedLearning: false,
     sourceImageStorage: false,
   }),
 });
 
-export function resolveLaunchCapabilities({ nodeEnv, launchProfile }: LaunchCapabilityInput): LaunchCapabilities {
+export function resolveLaunchCapabilities({ nodeEnv, launchProfile, guidedLearning }: LaunchCapabilityInput): LaunchCapabilities {
+  const guidedLearningEnabled = guidedLearning === "true";
   if (launchProfile === "free" || launchProfile === "full") {
-    return CAPABILITIES[launchProfile];
+    return Object.freeze({ ...CAPABILITIES[launchProfile], guidedLearning: guidedLearningEnabled });
   }
 
-  return nodeEnv === "production" ? CAPABILITIES.free : CAPABILITIES.development;
+  const profile = nodeEnv === "production" ? CAPABILITIES.free : CAPABILITIES.development;
+  return Object.freeze({ ...profile, guidedLearning: guidedLearningEnabled });
 }

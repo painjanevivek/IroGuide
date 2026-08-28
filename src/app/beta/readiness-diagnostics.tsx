@@ -536,6 +536,7 @@ function isReadinessPayload(value: unknown): value is ReadinessPayload {
     && typeof value.capabilities.aiCritique === "boolean"
     && typeof value.capabilities.bugReportEmail === "boolean"
     && typeof value.capabilities.community === "boolean"
+    && typeof value.capabilities.guidedLearning === "boolean"
     && typeof value.capabilities.sourceImageStorage === "boolean"
     && typeof value.checks.accountStorage === "boolean"
     && typeof value.checks.bugReportEmail === "boolean"

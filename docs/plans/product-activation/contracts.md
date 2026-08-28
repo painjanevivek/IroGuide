@@ -83,6 +83,8 @@ Errors: `401` unauthenticated, `423` account access locked, `503` configured sto
 
 Authenticated same-origin JSON request. Accepts versioned, bounded onboarding or activation changes. Rejects unknown keys. Uses optimistic versioning or idempotency key to prevent last-write surprises.
 
+The explicit `import-legacy` action migrates an owner-bound legacy draft during this mutation. It never performs migration work from `GET`, and it retains the source until the destination is read back and schema-verified.
+
 Errors: `400` schema failure, `401`, `409` version conflict, `413` bounded body exceeded, `423`, `429`, `503`.
 
 ## API contract — `POST /api/access-interest`

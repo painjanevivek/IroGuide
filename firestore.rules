@@ -153,6 +153,15 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Guided learning is server-owned so clients cannot bypass validation,
+    // optimistic concurrency, deletion locks, program gates, or rate limits.
+    match /accountExperiences/{document=**} { allow read, write: if false; }
+    match /sampleCritiqueProgress/{document=**} { allow read, write: if false; }
+    match /selfReviewSessions/{document=**} { allow read, write: if false; }
+    match /designBriefDrafts/{document=**} { allow read, write: if false; }
+    match /reviewAccessInterests/{document=**} { allow read, write: if false; }
+    match /reviewAccessDecisionAudit/{document=**} { allow read, write: if false; }
+
     match /reviewUploadSessions/{sessionId} {
       allow read, write: if false;
     }
