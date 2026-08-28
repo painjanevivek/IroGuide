@@ -406,7 +406,7 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** research artifact review and `GATE-EVIDENCE-01`
 **Evidence:** `docs/plans/product-activation/evidence/phase-8/README.md`
 
-- [ ] `ACT-0801` [P] Prepare role-specific but non-leading usability scripts and task scenarios.
+- [X] `ACT-0801` [P] Prepare role-specific but non-leading usability scripts and task scenarios.
   Prerequisites: Phase 7 and owner-approved participants | Subsystem: `research` | Source: `ACT-0606`
   Verify: research artifact review and `GATE-EVIDENCE-01` | Evidence: phase 8 evidence record
 - [ ] `ACT-0802` Obtain owner approval before recruiting or contacting participants.
