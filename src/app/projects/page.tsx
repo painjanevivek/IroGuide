@@ -32,12 +32,13 @@ const projects = [
 ] as const;
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} Projects`,
+  title: `${siteConfig.name} Product Roadmap`,
   description:
     "Official IroGuide product areas with clear availability for the private workspace, design review, portfolio preparation, and learning guide.",
   alternates: {
     canonical: "/projects",
   },
+  robots: { index: false, follow: false, nocache: true },
 };
 
 export default function ProjectsPage() {
@@ -50,7 +51,7 @@ export default function ProjectsPage() {
       <main className="official-main">
         <section className="official-hero">
           <p className="eyebrow"><Layers3 /> IroGuide projects</p>
-          <h1>Official IroGuide product areas and creative workflows.</h1>
+          <h1>What is available now—and what is still gated.</h1>
           <p>See what is available now, what remains private or gated, and where the critique learning loop is heading next.</p>
         </section>
         <section className="project-list" aria-label="IroGuide project areas">

@@ -66,8 +66,8 @@ const modes = [
 
 const faqs = [
   ["Will IroGuide redesign my work automatically?", "No. Critique comes first. You stay in control and can optionally request an improvement plan later."],
-  ["What kinds of design will IroGuide review?", "The planned critique contract covers logos, posters, social posts, UI screens, websites, book covers, and packaging. Check review availability before preparing an upload."],
-  ["Is my uploaded work private?", "Yes. Work is private by default, never added to a public gallery without permission, and can be deleted."],
+  ["What can I use today?", "You can inspect a free example critique and learn how evidence becomes a practical first fix. Personalized critique remains invite-only."],
+  ["Is my work uploaded in free mode?", "No. The current free learning path does not upload your design or send it to a provider."],
   ["Does the score decide whether my design is good?", "No. Scores are navigation aids. The evidence, audience fit, and recommended changes matter more than a single number."],
 ] as const;
 
@@ -81,9 +81,9 @@ export function LandingPage() {
         <div className="hero-copy reveal">
           <p className="eyebrow"><span className="signal-dot" /> Official IroGuide website</p>
           <h1><span className="hero-title-line">IroGuide</span><span className="hero-title-line display-accent">Design critique.</span></h1>
-          <p className="hero-lede">IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.</p>
+          <p className="hero-lede">Learn how strong design critique turns visual evidence into a clear first fix. Explore a free example now; personalized review remains invite-only.</p>
           <div className="hero-actions">
-            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" disabledLabel="Review availability" eventName="hero_review_design_click" />
+            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" eventName="hero_review_design_click" />
             <LandingHeroAuthButton />
             <a className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></a>
           </div>
@@ -151,7 +151,7 @@ export function LandingPage() {
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
         <Stagger className="mode-grid" revealOnScroll>
-          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledLabel="Mode availability" eventName="mode_review_click" /></StaggerItem>)}
+          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledLabel={`See ${mode.title} example`} eventName="mode_review_click" /></StaggerItem>)}
         </Stagger>
       </section>
 
@@ -169,7 +169,8 @@ export function LandingPage() {
           <div className="score-bars">
             {[['Composition', 7], ['Typography', 6], ['Hierarchy', 5], ['Color', 8]].map(([label, score]) => <div key={String(label)}><span>{label}</span><i><b style={{width: `${Number(score) * 10}%`}} /></i><strong>{score}</strong></div>)}
           </div>
-          <ReviewLaunchLink className="button button-dark" enabledLabel="Get feedback on my work" disabledLabel="Review availability" eventName="example_review_click" />
+          <p className="example-truth-label"><LockKeyhole size={16} /> Example critique—not an analysis of your work.</p>
+          <ReviewLaunchLink className="button button-dark" enabledLabel="Get feedback on my work" disabledHref="/#critique-preview" disabledLabel="Explore the evidence" eventName="example_review_click" />
         </div>
       </section>
 
@@ -200,7 +201,7 @@ export function LandingPage() {
         <div className="cta-spark" aria-hidden="true"><Sparkles /><Sparkles /><Sparkles /></div>
         <p className="eyebrow light">Your next version starts here</p>
         <h2>Stop guessing.<br /><span>Start refining.</span></h2>
-        <p>Bring the design. IroGuide will bring the clarity.</p>
+        <p>Start with an example. Leave with a more useful way to evaluate design.</p>
         <LandingFinalAuthActions />
       </section>
 

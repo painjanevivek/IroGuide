@@ -72,43 +72,43 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Playwright; `npm run lint`; `npm run typecheck`
 **Evidence:** `docs/plans/product-activation/evidence/phase-1/README.md`
 
-- [ ] `ACT-0101` Fix Projects heading collision at intermediate desktop widths.
+- [X] `ACT-0101` Fix Projects heading collision at intermediate desktop widths.
   Prerequisites: Phase 0 | Subsystem: `public-ui` | Source: `ACT-0101`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0102` Remove Community horizontal document overflow at all target widths.
+- [X] `ACT-0102` Remove Community horizontal document overflow at all target widths.
   Prerequisites: `ACT-0101` | Subsystem: `public-ui` | Source: `ACT-0102`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0103` Reposition, resize, or collapse the cookie notice so it never obscures the sole primary action.
+- [X] `ACT-0103` Reposition, resize, or collapse the cookie notice so it never obscures the sole primary action.
   Prerequisites: `ACT-0102` | Subsystem: `public-ui` | Source: `ACT-0103`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0104` Verify header, footer, mobile menu, account menu, focus order, skip link, and safe-area behavior.
+- [X] `ACT-0104` Verify header, footer, mobile menu, account menu, focus order, skip link, and safe-area behavior.
   Prerequisites: `ACT-0103` | Subsystem: `public-ui` | Source: `ACT-0104`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0105` Replace inconsistent `Review availability`, `Mode availability`, and similar labels with one capability-aware vocabulary.
+- [X] `ACT-0105` Replace inconsistent `Review availability`, `Mode availability`, and similar labels with one capability-aware vocabulary.
   Prerequisites: `ACT-0104` | Subsystem: `public-ui` | Source: `ACT-0105`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0106` Change the landing primary action in free mode to a useful `Try an example critique` or `Start learning` path.
+- [X] `ACT-0106` Change the landing primary action in free mode to a useful `Try an example critique` or `Start learning` path.
   Prerequisites: `ACT-0105` | Subsystem: `public-ui` | Source: `ACT-0106`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0107` Keep live-review availability as a secondary transparent action.
+- [X] `ACT-0107` Keep live-review availability as a secondary transparent action.
   Prerequisites: `ACT-0106` | Subsystem: `public-ui` | Source: `ACT-0107`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0108` Demote Portfolio, Community, Pricing, Projects, and Beta from the primary activation path.
+- [X] `ACT-0108` Demote Portfolio, Community, Pricing, Projects, and Beta from the primary activation path.
   Prerequisites: `ACT-0107` | Subsystem: `public-ui` | Source: `ACT-0108`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0109` Add truthful `Coming later`, `Research preview`, `Invite only`, or `Unavailable` labels wherever relevant.
+- [X] `ACT-0109` Add truthful `Coming later`, `Research preview`, `Invite only`, or `Unavailable` labels wherever relevant.
   Prerequisites: `ACT-0108` | Subsystem: `public-ui` | Source: `ACT-0109`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0110` [P] Audit 404, unexpected error, loading, no-JavaScript, and offline shells for a clear recovery route.
+- [X] `ACT-0110` [P] Audit 404, unexpected error, loading, no-JavaScript, and offline shells for a clear recovery route.
   Prerequisites: `ACT-0109` | Subsystem: `public-ui` | Source: `ACT-0110`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0111` [P] Audit page metadata, canonical URLs, sitemap, robots/noindex choices, FAQ structured data, and social previews against current availability.
+- [X] `ACT-0111` [P] Audit page metadata, canonical URLs, sitemap, robots/noindex choices, FAQ structured data, and social previews against current availability.
   Prerequisites: `ACT-0110` | Subsystem: `public-ui` | Source: `ACT-0111`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0112` Verify footer support, bug report, privacy, terms, and account/data-control links.
+- [X] `ACT-0112` Verify footer support, bug report, privacy, terms, and account/data-control links.
   Prerequisites: `ACT-0111` | Subsystem: `public-ui` | Source: `ACT-0112`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
-- [ ] `ACT-0113` [P] Add visual regression screenshots for every repaired route.
+- [X] `ACT-0113` [P] Add visual regression screenshots for every repaired route.
   Prerequisites: `ACT-0112` | Subsystem: `public-ui` | Source: `ACT-0113`
   Verify: focused Playwright; `npm run lint`; `npm run typecheck` | Evidence: phase 1 evidence record
 

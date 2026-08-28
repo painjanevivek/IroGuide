@@ -129,6 +129,8 @@ export function Dashboard() {
 
   const progressCohort = getProgressCohort(reviews);
   const progress = calculateProgress(progressCohort.evidence);
+  const reviewActionHref: Route = aiCritique ? "/review/new" : "/#critique-preview";
+  const reviewActionLabel = aiCritique ? "New review" : "Explore example critique";
   const recentReview = getRecentReviewSummary(reviews);
   const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
@@ -141,7 +143,7 @@ export function Dashboard() {
             <p className="eyebrow">Your design practice</p>
             <h1>Progress,<br />not perfection.</h1>
           </div>
-          <Link className="button" href="/review/new">{aiCritique ? "New review" : "Review availability"} <ArrowRight /></Link>
+          <Link className="button" href={reviewActionHref}>{reviewActionLabel} <ArrowRight /></Link>
         </div>
       </Reveal>
       <Reveal delay={0.05}>
@@ -166,7 +168,7 @@ export function Dashboard() {
                   <h3>{getDraftTitle(draft)}</h3>
                   <p>{aiCritique ? draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique." : "Draft context remains saved while new critiques are unavailable."}</p>
                   <div><small>Step {draft.step} / 4</small>{draft.updatedAtMs && <time>{new Date(draft.updatedAtMs).toLocaleDateString()}</time>}</div>
-                  <Link className="button button-dark button-small" href="/review/new">{aiCritique ? "Continue draft" : "Review availability"} <ArrowRight /></Link>
+                  <Link className="button button-dark button-small" href={reviewActionHref}>{aiCritique ? "Continue draft" : "Explore example critique"} <ArrowRight /></Link>
                 </article>
               ))}
             </div>
@@ -189,7 +191,7 @@ export function Dashboard() {
       ) : reviews.length === 0 ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-empty">
-            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>{aiCritique ? <>Your dashboard becomes useful after the first critique. New to the workflow? <Link href="/docs">Read the docs</Link>.</> : <>New critiques are paused during the free launch. You can still <Link href="/docs">read the docs</Link> and return when review access is available.</>}</p><Link className="button button-dark" href="/review/new">{aiCritique ? "Review a design" : "Review availability"} <Sparkles /></Link></div>
+            <div><LayoutDashboard size={38} /><h2>No reviews yet</h2><p>{aiCritique ? <>Your dashboard becomes useful after the first critique. New to the workflow? <Link href="/docs">Read the docs</Link>.</> : <>Personalized critique is paused, but the free example can teach you how to find evidence and choose a first fix now.</>}</p><Link className="button button-dark" href={reviewActionHref}>{aiCritique ? "Review a design" : "Explore example critique"} <Sparkles /></Link></div>
           </div>
         </Reveal>
       ) : (
@@ -215,7 +217,7 @@ export function Dashboard() {
             </Stagger>
           </section>
           <Reveal delay={0.12}>
-            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">VERIFIED LEARNING EVIDENCE</span><h2>{progress.evidenceState === "comparable" ? "One useful constraint." : "Build a trustworthy baseline."}</h2><p>{progress.evidenceState === "comparable" ? progress.lesson : progressCohort.reason}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}{progress.recurringIssues.length > 0 && <ul className="insight-list">{progress.recurringIssues.map((issue) => <li key={issue.category}>{issue.category} recurred in {issue.count} compatible reviews.</li>)}</ul>}</div><Link href="/review/new">{aiCritique ? "Practice with a new design" : "Review availability"} <ArrowRight /></Link></section>
+            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">VERIFIED LEARNING EVIDENCE</span><h2>{progress.evidenceState === "comparable" ? "One useful constraint." : "Build a trustworthy baseline."}</h2><p>{progress.evidenceState === "comparable" ? progress.lesson : progressCohort.reason}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}{progress.recurringIssues.length > 0 && <ul className="insight-list">{progress.recurringIssues.map((issue) => <li key={issue.category}>{issue.category} recurred in {issue.count} compatible reviews.</li>)}</ul>}</div><Link href={reviewActionHref}>{aiCritique ? "Practice with a new design" : "Explore example critique"} <ArrowRight /></Link></section>
           </Reveal>
           <Reveal delay={0.14}>
             <div className="dashboard-section-title"><div><p className="eyebrow">Recent critiques</p><h2>Keep the thread.</h2></div><span>{reviews.length} saved</span></div>

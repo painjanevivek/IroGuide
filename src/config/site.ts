@@ -9,15 +9,15 @@ function getCanonicalSiteUrl() {
 export const siteConfig = {
   name: "IroGuide",
   url: getCanonicalSiteUrl(),
-  title: "IroGuide - AI Design Critique and Creative Feedback",
+  title: "IroGuide - Learn Evidence-Based Design Critique",
   description:
-    "IroGuide is the official AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps.",
+    "Learn how to turn visual evidence into clear design decisions with a free example critique. Personalized AI review remains invite-only.",
   shortDescription:
-    "Professional, contextual AI critique that tells you what works, what does not, and what to fix next.",
+    "Structured design critique learning that explains what matters, why it matters, and what to fix first.",
   keywords: [
     "IroGuide",
     "IroGuide official",
-    "AI design critique",
+    "design critique learning",
     "design feedback",
     "creative feedback",
     "portfolio review",
@@ -38,12 +38,9 @@ export const siteConfig = {
   ],
   footerNavigation: [
     { label: "About", href: "/about" },
-    { label: "Projects", href: "/projects" },
     { label: "Docs", href: "/docs" },
     { label: "Contact", href: "/contact" },
     { label: "Bug report", href: "/contact#bug-report" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Beta", href: "/beta" },
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },
   ],

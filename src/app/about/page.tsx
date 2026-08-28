@@ -6,9 +6,9 @@ import { siteConfig } from "@/config/site";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 
 export const metadata: Metadata = {
-  title: `About ${siteConfig.name} - AI Design Critique Workspace`,
+  title: `About ${siteConfig.name} - Design Critique Learning`,
   description:
-    "About IroGuide, the official AI design critique workspace for contextual creative feedback and practical design improvement.",
+    "Learn how IroGuide teaches evidence-based design critique now and gates personalized AI review until it is proven safe and useful.",
   alternates: {
     canonical: "/about",
   },
@@ -19,14 +19,14 @@ export default function AboutPage() {
     <div className="simple-page">
       <header className="simple-header">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
-        <nav><Link href="/projects">Projects</Link><Link href="/contact">Contact</Link></nav>
+        <nav><Link href="/docs">Learning guide</Link><Link href="/contact">Contact</Link></nav>
       </header>
       <main className="official-main">
         <section className="official-hero">
           <p className="eyebrow"><Sparkles className="sparkle-blink-glow" /> About IroGuide</p>
-          <h1>IroGuide is the official AI critique workspace for better design decisions.</h1>
-          <p>IroGuide helps designers, students, creators, and founders understand what is working in a visual design, what is getting in the way, and what to improve next.</p>
-          <ReviewLaunchLink className="button button-dark" enabledLabel="Start a design review" disabledLabel="Review availability" eventName="about_review_click" />
+          <h1>Learn to turn design evidence into better decisions.</h1>
+          <p>IroGuide gives beginner designers, freelancers, and UI/UX designers a structured way to identify what matters, explain why, and choose the first useful fix.</p>
+          <ReviewLaunchLink className="button button-dark" enabledLabel="Start a design review" eventName="about_review_click" />
         </section>
         <section className="official-grid" aria-label="IroGuide principles">
           <article><Eye /><h2>Context first</h2><p>Feedback is shaped around the audience, format, goal, and creative intent instead of generic taste.</p></article>

@@ -39,7 +39,7 @@ export function CookieConsent() {
   if (!isVisible) return null;
 
   return (
-    <section className="cookie-consent" aria-label="Cookie consent notice">
+    <section className="cookie-consent" aria-label="Cookie preferences">
       <div className="cookie-consent-icon" aria-hidden="true"><ShieldCheck size={20} /></div>
       <div className="cookie-consent-copy">
         <strong>Site data preferences</strong>

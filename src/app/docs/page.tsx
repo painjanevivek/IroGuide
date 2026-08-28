@@ -5,6 +5,7 @@ import {
   BookOpenText,
   CheckCircle2,
   Compass,
+  Eye,
   FileText,
   Gauge,
   Layers3,
@@ -13,7 +14,6 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
-  Upload,
   UsersRound,
 } from "lucide-react";
 import "@/app/route-styles.css";
@@ -39,19 +39,19 @@ export const metadata: Metadata = {
 
 const quickStartSteps = [
   {
-    icon: Upload,
-    title: "Upload clear work",
-    text: "Use a focused image of the logo, poster, UI screen, package, or layout you want reviewed.",
+    icon: Eye,
+    title: "Inspect the example",
+    text: "Start with the owned sample so you can learn the critique method without uploading your design.",
   },
   {
     icon: Target,
-    title: "Add useful context",
-    text: "Tell IroGuide the audience, goal, format, tone, and any constraints that should shape the critique.",
+    title: "Find the evidence",
+    text: "Name the exact visual decision you can see before deciding whether it helps or hurts the goal.",
   },
   {
     icon: MessageSquareText,
-    title: "Choose critique tone",
-    text: "Select friendly, mentor, or direct depending on whether you need encouragement, coaching, or sharp prioritization.",
+    title: "Understand why",
+    text: "Connect the observation to hierarchy, readability, audience, purpose, or another relevant principle.",
   },
   {
     icon: CheckCircle2,
@@ -119,7 +119,7 @@ export default function DocsPage() {
         </Link>
         <nav>
           <Link href="/about">About</Link>
-          <Link href="/pricing">Pricing</Link>
+          <Link href="/contact">Support</Link>
           <ReviewLaunchLink className="button button-small" enabledLabel="Start review" />
         </nav>
       </header>
@@ -131,10 +131,10 @@ export default function DocsPage() {
               <Sparkles className="sparkle-blink-glow" />
               IroGuide docs
             </p>
-            <h1>Learn the website deeply, then critique with better intent.</h1>
+            <h1>Learn the critique method, then make a better first decision.</h1>
             <p>
               A practical documentation hub for new users, beginners, students, creators, and advanced learners who want
-              stronger design reviews from IroGuide.
+              a practical evidence-to-action method before personalized review becomes available.
             </p>
             <div className={styles.heroActions}>
               <ReviewLaunchLink className="button button-dark" enabledLabel="Try a review" />
@@ -155,9 +155,9 @@ export default function DocsPage() {
 
         <section id="quick-start" className={styles.quickStart} aria-labelledby="quick-start-title">
           <div className={styles.sectionLead}>
-            <p className="eyebrow">First review</p>
+            <p className="eyebrow">Free example</p>
             <h2 id="quick-start-title">Start with a clean loop.</h2>
-            <p>Every useful critique begins with a clear design file, a real goal, and one next action.</p>
+            <p>Every useful critique begins with a visible decision, a relevant goal, and one prioritized action.</p>
           </div>
           <div className={styles.stepGrid}>
             {quickStartSteps.map((step, index) => {
@@ -249,7 +249,7 @@ export default function DocsPage() {
               <ShieldCheck />
               <span>
                 <strong>Privacy and review data</strong>
-                <small>Understand uploads, saved critiques, AI provider use, and account controls.</small>
+                <small>Understand free examples, future uploads, saved critiques, provider use, and account controls.</small>
               </span>
               <ArrowRight />
             </Link>
