@@ -9,7 +9,7 @@ import { useLaunchCapabilities } from "@/features/capabilities/launch-capabiliti
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "New review", href: "/review/new", icon: PenLine },
-  { label: "Learning guide", href: "/docs", icon: BookOpenText },
+  { label: "Learning studio", href: "/learn", icon: BookOpenText },
   { label: "Profile", href: "/profile", icon: UserRound },
 ] as const;
 
@@ -55,7 +55,7 @@ export function UserMenu() {
           const Icon = item.icon;
           const isReviewLink = item.href === "/review/new";
           const label = isReviewLink && !aiCritique ? "Example critique" : item.label;
-          const href = isReviewLink && !aiCritique ? "/#critique-preview" : item.href;
+          const href = isReviewLink && !aiCritique ? "/learn#practice" : item.href;
           return (
             <Link key={item.href} className="user-menu-item" href={href} onClick={() => {
               if (menuRef.current) menuRef.current.open = false;

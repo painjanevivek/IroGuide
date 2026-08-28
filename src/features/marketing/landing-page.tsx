@@ -83,9 +83,9 @@ export function LandingPage() {
           <h1><span className="hero-title-line">IroGuide</span><span className="hero-title-line display-accent">Design critique.</span></h1>
           <p className="hero-lede">Learn how strong design critique turns visual evidence into a clear first fix. Explore a free example now; personalized review remains invite-only.</p>
           <div className="hero-actions">
-            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" eventName="hero_review_design_click" />
+            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" disabledHref="/learn#practice" disabledLabel="Start free learning" eventName="hero_review_design_click" />
             <LandingHeroAuthButton />
-            <a className="button-quiet" href="#critique-preview" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></a>
+            <Link className="button-quiet" href="/learn" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></Link>
           </div>
           <div className="micro-proof">
             <span><Check size={15} /> Context-aware</span>
@@ -151,7 +151,7 @@ export function LandingPage() {
           <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
         </div>
         <Stagger className="mode-grid" revealOnScroll>
-          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledLabel={`See ${mode.title} example`} eventName="mode_review_click" /></StaggerItem>)}
+          {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledHref="/learn#practice" disabledLabel={`Practice ${mode.title} guidance`} eventName="mode_review_click" /></StaggerItem>)}
         </Stagger>
       </section>
 
@@ -170,7 +170,7 @@ export function LandingPage() {
             {[['Composition', 7], ['Typography', 6], ['Hierarchy', 5], ['Color', 8]].map(([label, score]) => <div key={String(label)}><span>{label}</span><i><b style={{width: `${Number(score) * 10}%`}} /></i><strong>{score}</strong></div>)}
           </div>
           <p className="example-truth-label"><LockKeyhole size={16} /> Example critique—not an analysis of your work.</p>
-          <ReviewLaunchLink className="button button-dark" enabledLabel="Get feedback on my work" disabledHref="/#critique-preview" disabledLabel="Explore the evidence" eventName="example_review_click" />
+          <ReviewLaunchLink className="button button-dark" enabledLabel="Get feedback on my work" disabledHref="/learn#practice" disabledLabel="Practice with this example" eventName="example_review_click" />
         </div>
       </section>
 

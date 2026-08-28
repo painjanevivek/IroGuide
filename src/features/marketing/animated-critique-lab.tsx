@@ -145,7 +145,7 @@ export function AnimatedCritiqueLab() {
         <h2 id="gsap-lab-title" ref={titleRef}>A review path you can feel before you submit.</h2>
         <p><strong>Example critique—not an analysis of your work.</strong> Inspect how IroGuide moves from visible evidence to a useful next move.</p>
         <p className="gsap-lab-status">Choose an insight to inspect the example in your own time.</p>
-        <ReviewLaunchLink className="button button-lime" enabledLabel="Start a real review" disabledHref="/#critique-preview" disabledLabel="Inspect the full example" eventName="gsap_lab_review_click" />
+        <ReviewLaunchLink className="button button-lime" enabledLabel="Start a real review" disabledHref="/learn" disabledLabel="Inspect the full example" eventName="gsap_lab_review_click" />
       </div>
 
       <div className="gsap-lab-panel" aria-labelledby="gsap-lab-title">

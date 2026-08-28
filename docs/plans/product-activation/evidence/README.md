@@ -12,3 +12,4 @@ File names use lowercase kebab case and never include account identifiers, email
 | 1 | `phase-1/README.md` | Passed locally; push recorded in Git history |
 | 2 | `phase-2/README.md` | Passed locally; push recorded in Git history |
 | 3 | `phase-3/README.md` | Passed locally; push recorded in Git history |
+| 4 | `phase-4/README.md` | Passed locally; push recorded in Git history |

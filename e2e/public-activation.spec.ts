@@ -6,9 +6,9 @@ test.describe("public activation clarity", () => {
   test("prioritizes a useful free example without availability dead ends", async ({ page }) => {
     await page.goto("/");
 
-    const primaryAction = page.getByRole("link", { name: /explore example critique/i }).first();
+    const primaryAction = page.getByRole("link", { name: /explore (?:an )?example critique/i }).first();
     await expect(primaryAction).toBeVisible();
-    await expect(primaryAction).toHaveAttribute("href", /#(example|critique-preview)$/);
+    await expect(primaryAction).toHaveAttribute("href", "/learn");
     await expect(page.getByText("Review availability", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Mode availability", { exact: true })).toHaveCount(0);
     await expect(page.getByText(/example critique—not an analysis of your work/i).first()).toBeVisible();
@@ -75,7 +75,7 @@ test.describe("public activation clarity", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /explore (?:an )?example critique/i }).first()).toBeVisible();
     await expect(page.locator(".target-cursor-wrapper")).toHaveCount(0);
     await expectNoHorizontalDocumentOverflow(page);
   });
@@ -88,7 +88,7 @@ test.describe("public activation clarity", () => {
     });
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /explore (?:an )?example critique/i }).first()).toBeVisible();
     await expectNoHorizontalDocumentOverflow(page);
   });
 
@@ -99,7 +99,7 @@ test.describe("public activation clarity", () => {
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
     await expect(page.getByText(/example critique—not an analysis of your work/i).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toHaveAttribute("href", /#critique-preview$/);
+    await expect(page.getByRole("link", { name: /explore (?:an )?example critique/i }).first()).toHaveAttribute("href", "/learn");
 
     await context.close();
   });

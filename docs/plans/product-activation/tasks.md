@@ -222,58 +222,58 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Vitest, rules, and Playwright; free-side-effect spies
 **Evidence:** `docs/plans/product-activation/evidence/phase-4/README.md`
 
-- [ ] `ACT-0401` [P] Define three owned, approved, versioned sample designs covering beginner, freelancer, and UI/UX needs.
+- [X] `ACT-0401` [P] Define three owned, approved, versioned sample designs covering beginner, freelancer, and UI/UX needs.
   Prerequisites: Phases 1-3 | Subsystem: `learning` | Source: `ACT-0301`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0402` Record asset ownership/source, alt text, category, brief, rubric version, evidence regions, critique, actions, and learning goal.
+- [X] `ACT-0402` Record asset ownership/source, alt text, category, brief, rubric version, evidence regions, critique, actions, and learning goal.
   Prerequisites: `ACT-0401` | Subsystem: `learning` | Source: `ACT-0302`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0403` Validate sample content against the standard review contract and accessibility-risk language.
+- [X] `ACT-0403` Validate sample content against the standard review contract and accessibility-risk language.
   Prerequisites: `ACT-0402` | Subsystem: `learning` | Source: `ACT-0303`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0404` Build the public example so visitors can inspect `what`, `evidence`, `why`, and `how` without registering.
+- [X] `ACT-0404` Build the public example so visitors can inspect `what`, `evidence`, `why`, and `how` without registering.
   Prerequisites: `ACT-0403` | Subsystem: `learning` | Source: `ACT-0304`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0405` Build the signed-in sample exercise: read brief, predict issue, reveal evidence, choose first fix, complete reflection.
+- [X] `ACT-0405` Build the signed-in sample exercise: read brief, predict issue, reveal evidence, choose first fix, complete reflection.
   Prerequisites: `ACT-0404` | Subsystem: `learning` | Source: `ACT-0305`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0406` Clearly label every sample as illustrative and never personalized.
+- [X] `ACT-0406` Clearly label every sample as illustrative and never personalized.
   Prerequisites: `ACT-0405` | Subsystem: `learning` | Source: `ACT-0306`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0407` Provide annotation text equivalents and keyboard-operable finding selection.
+- [X] `ACT-0407` Provide annotation text equivalents and keyboard-operable finding selection.
   Prerequisites: `ACT-0406` | Subsystem: `learning` | Source: `ACT-0307`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0408` Add a category-driven self-review using `yes`, `no`, `unsure`, and `not applicable`.
+- [X] `ACT-0408` Add a category-driven self-review using `yes`, `no`, `unsure`, and `not applicable`.
   Prerequisites: `ACT-0407` | Subsystem: `learning` | Source: `ACT-0308`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0409` Explain each rubric item in plain language with an example and a verification suggestion.
+- [X] `ACT-0409` Explain each rubric item in plain language with an example and a verification suggestion.
   Prerequisites: `ACT-0408` | Subsystem: `learning` | Source: `ACT-0309`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0410` Derive at most three self-review priorities without claiming visual analysis.
+- [X] `ACT-0410` Derive at most three self-review priorities without claiming visual analysis.
   Prerequisites: `ACT-0409` | Subsystem: `learning` | Source: `ACT-0310`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0411` Add a design-brief builder for audience, purpose, style, goal, concern, and constraints.
+- [X] `ACT-0411` Add a design-brief builder for audience, purpose, style, goal, concern, and constraints.
   Prerequisites: `ACT-0410` | Subsystem: `learning` | Source: `ACT-0311`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0412` Reuse the existing bounded draft and compatibility patterns; do not attach an image in free mode.
+- [X] `ACT-0412` Reuse the existing bounded draft and compatibility patterns; do not attach an image in free mode.
   Prerequisites: `ACT-0411` | Subsystem: `learning` | Source: `ACT-0312`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0413` Add autosave status, manual retry, version conflict handling, and clear ready/draft states.
+- [X] `ACT-0413` Add autosave status, manual retry, version conflict handling, and clear ready/draft states.
   Prerequisites: `ACT-0412` | Subsystem: `learning` | Source: `ACT-0313`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0414` Persist sample/self-review progress privately and support explicit clear-history controls.
+- [X] `ACT-0414` Persist sample/self-review progress privately and support explicit clear-history controls.
   Prerequisites: `ACT-0413` | Subsystem: `learning` | Source: `ACT-0314`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0415` Add a review-access interest action with explicit contact permission, idempotency, revocation, and no email side effect.
+- [X] `ACT-0415` Add a review-access interest action with explicit contact permission, idempotency, revocation, and no email side effect.
   Prerequisites: `ACT-0414` | Subsystem: `learning` | Source: `ACT-0315`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0416` Show meaningful completion: what the user learned, prepared artifact, and next recommended action.
+- [X] `ACT-0416` Show meaningful completion: what the user learned, prepared artifact, and next recommended action.
   Prerequisites: `ACT-0415` | Subsystem: `learning` | Source: `ACT-0316`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0417` Verify no free-learning interaction creates upload policy, Storage object, provider call, generation job, Community write, or email.
+- [X] `ACT-0417` Verify no free-learning interaction creates upload policy, Storage object, provider call, generation job, Community write, or email.
   Prerequisites: `ACT-0416` | Subsystem: `learning` | Source: `ACT-0317`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
-- [ ] `ACT-0418` Add unit, rules, route, browser, accessibility, responsive, no-JavaScript fallback, and deletion tests.
+- [X] `ACT-0418` Add unit, rules, route, browser, accessibility, responsive, no-JavaScript fallback, and deletion tests.
   Prerequisites: `ACT-0417` | Subsystem: `learning` | Source: `ACT-0318`
   Verify: focused Vitest, rules, and Playwright; free-side-effect spies | Evidence: phase 4 evidence record
 

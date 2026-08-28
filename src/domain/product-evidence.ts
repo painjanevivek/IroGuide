@@ -24,6 +24,46 @@ export const productEvidenceEventSchema = z.discriminatedUnion("name", [
   }),
   z.strictObject({
     eventId: eventIdSchema,
+    name: z.literal("sample_finding_revealed"),
+    sampleId: z.enum(["form-together-friendly", "fieldnote-mentor", "signal-noise-direct"]),
+    findingIndex: z.number().int().min(0).max(2),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("sample_completed"),
+    sampleId: z.enum(["form-together-friendly", "fieldnote-mentor", "signal-noise-direct"]),
+    sampleVersion: z.literal("v1"),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("self_review_started"),
+    category: z.enum(["logo", "poster", "social", "ui", "website", "book-cover", "packaging", "other"]),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("self_review_completed"),
+    category: z.enum(["logo", "poster", "social", "ui", "website", "book-cover", "packaging", "other"]),
+    priorityCount: z.number().int().min(0).max(3),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("brief_ready"),
+    category: z.enum(["logo", "poster", "social", "ui", "website", "book-cover", "packaging", "other"]),
+    constraintPresent: z.boolean(),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("access_interest_recorded"),
+    category: z.enum(["logo", "poster", "social", "ui", "website", "book-cover", "packaging", "other"]),
+    cohort: z.enum(["beginner-designer", "freelancer", "ui-ux-designer", "other"]),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("access_interest_revoked"),
+    previousStatus: z.enum(["interested", "invited", "declined", "expired", "revoked", "none"]),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
     name: z.literal("sign_in_completed"),
     method: z.enum(["email", "google"]),
   }),
@@ -112,6 +152,10 @@ export type ProductEvidenceEnvironment = "development" | "preview" | "production
 
 const reportMetricDefinitions = [
   ["onboardingActivation", ["onboarding_started", "onboarding_completed", "onboarding_skipped"]],
+  ["sampleLearning", ["sample_finding_revealed", "sample_completed"]],
+  ["selfReviewLearning", ["self_review_started", "self_review_completed"]],
+  ["briefReadiness", ["brief_ready"]],
+  ["accessInterest", ["access_interest_recorded", "access_interest_revoked"]],
   ["signInCompletion", ["sign_in_completed"]],
   ["dashboardReturn", ["review_history_opened"]],
   ["documentationEngagement", ["documentation_opened"]],

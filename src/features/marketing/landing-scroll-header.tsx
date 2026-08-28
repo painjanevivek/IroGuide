@@ -194,6 +194,7 @@ export function LandingScrollHeader() {
 
       <nav className="landing-scroll-nav" aria-label="Landing page sections" ref={navRef}>
         <span className="landing-scroll-marker" aria-hidden="true" ref={markerRef} />
+        <Link href="/learn" prefetch={false}><span>Learn</span></Link>
         {landingSections.map((item) => (
           <Link
             aria-current={activeHref === item.href ? "location" : undefined}
@@ -214,6 +215,9 @@ export function LandingScrollHeader() {
       <details className="landing-mobile-menu" ref={mobileMenuRef}>
         <summary aria-label="Open navigation menu"><Menu size={19} /></summary>
         <nav aria-label="Mobile navigation">
+          <Link href="/learn" onClick={() => {
+            if (mobileMenuRef.current) mobileMenuRef.current.open = false;
+          }}>Free learning</Link>
           {landingSections.map((item) => (
             <Link href={item.href} key={item.href} onClick={() => {
               if (mobileMenuRef.current) mobileMenuRef.current.open = false;
@@ -232,10 +236,10 @@ export function LandingScrollHeader() {
           <Link
             aria-label={aiCritique ? "Start a new review" : "Explore the example critique"}
             className="button button-small landing-scroll-cta"
-            href={aiCritique ? "/review/new" : "/#critique-preview"}
+            href={aiCritique ? "/review/new" : "/learn#practice"}
             prefetch={false}
           >
-            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Example critique"}</span>
+            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Start learning"}</span>
             <ArrowRight size={16} />
           </Link>
         ) : (

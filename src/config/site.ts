@@ -32,11 +32,13 @@ export const siteConfig = {
   contactUrl: "/contact",
   supportEmail: "support@iroguide.com",
   navigation: [
+    { label: "Learn", href: "/learn" },
     { label: "How it works", href: "/#how-it-works" },
     { label: "Modes", href: "/#modes" },
     { label: "Example review", href: "/#example" },
   ],
   footerNavigation: [
+    { label: "Free learning", href: "/learn" },
     { label: "About", href: "/about" },
     { label: "Docs", href: "/docs" },
     { label: "Contact", href: "/contact" },
