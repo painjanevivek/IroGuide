@@ -99,13 +99,16 @@ export function ReviewPipelineWorkbench() {
     setUpload(null);
     try {
       setStage("authorizing");
-      const authorized = await requestJson<{ id: string; uploadHeaders: Record<string, string>; uploadUrl: string }>("/api/review-uploads", user, {
+      const authorized = await requestJson<{ id: string; uploadFields: Record<string, string>; uploadMethod: "POST"; uploadUrl: string }>("/api/review-uploads", user, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contentType: file.type }),
       });
       setStage("uploading");
-      const directUpload = await fetch(authorized.uploadUrl, { method: "PUT", headers: authorized.uploadHeaders, body: file });
+      const uploadBody = new FormData();
+      for (const [name, value] of Object.entries(authorized.uploadFields)) uploadBody.append(name, value);
+      uploadBody.append("file", file);
+      const directUpload = await fetch(authorized.uploadUrl, { method: authorized.uploadMethod, body: uploadBody });
       if (!directUpload.ok) throw new Error("The direct upload was rejected.");
       setStage("validating");
       const finalized = await requestJson<{ id: string; state: "uploaded" }>(`/api/review-uploads/${authorized.id}/finalize`, user, { method: "POST" });

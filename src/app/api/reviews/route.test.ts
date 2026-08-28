@@ -84,6 +84,7 @@ describe("review generation authorization", () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "new-account",
       sub: "new-account",
+      auth_time: 1,
       iat: 1,
       email_verified: false,
       iroguide_review_entitled: true,
@@ -99,6 +100,7 @@ describe("review generation authorization", () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "verified-but-unapproved",
       sub: "verified-but-unapproved",
+      auth_time: 1,
       iat: 1,
       email_verified: true,
     });
@@ -113,6 +115,7 @@ describe("review generation authorization", () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "approved-account",
       sub: "approved-account",
+      auth_time: 1,
       iat: 1,
       email_verified: true,
       iroguide_review_entitled: true,
@@ -135,6 +138,7 @@ describe("review generation authorization", () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "approved-account",
       sub: "approved-account",
+      auth_time: 1,
       iat: 1,
       email_verified: true,
       iroguide_review_entitled: true,

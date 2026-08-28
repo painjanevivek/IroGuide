@@ -25,8 +25,8 @@ export async function POST(request: Request) {
   if ("response" in limit) return limit.response;
   try {
     const payload = createReviewUploadRequestSchema.parse(await readJsonBody(request, REQUEST_BODY_LIMITS.reviewPipelineJson));
-    const { session, uploadHeaders, uploadUrl } = await createReviewUploadSession({ contentType: payload.contentType, userId: auth.user.uid });
-    return NextResponse.json({ id: session.id, uploadHeaders, uploadUrl, expiresAt: session.expiresAt, maxBytes: session.maxBytes }, { status: 201, headers: jsonHeaders(context) });
+    const { session, uploadFields, uploadMethod, uploadUrl } = await createReviewUploadSession({ contentType: payload.contentType, userId: auth.user.uid });
+    return NextResponse.json({ id: session.id, uploadFields, uploadMethod, uploadUrl, expiresAt: session.expiresAt, maxBytes: session.maxBytes }, { status: 201, headers: jsonHeaders(context) });
   } catch (error) {
     return toReviewPipelineErrorResponse(error, context);
   }

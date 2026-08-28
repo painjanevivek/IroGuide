@@ -6,12 +6,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function accountAccessAllowed() {
+      return signedIn()
+        && !exists(/databases/$(database)/documents/reviewDeletionLocks/$(request.auth.uid));
+    }
+
     function ownsExistingDocument() {
-      return signedIn() && resource.data.userId == request.auth.uid;
+      return accountAccessAllowed() && resource.data.userId == request.auth.uid;
     }
 
     function ownsIncomingDocument() {
-      return signedIn() && request.resource.data.userId == request.auth.uid;
+      return accountAccessAllowed() && request.resource.data.userId == request.auth.uid;
     }
 
     function communityEnabled() {
@@ -21,7 +26,7 @@ service cloud.firestore {
     }
 
     function ownsReview(reviewId) {
-      return signedIn()
+      return accountAccessAllowed()
         && get(/databases/$(database)/documents/reviews/$(reviewId)).data.userId == request.auth.uid;
     }
 
@@ -74,7 +79,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && request.auth.uid == userId;
+      allow read: if accountAccessAllowed() && request.auth.uid == userId;
       allow write: if false;
     }
 
@@ -118,6 +123,23 @@ service cloud.firestore {
       }
     }
 
+    // Community v1 is server-mediated. Public projections are still returned by
+    // the authenticated API so block filtering, consent state, abuse controls,
+    // and the kill switch cannot be bypassed with a Firebase client query.
+    match /communityProjections/{document=**} { allow read, write: if false; }
+    match /communityConsents/{document=**} { allow read, write: if false; }
+    match /communityComments/{document=**} { allow read, write: if false; }
+    match /communityInteractions/{document=**} { allow read, write: if false; }
+    match /communityReports/{document=**} { allow read, write: if false; }
+    match /communityBlocks/{document=**} { allow read, write: if false; }
+    match /communityModerationActions/{document=**} { allow read, write: if false; }
+    match /communityAccountModeration/{document=**} { allow read, write: if false; }
+    match /communityAppeals/{document=**} { allow read, write: if false; }
+    match /communityAudit/{document=**} { allow read, write: if false; }
+    match /communityOutbox/{document=**} { allow read, write: if false; }
+    match /communityCounterShards/{document=**} { allow read, write: if false; }
+    match /communityNotifications/{document=**} { allow read, write: if false; }
+
     match /uploads/{uploadId} {
       allow read: if ownsExistingDocument();
       allow write: if false;
@@ -132,6 +154,10 @@ service cloud.firestore {
     }
 
     match /reviewUploadSessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    match /reviewDeletionLocks/{userId} {
       allow read, write: if false;
     }
 

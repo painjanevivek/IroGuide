@@ -6,6 +6,11 @@ import {
   type ImportedReviewDocument,
   type TrustedStoredReviewDocument,
 } from "@/domain/review-storage";
+import {
+  ACCOUNT_DELETION_LOCKS_COLLECTION,
+  assertAccountDeletionUnlocked,
+  assertAccountDeletionUnlockedInTransaction,
+} from "./account-deletion-lock";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
 import { getServerLaunchCapabilities } from "./launch-capabilities";
 import { createTrustedReviewDocument } from "./review-provenance";
@@ -14,7 +19,6 @@ const REVIEWS_COLLECTION = "reviews";
 const REVIEW_DRAFTS_COLLECTION = "reviewDrafts";
 const REVIEW_FEEDBACK_COLLECTION = "reviewFeedback";
 const REVIEW_PIPELINE_COLLECTIONS = [
-  "reviewUploadSessions",
   "reviewJobs",
   "reviewJobOutbox",
   "providerUsageReservations",
@@ -41,7 +45,7 @@ export type ReviewDeleteResult = {
 };
 
 export type ReviewDeleteFailure = {
-  operation: "drafts" | "feedback" | "pipeline-documents" | "reviews" | "source-images" | "staging-images";
+  operation: "deletion-lock" | "drafts" | "feedback" | "pipeline-documents" | "reviews" | "source-images" | "staging-images";
   reason: string;
 };
 
@@ -65,6 +69,7 @@ export async function saveReviewForUser({
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
+  await assertAccountDeletionUnlocked(userId);
   const capabilities = getServerLaunchCapabilities();
   const createdDocument = createTrustedReviewDocument({ userId, review, category });
   const baseDocument = documentId ? { ...createdDocument, id: documentId } : createdDocument;
@@ -72,11 +77,17 @@ export async function saveReviewForUser({
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
     : undefined;
   const document = persistedSourceImage ? { ...baseDocument, sourceImage: persistedSourceImage } : baseDocument;
-  await writeReviewDocument(document);
+  try {
+    await writeReviewDocument(document);
+  } catch (error) {
+    if (persistedSourceImage) await deletePersistedSourceImage(persistedSourceImage.storagePath);
+    throw error;
+  }
   return document;
 }
 
 export async function syncReviewDocumentsForUser(userId: string, documents: ReviewSyncDocumentInput[]): Promise<ReviewSaveResult> {
+  await assertAccountDeletionUnlocked(userId);
   const capabilities = getServerLaunchCapabilities();
   const results = await Promise.allSettled(documents.map(async (input) => {
     const { document, sourceImage } = normalizeSyncDocumentInput(input);
@@ -94,7 +105,12 @@ export async function syncReviewDocumentsForUser(userId: string, documents: Revi
       ? { ...normalizedDocument, sourceImage: persistedSourceImage }
       : normalizedDocument;
 
-    await writeImportedReviewDocument(documentToWrite);
+    try {
+      await writeImportedReviewDocument(documentToWrite);
+    } catch (error) {
+      if (persistedSourceImage) await deletePersistedSourceImage(persistedSourceImage.storagePath);
+      throw error;
+    }
     return { id: normalizedDocument.id, sourceImage: persistedSourceImage };
   }));
 
@@ -121,8 +137,32 @@ type ReviewSyncDocumentInput = ImportedReviewDocument | {
   sourceImage?: ReviewSourceImageUpload;
 };
 
-export async function deleteReviewDataForUser(userId: string): Promise<ReviewDeleteResult> {
+export async function deleteReviewDataForUser(
+  userId: string,
+  { retainDeletionLock = false }: { retainDeletionLock?: boolean } = {},
+): Promise<ReviewDeleteResult> {
   const db = await getFirebaseAdminFirestore();
+  try {
+    await db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId).set({
+      schemaVersion: 1,
+      state: "deleting",
+      updatedAt: new Date().toISOString(),
+      userId,
+    }, { merge: true });
+  } catch (error) {
+    const result: ReviewDeleteResult = {
+      draftsDeleted: 0,
+      failures: [{ operation: "deletion-lock", reason: toDeletionFailureReason(error) }],
+      feedbackDeleted: 0,
+      pipelineDocumentsDeleted: 0,
+      reviewsDeleted: 0,
+      retryToken: randomUUID(),
+      sourceImagesDeleted: 0,
+      stagingImagesDeleted: 0,
+      status: "retry-required",
+    };
+    throw new ReviewDeletionIncompleteError(result);
+  }
   const operations = await Promise.allSettled([
     deleteDocumentsForUser(db, REVIEWS_COLLECTION, userId),
     deleteDocumentsForUser(db, REVIEW_DRAFTS_COLLECTION, userId),
@@ -157,6 +197,7 @@ export async function deleteReviewDataForUser(userId: string): Promise<ReviewDel
   };
 
   if (failures.length > 0) throw new ReviewDeletionIncompleteError(result);
+  if (!retainDeletionLock) await db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId).delete();
   return result;
 }
 
@@ -166,14 +207,15 @@ async function writeReviewDocument(document: TrustedStoredReviewDocument) {
     getFirebaseAdminFirestore(),
   ]);
 
-  await db.collection(REVIEWS_COLLECTION)
-    .doc(document.id)
-    .set({
+  await db.runTransaction(async (transaction) => {
+    await assertAccountDeletionUnlockedInTransaction({ db, transaction, userId: document.userId });
+    transaction.set(db.collection(REVIEWS_COLLECTION).doc(document.id), {
       ...document,
       syncState: "cloud",
       savedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
+  });
 }
 
 async function writeImportedReviewDocument(document: ImportedReviewDocument & { sourceImage?: ReviewSourceImage }) {
@@ -182,14 +224,15 @@ async function writeImportedReviewDocument(document: ImportedReviewDocument & { 
     getFirebaseAdminFirestore(),
   ]);
 
-  await db.collection(REVIEW_DRAFTS_COLLECTION)
-    .doc(document.id)
-    .set({
+  await db.runTransaction(async (transaction) => {
+    await assertAccountDeletionUnlockedInTransaction({ db, transaction, userId: document.userId });
+    transaction.set(db.collection(REVIEW_DRAFTS_COLLECTION).doc(document.id), {
       ...document,
       syncState: "cloud",
       savedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
+  });
 }
 
 async function uploadReviewSourceImage({
@@ -226,6 +269,11 @@ async function uploadReviewSourceImage({
     originalName: sourceImage.file.name,
     uploadedAt,
   };
+}
+
+async function deletePersistedSourceImage(storagePath: string) {
+  const bucket = await getFirebaseAdminStorageBucket();
+  await bucket.file(storagePath).delete({ ignoreNotFound: true });
 }
 
 function getReviewSourceImagePath(userId: string, documentId: string, mimeType: ReviewSourceImageUpload["image"]["mimeType"]) {
@@ -296,8 +344,40 @@ async function deleteReviewPipelineDocumentsForUser(
   db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>,
   userId: string,
 ) {
+  const now = new Date();
+  const sessions = await db.collection("reviewUploadSessions").where("userId", "==", userId).get();
+  const unexpiredCapabilities = sessions.docs.filter((document) => {
+    const value = document.data();
+    return typeof value.expiresAt === "string" && Date.parse(value.expiresAt) > now.getTime();
+  });
+  if (unexpiredCapabilities.length > 0) {
+    for (let offset = 0; offset < unexpiredCapabilities.length; offset += FIRESTORE_BATCH_LIMIT) {
+      const batch = db.batch();
+      for (const document of unexpiredCapabilities.slice(offset, offset + FIRESTORE_BATCH_LIMIT)) {
+        batch.update(document.ref, { failureClass: "revoked", state: "rejected", updatedAt: now.toISOString() });
+      }
+      await batch.commit();
+    }
+  }
   const results = await Promise.all(REVIEW_PIPELINE_COLLECTIONS.map((collection) => deleteDocumentsForUser(db, collection, userId)));
-  return results.reduce((total, count) => total + count, 0);
+  if (unexpiredCapabilities.length > 0) {
+    const error = new Error("Signed upload capabilities must expire before account deletion can finish.");
+    error.name = "ActiveUploadCapability";
+    throw error;
+  }
+  await deleteDocumentReferences(db, sessions.docs.map((document) => document.ref));
+  return sessions.docs.length + results.reduce((total, count) => total + count, 0);
+}
+
+async function deleteDocumentReferences(
+  db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>,
+  references: FirebaseFirestore.DocumentReference[],
+) {
+  for (let offset = 0; offset < references.length; offset += FIRESTORE_BATCH_LIMIT) {
+    const batch = db.batch();
+    for (const reference of references.slice(offset, offset + FIRESTORE_BATCH_LIMIT)) batch.delete(reference);
+    await batch.commit();
+  }
 }
 
 function getSettledCount(result: PromiseSettledResult<number>) {

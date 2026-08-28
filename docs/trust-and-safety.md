@@ -16,7 +16,7 @@ Status: Phase 12 implementation checklist
 - Local demo mode is limited to non-production environments and is clearly labeled.
 - Local review history can be deleted from the dashboard.
 - Production uploads require private storage, short-lived signed access, ownership checks, retention jobs, and deletion verification.
-- Public community and portfolio publishing remain disabled until separate explicit consent and moderation exist.
+- Public community and portfolio publishing remain disabled. Community has closed-mode technical consent and moderation controls, but rollout still requires staffed operations, approved policy, retention evidence, production load proof, and separate product and safety approval.
 - Logs must exclude images, signed URLs, briefs, prompts, and full model responses.
 
 ## Platform accessibility

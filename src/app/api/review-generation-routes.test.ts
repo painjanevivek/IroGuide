@@ -34,6 +34,7 @@ describe("secondary review generation routes", () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "verified-entitled",
       sub: "verified-entitled",
+      auth_time: 1,
       iat: 1,
       email_verified: true,
       iroguide_review_entitled: true,

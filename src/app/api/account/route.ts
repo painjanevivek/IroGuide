@@ -4,7 +4,7 @@ import { deleteFirebaseUser, FirebaseAdminUnavailableError, FirebaseTokenVerific
 import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser, ReviewDeletionIncompleteError } from "@/server/review-storage";
-import { deleteCommunityDataForUser } from "@/server/community-storage";
+import { CommunityDeletionIncompleteError, deleteCommunityDataForUser } from "@/server/community-storage";
 
 const ACCOUNT_DELETE_RATE_LIMIT = { limit: 4, windowMs: 10 * 60 * 1000 };
 
@@ -37,10 +37,14 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const [result, community] = await Promise.all([
-      deleteReviewDataForUser(decodedToken.uid),
+    const [reviewOutcome, communityOutcome] = await Promise.allSettled([
+      deleteReviewDataForUser(decodedToken.uid, { retainDeletionLock: true }),
       deleteCommunityDataForUser(decodedToken.uid),
     ]);
+    if (reviewOutcome.status === "rejected") throw reviewOutcome.reason;
+    if (communityOutcome.status === "rejected") throw communityOutcome.reason;
+    const result = reviewOutcome.value;
+    const community = communityOutcome.value;
     await deleteFirebaseUser(decodedToken.uid);
     logRequestEvent("info", "account_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
@@ -57,6 +61,15 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ deleted: true, ...result }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
+    if (error instanceof CommunityDeletionIncompleteError) {
+      logRequestEvent("error", "account_delete.community_cleanup_incomplete", context, {
+        failedOperations: error.failures.length,
+      });
+      return NextResponse.json(
+        { deleted: false, community: error.result, retryRequired: true },
+        { status: 503, headers: jsonHeaders(context) },
+      );
+    }
     if (error instanceof ReviewDeletionIncompleteError) {
       logRequestEvent("error", "account_delete.cleanup_incomplete", context, {
         failedOperations: error.result.failures.length,

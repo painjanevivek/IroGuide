@@ -33,7 +33,7 @@ const request: ReviewRequest = {
 describe("review sync provenance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(verifyFirebaseIdToken).mockResolvedValue({ uid: "user-a", sub: "user-a", iat: 1 });
+    vi.mocked(verifyFirebaseIdToken).mockResolvedValue({ uid: "user-a", sub: "user-a", auth_time: 1, iat: 1 });
     vi.mocked(syncReviewDocumentsForUser).mockResolvedValue({
       failedIds: [],
       savedIds: ["user-a_imported"],
