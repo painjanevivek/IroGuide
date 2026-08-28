@@ -21,3 +21,4 @@ File names use lowercase kebab case and never include account identifiers, email
 | 10 | `phase-10/README.md` | Dependency closed: provider gate is NO-GO; live critique remains unavailable |
 | 11 | `phase-11/README.md` | Dependency closed: no approved live critique or second-review cohort exists |
 | 12 | `phase-12/README.md` | Dependency closed: private portfolio lacks verified review/comparison evidence |
+| 13 | `phase-13/README.md` | Technical operations controls added; external owners, dashboards, restore, and legal review remain open |

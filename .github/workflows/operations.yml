@@ -1,0 +1,77 @@
+name: Scheduled operations assurance
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operations-assurance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  repository-assurance:
+    name: Dependency secret workflow and rules assurance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Verify repository secret hygiene
+        run: npm run security:secret-hygiene
+      - name: Verify immutable workflow pins
+        run: npm run security:workflow-pins
+      - name: Verify evaluation and capability contracts
+        run: npm run eval:reviews:validate && npm test -- src/domain/launch-capabilities.test.ts src/domain/readiness.test.ts src/server/provider-controls.test.ts src/server/review-pipeline-config.test.ts
+      - name: Verify Firebase and Storage rules
+        run: npm run test:rules
+
+  deployed-assurance:
+    name: Protected staging DAST and capability probes
+    if: ${{ vars.IROGUIDE_STAGING_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DAST_BASE_URL: ${{ vars.IROGUIDE_STAGING_URL }}
+      DAST_REQUIRE_READY: "true"
+      OPERATIONS_BASE_URL: ${{ vars.IROGUIDE_STAGING_URL }}
+      SMOKE_DEPLOYMENT_PROTECTION_BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run protected staging DAST
+        run: npm run dast:prelaunch
+      - name: Run free-capability synthetic probes
+        run: npm run probe:operations
+      - name: Upload assurance reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: scheduled-operations-assurance
+          path: artifacts
+          if-no-files-found: warn
+          retention-days: 30

@@ -35,6 +35,9 @@ jobs:
       - name: Verify immutable GitHub Action pins
         run: npm run security:workflow-pins
 
+      - name: Verify repository secret hygiene
+        run: npm run security:secret-hygiene
+
       - name: Check types
         run: npm run typecheck
 

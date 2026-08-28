@@ -618,10 +618,10 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** scheduled-check configuration, probes, restore and rollback drill evidence
 **Evidence:** `docs/plans/product-activation/evidence/phase-13/README.md`
 
-- [ ] `ACT-1301` Add scheduled dependency, secret, workflow-pin, rules, DAST, and capability-drift checks.
+- [X] `ACT-1301` Add scheduled dependency, secret, workflow-pin, rules, DAST, and capability-drift checks.
   Prerequisites: Begins in Phase 0; closes after latest enabled phase | Subsystem: `operations` | Source: `ACT-1201`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1302` [P] Define SLOs for public readiness, auth, account APIs, activation saves, review completion, queue age, provider latency, deletion, and future gated services.
+- [X] `ACT-1302` [P] Define SLOs for public readiness, auth, account APIs, activation saves, review completion, queue age, provider latency, deletion, and future gated services.
   Prerequisites: `ACT-1301` | Subsystem: `operations` | Source: `ACT-1202`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
 - [ ] `ACT-1303` [P] Define error budgets, alert thresholds, paging/severity, owners, backups, escalation, and automatic capability rollback.
@@ -630,7 +630,7 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-1304` Build dashboards for errors, latency, saturation, queues, reservations, cleanup, deletion, and cost without creative content.
   Prerequisites: `ACT-1303` | Subsystem: `operations` | Source: `ACT-1204`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1305` Add synthetic probes for landing, auth boundary, free learning, access interest, review denial/enabled path, deletion, and support.
+- [X] `ACT-1305` Add synthetic probes for landing, auth boundary, free learning, access interest, review denial/enabled path, deletion, and support.
   Prerequisites: `ACT-1304` | Subsystem: `operations` | Source: `ACT-1205`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
 - [ ] `ACT-1306` Verify backup and restore for owned text, activation state, review/job state, audit state, and future billing ledger.
@@ -642,19 +642,19 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 - [ ] `ACT-1308` [P] Maintain staging parity for headers, rules, storage policy, queues, capabilities, and observability.
   Prerequisites: `ACT-1307` | Subsystem: `operations` | Source: `ACT-1208`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1309` Add release checklist with migration, rollback, smoke, support note, screenshot, accessibility, and change communication.
+- [X] `ACT-1309` Add release checklist with migration, rollback, smoke, support note, screenshot, accessibility, and change communication.
   Prerequisites: `ACT-1308` | Subsystem: `operations` | Source: `ACT-1209`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1310` [P] Maintain incident runbooks for auth, data exposure, provider degradation, stuck jobs, deletion backlog, cost spike, and deployment failure.
+- [X] `ACT-1310` [P] Maintain incident runbooks for auth, data exposure, provider degradation, stuck jobs, deletion backlog, cost spike, and deployment failure.
   Prerequisites: `ACT-1309` | Subsystem: `operations` | Source: `ACT-1210`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1311` Add support-safe diagnostics and user-facing status messages.
+- [X] `ACT-1311` Add support-safe diagnostics and user-facing status messages.
   Prerequisites: `ACT-1310` | Subsystem: `operations` | Source: `ACT-1211`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
 - [ ] `ACT-1312` Review privacy, terms, retention, provider processing, support promises, and jurisdictional requirements with qualified owners before broad launch.
   Prerequisites: `ACT-1311` | Subsystem: `operations` | Source: `ACT-1212`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
-- [ ] `ACT-1313` Track and safely retire obsolete flags, schemas, migrations, sample versions, and compatibility paths.
+- [X] `ACT-1313` Track and safely retire obsolete flags, schemas, migrations, sample versions, and compatibility paths.
   Prerequisites: `ACT-1312` | Subsystem: `operations` | Source: `ACT-1213`
   Verify: scheduled-check configuration, probes, restore and rollback drill evidence | Evidence: phase 13 evidence record
 
