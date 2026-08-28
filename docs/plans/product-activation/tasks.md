@@ -664,16 +664,16 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** Community denial and safety regression suites
 **Evidence:** `docs/plans/product-activation/evidence/phase-14/README.md`
 
-- [ ] `ACT-1401` Keep Community out of primary navigation and user activation metrics.
+- [X] `ACT-1401` Keep Community out of primary navigation and user activation metrics.
   Prerequisites: Retention, staffing, legal, and independent approval | Subsystem: `community` | Source: `ACT-1301`
   Verify: Community denial and safety regression suites | Evidence: phase 14 evidence record
-- [ ] `ACT-1402` Keep page, API, rules, dispatcher, notification, and projection paths closed by default.
+- [X] `ACT-1402` Keep page, API, rules, dispatcher, notification, and projection paths closed by default.
   Prerequisites: `ACT-1401` | Subsystem: `community` | Source: `ACT-1302`
   Verify: Community denial and safety regression suites | Evidence: phase 14 evidence record
-- [ ] `ACT-1403` Continue regression tests for consent, withdrawal, blocking, reporting, moderation, appeals, counters, deletion, and audits.
+- [X] `ACT-1403` Continue regression tests for consent, withdrawal, blocking, reporting, moderation, appeals, counters, deletion, and audits.
   Prerequisites: `ACT-1402` | Subsystem: `community` | Source: `ACT-1303`
   Verify: Community denial and safety regression suites | Evidence: phase 14 evidence record
-- [ ] `ACT-1404` Configure no scheduled dispatcher while rollout is closed.
+- [X] `ACT-1404` Configure no scheduled dispatcher while rollout is closed.
   Prerequisites: `ACT-1403` | Subsystem: `community` | Source: `ACT-1304`
   Verify: Community denial and safety regression suites | Evidence: phase 14 evidence record
 - [ ] `ACT-1405` Require retention evidence, named Trust and Safety owner/backup, policy, response windows, legal/privacy contact, incident runbook, load tests, worker proof, alert routing, and independent approvals.
