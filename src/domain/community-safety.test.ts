@@ -29,6 +29,7 @@ describe("Community activation contracts", () => {
       title: "Reworked landing page",
       category: "Website",
       critiqueExcerpt: "The primary action now has a clearer first read.",
+      stats: { comments: 0, likes: 0, saves: 0 },
       publishedAt: "2026-08-24T00:00:00.000Z",
       consent: { version: "community-consent-v1", grantedAt: "2026-08-24T00:00:00.000Z", withdrawalState: "active" },
       review: { private: "must never project" },

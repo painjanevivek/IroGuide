@@ -3,7 +3,13 @@ import { communityMutationSchema } from "./community";
 
 describe("community mutations", () => {
   it("accepts only the client fields needed to publish, comment, or react", () => {
-    expect(communityMutationSchema.safeParse({ action: "publish", reviewId: "user_review-1", title: "A clear critique" }).success).toBe(true);
+    expect(communityMutationSchema.safeParse({
+      action: "publish",
+      consent: true,
+      consentVersion: "community-consent-v1",
+      reviewId: "user_review-1",
+      title: "A clear critique",
+    }).success).toBe(true);
     expect(communityMutationSchema.safeParse({ action: "comment", postId: "post-1", body: "Specific and useful feedback." }).success).toBe(true);
     expect(communityMutationSchema.safeParse({ action: "interaction", postId: "post-1", key: "liked", value: true }).success).toBe(true);
   });
@@ -11,5 +17,10 @@ describe("community mutations", () => {
   it("rejects forged ownership and invalid document identifiers", () => {
     expect(communityMutationSchema.safeParse({ action: "publish", reviewId: "review-1", authorId: "another-user" }).success).toBe(false);
     expect(communityMutationSchema.safeParse({ action: "comment", postId: "../post", body: "Specific feedback" }).success).toBe(false);
+  });
+
+  it("bounds links and mentions to reduce Community abuse", () => {
+    expect(communityMutationSchema.safeParse({ action: "comment", postId: "post-1", body: "See https://a.test https://b.test https://c.test" }).success).toBe(false);
+    expect(communityMutationSchema.safeParse({ action: "comment", postId: "post-1", body: "@a @b @c @d @e @f please review" }).success).toBe(false);
   });
 });
