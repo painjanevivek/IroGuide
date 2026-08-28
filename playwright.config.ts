@@ -24,6 +24,7 @@ export default defineConfig({
       ...process.env,
       ...(useFirebaseFlow ? {} : {
         IROGUIDE_LAUNCH_PROFILE: "full",
+        IROGUIDE_GUIDED_LEARNING_ENABLED: "true",
         IROGUIDE_REVIEW_PROVIDER: "demo",
         NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
       }),

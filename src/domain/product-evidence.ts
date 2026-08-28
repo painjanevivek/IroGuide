@@ -7,6 +7,23 @@ const cohortSignatureSchema = z.string().regex(/^[a-f0-9]{64}$/);
 export const productEvidenceEventSchema = z.discriminatedUnion("name", [
   z.strictObject({
     eventId: eventIdSchema,
+    name: z.literal("onboarding_started"),
+    source: z.enum(["auth", "dashboard", "profile"]),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("onboarding_completed"),
+    cohort: z.enum(["beginner-designer", "freelancer", "ui-ux-designer", "other"]),
+    categoryCount: z.number().int().min(0).max(5),
+    mode: z.enum(["friendly", "mentor", "direct"]),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
+    name: z.literal("onboarding_skipped"),
+    atStep: z.number().int().min(1).max(3),
+  }),
+  z.strictObject({
+    eventId: eventIdSchema,
     name: z.literal("sign_in_completed"),
     method: z.enum(["email", "google"]),
   }),
@@ -94,6 +111,7 @@ export type StoredResearchFeedback = ResearchFeedback & {
 export type ProductEvidenceEnvironment = "development" | "preview" | "production" | "test";
 
 const reportMetricDefinitions = [
+  ["onboardingActivation", ["onboarding_started", "onboarding_completed", "onboarding_skipped"]],
   ["signInCompletion", ["sign_in_completed"]],
   ["dashboardReturn", ["review_history_opened"]],
   ["documentationEngagement", ["documentation_opened"]],

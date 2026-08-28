@@ -65,6 +65,63 @@ describe("product activation persistence", () => {
     expect(right.experience.revision).toBe(1);
   });
 
+  it("records onboarding completion without marking the whole activation program complete", async () => {
+    const completed = await patchAccountExperience("owner", {
+      schemaVersion: 1,
+      expectedRevision: 0,
+      mutationId: "complete-onboarding-123",
+      action: "update",
+      changes: {
+        onboardingStatus: "completed",
+        onboardingStep: 3,
+        primaryRole: "ui-ux-designer",
+        primaryGoal: "improve-ui",
+        steps: { "choose-path": { completed: true, completedAt: "2026-08-28T10:00:00.000Z" } },
+      },
+    }, new Date("2026-08-28T10:00:00.000Z"));
+
+    expect(completed.experience.onboardingCompletedAt).toBe("2026-08-28T10:00:00.000Z");
+    expect(completed.experience.completedAt).toBeNull();
+    expect(completed.experience.nextStep).toBe("inspect-sample");
+  });
+
+  it("clears every onboarding preference while retaining the account record", async () => {
+    const configured = await patchAccountExperience("owner", {
+      schemaVersion: 1,
+      expectedRevision: 0,
+      mutationId: "configure-onboarding-123",
+      action: "update",
+      changes: {
+        primaryRole: "freelancer",
+        primaryGoal: "pre-client-check",
+        preferredMode: "direct",
+        selectedCategories: ["ui", "website"],
+        onboardingStatus: "completed",
+        onboardingStep: 3,
+        dismissedHints: ["sample-evidence"],
+      },
+    });
+    const cleared = await patchAccountExperience("owner", {
+      schemaVersion: 1,
+      expectedRevision: configured.experience.revision,
+      mutationId: "clear-onboarding-123",
+      action: "clear-onboarding",
+      changes: {},
+    });
+
+    expect(cleared.experience).toMatchObject({
+      primaryRole: null,
+      primaryGoal: null,
+      preferredMode: "mentor",
+      selectedCategories: [],
+      dismissedHints: [],
+      onboardingStatus: "not-started",
+      onboardingStep: 0,
+      nextStep: "choose-path",
+    });
+    expect(cleared.experience.revision).toBe(2);
+  });
+
   it("merges only valid unexpired guest progress and keeps it owner scoped", async () => {
     const bundle = await patchAccountExperience("owner", {
       schemaVersion: 1,

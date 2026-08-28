@@ -55,7 +55,7 @@ export const rubricItemIdsByCategory = Object.freeze({
 });
 
 type OwnedSampleId = keyof typeof ownedSampleCatalog;
-type ReviewCategory = (typeof reviewCategories)[number];
+export type ReviewCategory = (typeof reviewCategories)[number];
 type SelfReviewAnswer = (typeof selfReviewAnswers)[number];
 
 const opaqueIdSchema = z.string().trim().min(1).max(80).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
@@ -114,7 +114,7 @@ export const accountExperiencePatchSchema = z.object({
   schemaVersion: z.literal(ACTIVATION_SCHEMA_VERSION),
   expectedRevision: z.number().int().nonnegative(),
   mutationId: mutationIdSchema,
-  action: z.enum(["update", "reset-onboarding", "import-legacy"]).default("update"),
+  action: z.enum(["update", "reset-onboarding", "clear-onboarding", "import-legacy"]).default("update"),
   changes: accountExperienceChangesSchema,
   sampleProgress: z.lazy(() => sampleProgressMutationSchema).optional(),
   guestProgress: z.lazy(() => guestSampleProgressSchema).optional(),

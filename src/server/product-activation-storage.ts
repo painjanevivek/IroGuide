@@ -475,10 +475,17 @@ export function toPublicActivationRecord<T extends { userId: string; recentMutat
 }
 
 function buildNextExperience(current: AccountExperience, input: AccountExperiencePatch, timestamp: string) {
-  if (input.action === "reset-onboarding") {
+  if (input.action === "reset-onboarding" || input.action === "clear-onboarding") {
     return accountExperienceSchema.parse({
       ...current,
       revision: current.revision + 1,
+      ...(input.action === "clear-onboarding" ? {
+        primaryRole: null,
+        primaryGoal: null,
+        preferredMode: "mentor",
+        selectedCategories: [],
+        dismissedHints: [],
+      } : {}),
       onboardingStatus: "not-started",
       onboardingStep: 0,
       steps: {},
@@ -494,16 +501,17 @@ function buildNextExperience(current: AccountExperience, input: AccountExperienc
   assertOnboardingTransition(current.onboardingStatus, requestedStatus);
   const steps = input.changes.steps ? { ...current.steps, ...input.changes.steps } : current.steps;
   const nextStep = deriveNextActivationStep(steps);
-  const completed = requestedStatus === "completed" || nextStep === "complete";
+  const onboardingCompleted = requestedStatus === "completed";
+  const programCompleted = nextStep === "complete";
   return accountExperienceSchema.parse({
     ...current,
     ...input.changes,
     revision: current.revision + 1,
     steps,
     nextStep,
-    onboardingStatus: completed ? "completed" : requestedStatus,
-    onboardingCompletedAt: completed ? current.onboardingCompletedAt ?? timestamp : null,
-    completedAt: completed ? current.completedAt ?? timestamp : null,
+    onboardingStatus: requestedStatus,
+    onboardingCompletedAt: onboardingCompleted ? current.onboardingCompletedAt ?? timestamp : null,
+    completedAt: programCompleted ? current.completedAt ?? timestamp : null,
     lastVisitedAt: timestamp,
     updatedAt: timestamp,
     recentMutationIds: appendMutationId(current.recentMutationIds, input.mutationId),

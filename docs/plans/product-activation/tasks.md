@@ -170,49 +170,49 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
 **Shared validation:** focused Vitest and Playwright; `npm run typecheck`
 **Evidence:** `docs/plans/product-activation/evidence/phase-3/README.md`
 
-- [ ] `ACT-0301` Add a capability-aware pre-auth value preview explaining what the workspace provides today.
+- [X] `ACT-0301` Add a capability-aware pre-auth value preview explaining what the workspace provides today.
   Prerequisites: Phases 1-2 | Subsystem: `auth-onboarding` | Source: `ACT-0201`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0302` Preserve a validated same-origin return destination through sign-in/sign-up.
+- [X] `ACT-0302` Preserve a validated same-origin return destination through sign-in/sign-up.
   Prerequisites: `ACT-0301` | Subsystem: `auth-onboarding` | Source: `ACT-0202`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0303` Handle session-checking, provider-popup blocked, duplicate email, weak password, invalid credentials, unverified email, rate limit, reset success, reset failure, and expired session states.
+- [X] `ACT-0303` Handle session-checking, provider-popup blocked, duplicate email, weak password, invalid credentials, unverified email, rate limit, reset success, reset failure, and expired session states.
   Prerequisites: `ACT-0302` | Subsystem: `auth-onboarding` | Source: `ACT-0203`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0304` Add an onboarding route or workspace panel with no more than three initial decision screens.
+- [X] `ACT-0304` Add an onboarding route or workspace panel with no more than three initial decision screens.
   Prerequisites: `ACT-0303` | Subsystem: `auth-onboarding` | Source: `ACT-0204`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0305` Ask primary role: beginner designer, freelancer, UI/UX designer, or other.
+- [X] `ACT-0305` Ask primary role: beginner designer, freelancer, UI/UX designer, or other.
   Prerequisites: `ACT-0304` | Subsystem: `auth-onboarding` | Source: `ACT-0205`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0306` Ask one primary goal and optional preferred categories; avoid unnecessary personal data.
+- [X] `ACT-0306` Ask one primary goal and optional preferred categories; avoid unnecessary personal data.
   Prerequisites: `ACT-0305` | Subsystem: `auth-onboarding` | Source: `ACT-0206`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0307` Recommend Friendly, Mentor, or Direct educational presentation while allowing override.
+- [X] `ACT-0307` Recommend Friendly, Mentor, or Direct educational presentation while allowing override.
   Prerequisites: `ACT-0306` | Subsystem: `auth-onboarding` | Source: `ACT-0207`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0308` Provide visible step progress, Back, Skip for now, Save and continue, and Restart controls.
+- [X] `ACT-0308` Provide visible step progress, Back, Skip for now, Save and continue, and Restart controls.
   Prerequisites: `ACT-0307` | Subsystem: `auth-onboarding` | Source: `ACT-0208`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0309` Persist only confirmed answers; resume after refresh and sign-out/sign-in.
+- [X] `ACT-0309` Persist only confirmed answers; resume after refresh and sign-out/sign-in.
   Prerequisites: `ACT-0308` | Subsystem: `auth-onboarding` | Source: `ACT-0209`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0310` Move focus and announce step changes and completion correctly.
+- [X] `ACT-0310` Move focus and announce step changes and completion correctly.
   Prerequisites: `ACT-0309` | Subsystem: `auth-onboarding` | Source: `ACT-0210`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0311` Ensure browser back/forward, duplicate tabs, slow save, conflict, and offline behavior do not corrupt progress.
+- [X] `ACT-0311` Ensure browser back/forward, duplicate tabs, slow save, conflict, and offline behavior do not corrupt progress.
   Prerequisites: `ACT-0310` | Subsystem: `auth-onboarding` | Source: `ACT-0211`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0312` Add account-level ability to edit or clear onboarding preferences.
+- [X] `ACT-0312` Add account-level ability to edit or clear onboarding preferences.
   Prerequisites: `ACT-0311` | Subsystem: `auth-onboarding` | Source: `ACT-0212`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0313` Add owner-scoped rules/API validation, rate limits, idempotency, access-lock, and deletion coverage.
+- [X] `ACT-0313` Add owner-scoped rules/API validation, rate limits, idempotency, access-lock, and deletion coverage.
   Prerequisites: `ACT-0312` | Subsystem: `auth-onboarding` | Source: `ACT-0213`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0314` Add cohort-specific but standards-consistent copy and sample recommendations.
+- [X] `ACT-0314` Add cohort-specific but standards-consistent copy and sample recommendations.
   Prerequisites: `ACT-0313` | Subsystem: `auth-onboarding` | Source: `ACT-0214`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
-- [ ] `ACT-0315` Instrument privacy-safe onboarding started/completed/skipped events.
+- [X] `ACT-0315` Instrument privacy-safe onboarding started/completed/skipped events.
   Prerequisites: `ACT-0314` | Subsystem: `auth-onboarding` | Source: `ACT-0215`
   Verify: focused Vitest and Playwright; `npm run typecheck` | Evidence: phase 3 evidence record
 

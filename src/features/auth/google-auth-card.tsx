@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
+import { withAuthReturn } from "@/domain/auth-return";
 
 type GoogleAuthCardProps = {
   intent?: "sign-in" | "sign-up";
@@ -18,6 +19,7 @@ export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", se
   const { signInWithGoogle, error, user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const isSignUp = intent === "sign-up";
+  const isLearningSetup = nextPath.startsWith("/onboarding");
   const visibleError = error || setupError;
 
   useEffect(() => {
@@ -43,15 +45,15 @@ export function GoogleAuthCard({ intent = "sign-in", nextPath = "/dashboard", se
     <>
       <ShieldCheck size={36} />
       <p className="eyebrow">Private workspace</p>
-      <h1>{isSignUp ? "Create your IroGuide account with Google." : "Sign in with Google to save your design critiques."}</h1>
-      <p>Use your Google account for a faster login. Your reviews stay private inside your IroGuide workspace.</p>
+      <h1>{isLearningSetup ? "Sign in to continue your learning setup." : isSignUp ? "Create your IroGuide account with Google." : "Sign in with Google to open your private workspace."}</h1>
+      <p>{isLearningSetup ? "Save three learning preferences and any confirmed example progress to your account. No design upload is needed." : "Use your Google account for faster access. Your saved workspace data stays private to your account."}</p>
 
       <div className="google-auth-card">
         {visibleError && <p className="form-error" role="alert">{visibleError}</p>}
         <button className="button button-dark google-button" type="button" data-analytics-event="auth_google_click" data-analytics-label={intent} onClick={() => void onGoogleClick()} disabled={submitting}>
           {submitting ? <><LoaderCircle className="spin" /> Opening Google...</> : <><GoogleMark /> Continue with Google</>}
         </button>
-        <Link className="button-secondary" href={isSignUp ? "/auth/sign-up" : "/auth/sign-in"} data-analytics-event="auth_manual_click" data-analytics-label={intent}>
+        <Link className="button-secondary" href={withAuthReturn(isSignUp ? "/auth/sign-up" : "/auth/sign-in", nextPath)} data-analytics-event="auth_manual_click" data-analytics-label={intent}>
           {isSignUp ? "Sign up manually with email" : "Sign in manually with email"}
         </Link>
         <p className="auth-note"><Sparkles size={14} /> Fast access with your existing Google account.</p>

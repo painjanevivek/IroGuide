@@ -25,7 +25,7 @@ type AuthState = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, nextPath?: string) => Promise<void>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   linkGoogleProvider: () => Promise<void>;
@@ -224,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  const resetPassword = useCallback(async (email: string, nextPath = "/dashboard") => {
     setError("");
     if (isE2ELocalAuthEnabled()) return;
 
@@ -234,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         import("firebase/auth"),
       ]);
       await sendPasswordResetEmail(getFirebaseClientAuth(), email.trim(), {
-        url: `${window.location.origin}/auth/sign-in`,
+        url: `${window.location.origin}/auth/sign-in?next=${encodeURIComponent(nextPath)}`,
       });
     } catch (resetError) {
       const message = getAuthErrorMessage(resetError);
@@ -566,6 +566,7 @@ function isAuthSensitivePath(pathname: string) {
     || pathname.startsWith("/admin")
     || pathname.startsWith("/community")
     || pathname.startsWith("/dashboard")
+    || pathname.startsWith("/onboarding")
     || pathname.startsWith("/profile")
     || pathname.startsWith("/review")
   );
