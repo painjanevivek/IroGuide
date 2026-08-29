@@ -91,16 +91,19 @@ export function EmailAuthPage({ mode, nextPath }: EmailAuthPageProps) {
       setFormError(rateLimit.message);
       return;
     }
+    const reservedAttempt = recordPasswordResetAttempt(email);
+    if (reservedAttempt.blocked) {
+      setFormError(reservedAttempt.message);
+      return;
+    }
 
     setResetSubmitting(true);
     try {
       await resetPassword(email, nextPath);
-      recordAuthFailure("password-reset", email);
       setFormSuccess(PASSWORD_RESET_SUCCESS_MESSAGE);
     } catch (resetError) {
-      const failureLimit = recordAuthFailure("password-reset", email);
       const message = resetError instanceof Error ? resetError.message : "Password reset is unavailable right now.";
-      setFormError(failureLimit.blocked ? failureLimit.message : getPasswordResetErrorMessage(message));
+      setFormError(getPasswordResetErrorMessage(message));
     } finally {
       setResetSubmitting(false);
     }
@@ -198,6 +201,21 @@ function recordAuthFailure(mode: AuthRateLimitMode, email: string, now = Date.no
 
   if (!lockedUntil) return { blocked: false, message: "" };
   return { blocked: true, message: getAuthLockoutMessage(lockedUntil, now) };
+}
+
+function recordPasswordResetAttempt(email: string, now = Date.now()) {
+  const storageKey = getAuthAttemptStorageKey("password-reset", email);
+  const currentRecord = readAuthAttemptRecord(storageKey);
+  const attempts = currentRecord.attempts.filter((attemptedAt) => now - attemptedAt < RESET_ATTEMPT_WINDOW_MS);
+
+  if (attempts.length >= RESET_ATTEMPT_LIMIT) {
+    const lockedUntil = now + RESET_LOCKOUT_MS;
+    writeAuthAttemptRecord(storageKey, { attempts, lockedUntil });
+    return { blocked: true, message: getAuthLockoutMessage(lockedUntil, now) };
+  }
+
+  writeAuthAttemptRecord(storageKey, { attempts: [...attempts, now] });
+  return { blocked: false, message: "" };
 }
 
 function clearAuthAttempts(mode: AuthRateLimitMode, email: string) {

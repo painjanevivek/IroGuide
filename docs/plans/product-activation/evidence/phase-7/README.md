@@ -1,7 +1,7 @@
 # Phase 7 Evidence — Free-release Production Proof
 
 **Status:** `GATE-FREE-01` closed
-**Date:** 2026-08-28
+**Date:** 2026-08-29
 **Starting SHA:** `d7b133fb6a26e1e14a9793d04665eb292ae6d61f`
 **Reviewed preview SHA:** `7d8e8381f7d972d7b78ce8ea549c1f13c3c8c506`
 **Branch:** `codex/product-activation`
@@ -22,9 +22,10 @@ The free launch profile, guided learning, public safety boundaries, cross-browse
 
 | Command or check | Result |
 |---|---|
-| `npm run check` | Passed on the Phase 7 implementation baseline: 103 Vitest files / 416 tests, 43 Firebase rules tests, typecheck, lint, workflow pins, evaluation validation, and production build |
+| `npm run check` | Passed on the final branch: 106 Vitest files / 427 tests, 43 Firebase rules tests, typecheck, lint, workflow pins, evaluation validation, and production build |
 | `npm run test:e2e` | Passed: 141 scenarios across Chromium, Firefox, and WebKit; 3 Community scenarios intentionally skipped while its capability is closed |
 | `npm run test:e2e:free` | Passed: 20 Chromium scenarios with provider, source-image Storage, email, Community, and billing side-effect denial |
+| Repeated interaction stability | Passed: 15/15 homepage learning-route activations and 15/15 password-reset lockout checks across Chromium, Firefox, and WebKit |
 | `npm run dast:prelaunch` | Passed against protected staging: 38/38 route, header, origin, authentication, media, and readiness checks |
 | `npm run perf:budget` | Passed: `/` LCP 780 ms / CLS 0.068 / 379,121 B JS; `/learn` 1,304 ms / 0.000 / 250,671 B; `/auth/sign-in` 760 ms / 0.000 / 371,831 B |
 | `npm run smoke:production` against staging | 16/18 passed; public routes, security headers, capability denial, and readiness passed; both privileged Firebase checks correctly reported unavailable credentials |

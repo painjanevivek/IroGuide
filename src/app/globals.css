@@ -65,7 +65,7 @@ button, input, textarea, select { font: inherit; }
 .hero-title-line:first-child { animation-delay: 150ms; }
 .hero-title-line:nth-child(2) { animation-delay: 260ms; }
 .hero-lede { animation: heroReveal 620ms var(--ease-emphasis) 560ms both; }
-.hero-actions > * { animation: heroReveal 540ms var(--ease-emphasis) both; }
+.hero-actions > * { animation: heroActionReveal 540ms var(--ease-emphasis) both; }
 .hero-actions > *:nth-child(1) { animation-delay: 700ms; }
 .hero-actions > *:nth-child(2) { animation-delay: 780ms; }
 .hero-actions > *:nth-child(3) { animation-delay: 860ms; }
@@ -75,6 +75,7 @@ button, input, textarea, select { font: inherit; }
 .micro-proof span:nth-child(3) { animation-delay: 1120ms; }
 @keyframes heroStageFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes heroReveal { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes heroActionReveal { from { opacity: 0; } to { opacity: 1; } }
 @keyframes heroTitleReveal { from { opacity: 0; transform: translateY(.18em); } to { opacity: 1; transform: translateY(0); } }
 @keyframes heroOrbitTrace { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
 @keyframes signalDotPulse { 0%, 100% { box-shadow: 0 0 0 5px rgba(200,244,93,.2); } 38% { box-shadow: 0 0 0 9px rgba(200,244,93,.24), 0 0 22px rgba(200,244,93,.36); } }
@@ -90,6 +91,9 @@ button, input, textarea, select { font: inherit; }
 .hero-lede { max-width: 620px; font-size: clamp(1.06rem, 1.5vw, 1.32rem); line-height: 1.72; color: var(--graphite); }
 .hero-lede strong { color: var(--ink); }
 .hero-actions { margin-top: 2.2rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; }
+.hero-auth-slot { min-width: 148px; display: inline-flex; }
+.hero-auth-button { width: 100%; }
+.hero-auth-placeholder { visibility: hidden; pointer-events: none; }
 .button-quiet { display: inline-flex; gap: .55rem; align-items: center; font-size: .9rem; font-weight: 720; border-bottom: 1px solid var(--ink); padding-block: .45rem; }
 .micro-proof { display: flex; flex-wrap: wrap; gap: 1rem 1.4rem; margin-top: 2.1rem; color: var(--graphite); font-size: .75rem; font-weight: 620; }
 .micro-proof span { display: inline-flex; align-items: center; gap: .35rem; }

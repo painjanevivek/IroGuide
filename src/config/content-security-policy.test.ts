@@ -22,4 +22,12 @@ describe("buildContentSecurityPolicy", () => {
     expect(policy).toContain("ws://localhost:*");
     expect(policy).not.toContain("upgrade-insecure-requests");
   });
+
+  it("can preserve production restrictions on an HTTP loopback test origin", () => {
+    const policy = buildContentSecurityPolicy("loopback-nonce", false, false);
+
+    expect(policy).toContain("script-src 'self' 'nonce-loopback-nonce' 'strict-dynamic'");
+    expect(policy).not.toContain("'unsafe-eval'");
+    expect(policy).not.toContain("upgrade-insecure-requests");
+  });
 });
