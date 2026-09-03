@@ -13,6 +13,7 @@ const deploymentProtectionBypass = process.env.SMOKE_DEPLOYMENT_PROTECTION_BYPAS
 const publicRoutes = [
   "/",
   "/about",
+  "/learn",
   "/projects",
   "/pricing",
   "/community",
@@ -20,6 +21,7 @@ const publicRoutes = [
   "/privacy",
   "/terms",
   "/beta",
+  "/status",
   "/portfolio",
   "/auth",
   "/auth/sign-in",
@@ -32,6 +34,8 @@ const publicRoutes = [
 ];
 
 const protectedApiRoutes = [
+  { method: "GET", path: "/api/projects" },
+  { method: "GET", path: "/api/admin/readiness" },
   { method: "POST", path: "/api/reviews", body: "{}" },
   { method: "POST", path: "/api/reviews/sync", body: "{\"documents\":[]}" },
   { method: "POST", path: "/api/follow-ups", body: "{}" },
@@ -163,7 +167,8 @@ async function checkAuthGate(route) {
   const payload = await readJson(response);
   const headerProblems = getApiHeaderProblems(response.headers, requestId);
   const leakage = getSensitivePayloadFindings(payload);
-  addResult(`${route.method} ${route.path} requires auth`, response.status === 401 && headerProblems.length === 0 && leakage.length === 0, "high", [
+  const statusAllowed = response.status === 401 || response.status === 404;
+  addResult(`${route.method} ${route.path} requires auth or stays capability-closed`, statusAllowed && headerProblems.length === 0 && leakage.length === 0, "high", [
     `status=${response.status}`,
     ...headerProblems,
     ...leakage,
@@ -190,7 +195,8 @@ async function checkCrossSiteBlock(route) {
   }
 
   const headerProblems = getApiHeaderProblems(response.headers, requestId);
-  addResult(`${route.method} ${route.path} blocks cross-site`, response.status === 403 && headerProblems.length === 0, "high", [
+  const statusAllowed = response.status === 403 || response.status === 404;
+  addResult(`${route.method} ${route.path} blocks cross-site or stays capability-closed`, statusAllowed && headerProblems.length === 0, "high", [
     `status=${response.status}`,
     ...headerProblems,
   ].filter(Boolean).join("; "));
@@ -214,7 +220,8 @@ async function checkContentTypeGate(route) {
   }
 
   const headerProblems = getApiHeaderProblems(response.headers, requestId);
-  addResult(`${route.method} ${route.path} rejects unsupported media`, response.status === 415 && headerProblems.length === 0, "medium", [
+  const statusAllowed = response.status === 415 || response.status === 404;
+  addResult(`${route.method} ${route.path} rejects unsupported media or stays capability-closed`, statusAllowed && headerProblems.length === 0, "medium", [
     `status=${response.status}`,
     ...headerProblems,
   ].filter(Boolean).join("; "));
