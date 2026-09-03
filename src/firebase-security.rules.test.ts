@@ -268,6 +268,8 @@ describe("Firebase security rules", () => {
     `designBriefDrafts/${OWNER_UID}_brief-a`,
     `reviewAccessInterests/${OWNER_UID}_provider-alpha-v1`,
     "reviewAccessDecisionAudit/event-a",
+    `projects/project-a`,
+    `projectMutationReceipts/${OWNER_UID}_mutation-a`,
   ])("denies every client access path to server-owned activation data at %s", async (path) => {
     await seedFirestoreDocument(path, { schemaVersion: 1, userId: OWNER_UID });
     await assertFails(authenticatedFirestore(OWNER_UID).doc(path).get());

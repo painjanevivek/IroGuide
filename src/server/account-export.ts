@@ -5,6 +5,7 @@ import { accountExportEnvelopeSchema } from "@/domain/account-export";
 import { assertAccountDeletionUnlocked } from "./account-deletion-lock";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "./firebase-admin";
 import { getAccountExperienceBundle, listDesignBriefs, listSelfReviews, toPublicActivationRecord } from "./product-activation-storage";
+import { listProjectsForUser } from "./project-storage";
 
 const MAX_EXPORT_ROWS = 200;
 const MAX_EXPORT_BYTES = 2 * 1024 * 1024;
@@ -23,16 +24,17 @@ export class AccountExportTooLargeError extends Error {
 export async function buildAccountExport(userId: string, now = new Date()) {
   await assertAccountDeletionUnlocked(userId);
   const db = await getFirebaseAdminFirestore();
-  const [authUser, bundle, selfReviews, briefs, reviews, reviewDrafts, comparisons, messages, caseStudies] = await Promise.all([
+  const [authUser, bundle, selfReviews, briefs, projectBundle, reviews, reviewDrafts, comparisons, messages, caseStudies] = await Promise.all([
     (await getFirebaseAdminAuth()).getUser(userId),
     getAccountExperienceBundle(userId),
     listSelfReviews(userId),
     listDesignBriefs(userId),
+    listProjectsForUser(userId),
     readOwnedCollection(db, "reviews", userId),
     readOwnedCollection(db, "reviewDrafts", userId),
     readOwnedCollection(db, "reviewComparisons", userId),
     readOwnedCollection(db, "reviewFollowUps", userId),
-    readOwnedCollection(db, "privateCaseStudies", userId),
+    readOwnedCollection(db, "privateCaseStudies", userId, "ownerId"),
   ]);
   const envelope = accountExportEnvelopeSchema.parse({
     schemaVersion: 1,
@@ -50,6 +52,7 @@ export async function buildAccountExport(userId: string, now = new Date()) {
       briefs: briefs.map(toPublicActivationRecord),
       accessInterest: bundle.accessInterest ? toPublicActivationRecord(bundle.accessInterest) : null,
     }),
+    projects: projectBundle.projects.map((project, index) => ({ exportId: `project-${index + 1}`, ...sanitizeRecord(project) })),
     reviews: reviews.map((record, index) => ({ exportId: `review-${index + 1}`, ...sanitizeRecord(record) })),
     reviewDrafts: reviewDrafts.map((record, index) => ({ exportId: `review-draft-${index + 1}`, ...sanitizeRecord(record) })),
     comparisons: comparisons.map((record, index) => ({ exportId: `comparison-${index + 1}`, ...sanitizeRecord(record) })),
@@ -60,8 +63,8 @@ export async function buildAccountExport(userId: string, now = new Date()) {
   return envelope;
 }
 
-async function readOwnedCollection(db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>, collection: string, userId: string) {
-  const snapshot = await db.collection(collection).where("userId", "==", userId).limit(MAX_EXPORT_ROWS + 1).get();
+async function readOwnedCollection(db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>, collection: string, userId: string, ownerField = "userId") {
+  const snapshot = await db.collection(collection).where(ownerField, "==", userId).limit(MAX_EXPORT_ROWS + 1).get();
   if (snapshot.size > MAX_EXPORT_ROWS) throw new AccountExportTooLargeError(`${collection} exceeds the synchronous export row limit.`);
   return snapshot.docs.map((document) => document.data());
 }

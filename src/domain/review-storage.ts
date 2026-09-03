@@ -23,6 +23,7 @@ export const importedReviewDocumentSchema = z.strictObject({
   review: importedReviewOutputSchema,
   category: z.enum(reviewCategories),
   categoryLabel: z.string().min(1).max(80),
+  projectId: z.string().uuid().nullable().default(null),
   savedAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   syncState: reviewSyncStateSchema,
@@ -34,6 +35,7 @@ export const storedReviewDocumentSchema = z.object({
   review: reviewOutputSchema,
   category: z.enum(reviewCategories),
   categoryLabel: z.string().min(1),
+  projectId: z.string().uuid().nullable().default(null),
   provider: reviewOutputSchema.shape.provider,
   status: z.literal("complete"),
   savedAt: z.string().min(1),
@@ -88,12 +90,14 @@ export function getReviewTrustState(value: unknown): ReviewTrustState {
 
 export function createImportedReviewDocument({
   category,
+  projectId = null,
   review,
   savedAt = new Date().toISOString(),
   syncState = "local",
   userId,
 }: {
   category: ReviewCategory;
+  projectId?: string | null;
   review: ReviewOutput;
   savedAt?: string;
   syncState?: ImportedReviewDocument["syncState"];
@@ -107,6 +111,7 @@ export function createImportedReviewDocument({
     review,
     category,
     categoryLabel: categoryLabels[category],
+    projectId,
     savedAt,
     updatedAt: savedAt,
     syncState,
@@ -119,6 +124,7 @@ export function getReviewDocumentId(userId: string, reviewId: string) {
 
 export function createStoredReviewDocument({
   category,
+  projectId = null,
   review,
   savedAt = new Date().toISOString(),
   sourceImage,
@@ -126,6 +132,7 @@ export function createStoredReviewDocument({
   userId,
 }: {
   category: ReviewCategory;
+  projectId?: string | null;
   review: ReviewOutput;
   savedAt?: string;
   sourceImage?: ReviewSourceImage;
@@ -138,6 +145,7 @@ export function createStoredReviewDocument({
     review,
     category,
     categoryLabel: categoryLabels[category],
+    projectId,
     provider: review.provider,
     status: "complete",
     savedAt,

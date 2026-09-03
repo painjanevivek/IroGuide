@@ -25,6 +25,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "This account cannot view deployment diagnostics." }, { status: 403, headers: jsonHeaders(context) });
   }
 
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (auth.user.auth_time < nowSeconds - 15 * 60) {
+    logRequestEvent("warn", "admin_readiness.reauthentication_required", context, { user: auth.userLogId });
+    return NextResponse.json(
+      { error: "Sign in again before viewing deployment diagnostics.", code: "recent_authentication_required" },
+      { status: 403, headers: jsonHeaders(context) },
+    );
+  }
+
   const rateLimit = await enforceRateLimit({
     context,
     eventPrefix: "admin_readiness",

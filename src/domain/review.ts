@@ -40,6 +40,7 @@ export const reviewSourceImageSchema = z.object({
 export const reviewRequestSchema = z.object({
   category: z.enum(reviewCategories),
   mode: z.enum(feedbackModes),
+  projectId: z.uuid().nullable().default(null),
   file: reviewFileSchema,
   brief: reviewBriefSchema,
   image: reviewImageSchema.optional(),
@@ -97,7 +98,7 @@ export const reviewCreateResponseSchema = z.object({
   }),
 });
 
-export type ReviewRequest = z.infer<typeof reviewRequestSchema>;
+export type ReviewRequest = z.input<typeof reviewRequestSchema>;
 export type ReviewIssue = z.infer<typeof reviewIssueSchema>;
 export type ReviewOutput = z.infer<typeof reviewOutputSchema>;
 export type ReviewCreateResponse = z.infer<typeof reviewCreateResponseSchema>;

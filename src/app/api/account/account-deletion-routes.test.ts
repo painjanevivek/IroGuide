@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   deleteFirebaseUser: vi.fn(),
   deleteActivationDataForUser: vi.fn(),
   deleteReviewDataForUser: vi.fn(),
+  deleteProjectDataForUser: vi.fn(),
   logRequestEvent: vi.fn(),
   verifyRecentFirebaseIdToken: vi.fn(),
 }));
@@ -62,6 +63,10 @@ vi.mock("@/server/product-activation-storage", () => ({
   deleteActivationDataForUser: mocks.deleteActivationDataForUser,
 }));
 
+vi.mock("@/server/project-storage", () => ({
+  deleteProjectDataForUser: mocks.deleteProjectDataForUser,
+}));
+
 import { DELETE as deleteAccount } from "./route";
 import { DELETE as deleteReviews } from "./reviews/route";
 import { ReviewDeletionIncompleteError } from "@/server/review-storage";
@@ -96,6 +101,7 @@ describe("account deletion routes", () => {
       status: "complete",
     });
     mocks.deleteCommunityDataForUser.mockResolvedValue({ commentsDeleted: 0, interactionsDeleted: 0, postsDeleted: 0 });
+    mocks.deleteProjectDataForUser.mockResolvedValue({ projectMutationReceiptsDeleted: 2, projectsDeleted: 3 });
     mocks.deleteFirebaseUser.mockResolvedValue(undefined);
   });
 
@@ -106,11 +112,16 @@ describe("account deletion routes", () => {
     expect(mocks.deleteReviewDataForUser).toHaveBeenCalledWith("owner", { retainDeletionLock: true });
     expect(mocks.deleteCommunityDataForUser).toHaveBeenCalledWith("owner");
     expect(mocks.deleteActivationDataForUser).toHaveBeenCalledWith("owner");
+    expect(mocks.deleteProjectDataForUser).toHaveBeenCalledWith("owner");
     expect(mocks.deleteFirebaseUser).toHaveBeenCalledWith("owner");
     expect(mocks.deleteFirebaseUser.mock.invocationCallOrder[0]).toBeGreaterThan(
       mocks.deleteReviewDataForUser.mock.invocationCallOrder[0]!,
     );
-    await expect(response.json()).resolves.toMatchObject({ deleted: true, status: "complete" });
+    await expect(response.json()).resolves.toMatchObject({
+      deleted: true,
+      projects: { projectMutationReceiptsDeleted: 2, projectsDeleted: 3 },
+      status: "complete",
+    });
   });
 
   it("keeps the identity recoverable when review cleanup needs a retry", async () => {

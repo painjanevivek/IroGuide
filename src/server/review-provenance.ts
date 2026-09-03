@@ -7,6 +7,7 @@ import {
 
 type TrustedReviewDocumentInput = {
   category: ReviewCategory;
+  projectId?: string | null;
   review: ReviewOutput;
   savedAt?: string;
   userId: string;

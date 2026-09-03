@@ -29,7 +29,7 @@ export function buildReadiness({
     && checks.reviewPipeline
     && checks.rateLimitAdapter
     && checks.requestBudgets;
-  const optionalReady = (!capabilities.aiCritique || checks.liveVision)
+  const optionalReady = (!capabilities.liveCritique || checks.liveVision)
     && (!capabilities.bugReportEmail || checks.bugReportEmail)
     && (!capabilities.sourceImageStorage || checks.sourceImageStorage);
 

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, LockKeyhole, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
-import { CommunityBoard } from "@/features/community/community-board";
 import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
 import { siteConfig } from "@/config/site";
 import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
@@ -21,8 +20,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CommunityPage() {
+export default async function CommunityPage() {
   if (!getServerLaunchCapabilities().community) return <CommunityUnavailable />;
+  const { CommunityBoard } = await import("@/features/community/community-board");
 
   return (
     <div className="community-page">

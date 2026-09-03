@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { LaunchCapabilities } from "@/domain/launch-capabilities";
+import { productCapabilityNames, type LaunchCapabilities } from "@/domain/launch-capabilities";
 import { buildReadiness } from "./readiness";
 
 const freeCapabilities: LaunchCapabilities = {
   profile: "free",
-  aiCritique: false,
-  bugReportEmail: false,
-  community: false,
-  guidedLearning: false,
-  sourceImageStorage: false,
+  ...Object.fromEntries(productCapabilityNames.map((capability) => [capability, false])) as Record<(typeof productCapabilityNames)[number], boolean>,
 };
 
 const fullCapabilities: LaunchCapabilities = {
+  ...freeCapabilities,
   profile: "full",
-  aiCritique: true,
+  liveCritique: true,
   bugReportEmail: true,
-  community: false,
   guidedLearning: true,
   sourceImageStorage: true,
 };

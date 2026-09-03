@@ -47,7 +47,7 @@ export async function runPrivilegedReadinessProof(context: ProofContext) {
     summary: {
       communityClosed: payload?.operations?.communityGate === "closed",
       coreChecksReady: ["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "providerControls", "rateLimitAdapter", "requestBudgets", "reviewPipeline"].every((key) => payload?.checks?.[key] === true),
-      externalCapabilitiesClosed: ["aiCritique", "bugReportEmail", "community", "sourceImageStorage"].every((key) => payload?.capabilities?.[key] === false),
+      externalCapabilitiesClosed: ["liveCritique", "improvementTracking", "revisionComparison", "followUpConversation", "privatePortfolio", "publicPortfolio", "community", "billing", "bugReportEmail", "reviewPipeline", "sourceImageStorage"].every((key) => payload?.capabilities?.[key] === false),
       guidedLearning: payload?.capabilities?.guidedLearning === true,
       profile: payload?.capabilities?.profile ?? "unknown",
     },
@@ -104,6 +104,19 @@ export async function runDisposableAccountProof(context: ProofContext) {
     });
     expectStatus(results, updated, 200, "update account experience");
 
+    const createdProject = await apiRequest(context, "/api/projects", idToken, {
+      method: "POST",
+      body: {
+        schemaVersion: 1,
+        mutationId: randomUUID(),
+        name: "Staging proof project",
+        category: "website",
+        goal: "Verify owner-scoped project persistence and cleanup",
+      },
+    });
+    expectStatus(results, createdProject, 201, "create project");
+    const projectId = requiredString((await createdProject.json())?.project?.id, "Project creation did not return an ID.");
+
     const savedBrief = await apiRequest(context, "/api/design-briefs", idToken, {
       method: "PUT",
       body: {
@@ -111,6 +124,7 @@ export async function runDisposableAccountProof(context: ProofContext) {
         id: `staging-smoke-${randomUUID()}`,
         expectedRevision: null,
         mutationId: randomUUID(),
+        projectId,
         category: "website",
         audience: "Disposable staging test audience",
         purpose: "Verify owner-scoped activation persistence",
@@ -129,7 +143,9 @@ export async function runDisposableAccountProof(context: ProofContext) {
     const exported = await apiRequest(context, "/api/account/export", idToken, { method: "POST", body: { schemaVersion: 1 } });
     expectStatus(results, exported, 200, "export owned account data");
     const exportPayload = await exported.json();
-    if (exportPayload?.schemaVersion !== 1 || exportPayload?.learning?.briefs?.length !== 1) throw new Error("Account export did not contain the single owned brief.");
+    if (exportPayload?.schemaVersion !== 1 || exportPayload?.learning?.briefs?.length !== 1 || exportPayload?.projects?.length !== 1) {
+      throw new Error("Account export did not contain the single owned project and brief.");
+    }
 
     expectStatus(results, await apiRequest(context, "/api/account/reviews", idToken, { method: "DELETE" }), 200, "purge review history");
     expectStatus(results, await apiRequest(context, "/api/account/experience", idToken, { method: "DELETE", body: { schemaVersion: 1, scope: "learning-history" } }), 200, "clear learning history");
@@ -231,7 +247,7 @@ function getReadinessFailures(status: number, payload: ReadinessPayload) {
   const failures: string[] = [];
   if (status !== 200 || payload?.ok !== true) failures.push(`readiness status=${status}`);
   if (payload?.capabilities?.profile !== "free" || payload?.capabilities?.guidedLearning !== true) failures.push("free guided-learning profile is not ready");
-  for (const key of ["aiCritique", "bugReportEmail", "community", "sourceImageStorage"]) if (payload?.capabilities?.[key] !== false) failures.push(`${key} must remain disabled`);
+  for (const key of ["liveCritique", "improvementTracking", "revisionComparison", "followUpConversation", "privatePortfolio", "publicPortfolio", "community", "billing", "bugReportEmail", "reviewPipeline", "sourceImageStorage"]) if (payload?.capabilities?.[key] !== false) failures.push(`${key} must remain disabled`);
   for (const key of ["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "providerControls", "rateLimitAdapter", "requestBudgets", "reviewPipeline"]) if (payload?.checks?.[key] !== true) failures.push(`${key} is not ready`);
   if (payload?.operations?.communityGate !== "closed") failures.push("Community gate is not closed");
   return failures;
@@ -276,7 +292,7 @@ async function fetchStorageMetadata(bucketName: string, objectPath: string, idTo
 }
 
 async function cleanupDisposableAccount(auth: Awaited<ReturnType<typeof getFirebaseAdminAuth>>, db: Awaited<ReturnType<typeof getFirebaseAdminFirestore>>, userId: string) {
-  const collections = ["accountExperiences", "sampleCritiqueProgress", "selfReviewSessions", "designBriefDrafts", "reviewAccessInterests", "reviews", "reviewDrafts"];
+  const collections = ["accountExperiences", "sampleCritiqueProgress", "selfReviewSessions", "designBriefDrafts", "reviewAccessInterests", "reviews", "reviewDrafts", "projects", "projectMutationReceipts"];
   await Promise.allSettled(collections.map(async (collection) => {
     const snapshot = await db.collection(collection).where("userId", "==", userId).limit(100).get();
     await Promise.all(snapshot.docs.map((document) => document.ref.delete()));

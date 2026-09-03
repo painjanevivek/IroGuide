@@ -1,22 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isBugReportEmailConfigured, sendBugReportEmail } from "./bug-report-email";
-import { listBugReports, saveBugReport, updateBugReportEmailStatus } from "./bug-report-storage";
+import { listBugReports, saveBugReport, updateBugReportEmailStatus, updateBugReportWorkflow } from "./bug-report-storage";
 
 const firestoreMock = vi.hoisted(() => {
   const get = vi.fn();
   const limit = vi.fn(() => ({ get }));
   const orderBy = vi.fn(() => ({ limit }));
   const set = vi.fn();
-  const doc = vi.fn(() => ({ set }));
+  const docGet = vi.fn();
+  const doc = vi.fn((id: string) => ({ get: docGet, id, set }));
   const collection = vi.fn(() => ({ doc, orderBy }));
   const serverTimestamp = vi.fn(() => "server-time");
+  const transactionSet = vi.fn();
+  const runTransaction = vi.fn(async (work: (transaction: { get: (reference: { get: () => Promise<unknown> }) => Promise<unknown>; set: typeof transactionSet }) => Promise<unknown>) => work({ get: (reference) => reference.get(), set: transactionSet }));
 
-  return { collection, doc, get, limit, orderBy, serverTimestamp, set };
+  return { collection, doc, docGet, get, limit, orderBy, runTransaction, serverTimestamp, set, transactionSet };
 });
 
 vi.mock("./firebase-admin", () => ({
   getFirebaseAdminFirestore: () => ({
     collection: firestoreMock.collection,
+    runTransaction: firestoreMock.runTransaction,
   }),
 }));
 
@@ -29,16 +33,20 @@ vi.mock("firebase-admin/firestore", () => ({
 describe("bug report storage", () => {
   beforeEach(() => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "full");
+    vi.stubEnv("IROGUIDE_CAPABILITY_BUG_REPORT_EMAIL", "true");
     delete process.env.RESEND_API_KEY;
     delete process.env.BUG_REPORT_TO_EMAIL;
     delete process.env.BUG_REPORT_FROM_EMAIL;
     firestoreMock.collection.mockClear();
     firestoreMock.doc.mockClear();
+    firestoreMock.docGet.mockReset();
     firestoreMock.get.mockReset();
     firestoreMock.limit.mockClear();
     firestoreMock.orderBy.mockClear();
     firestoreMock.serverTimestamp.mockClear();
     firestoreMock.set.mockClear();
+    firestoreMock.runTransaction.mockClear();
+    firestoreMock.transactionSet.mockClear();
   });
 
   afterEach(() => {
@@ -131,6 +139,42 @@ describe("bug report storage", () => {
     ]);
   });
 
+  it("tracks assignment, internal notes, and resolution with optimistic revision", async () => {
+    firestoreMock.docGet.mockResolvedValueOnce({
+      exists: true,
+      id: "018f1a80-7b5a-7c61-a9be-2f38de60ec98",
+      data: () => ({
+        id: "018f1a80-7b5a-7c61-a9be-2f38de60ec98",
+        name: "Reporter",
+        email: "reporter@example.com",
+        problem: "The project delete confirmation did not complete.",
+        status: "triaged",
+        revision: 2,
+        source: "contact",
+        emailStatus: "disabled",
+        requestId: "request-2",
+        createdAtIso: "2026-09-03T10:00:00.000Z",
+        updatedAtIso: "2026-09-03T10:00:00.000Z",
+        assignedTo: null,
+        resolution: null,
+        internalNotes: [],
+        recentMutationIds: [],
+      }),
+    });
+
+    const report = await updateBugReportWorkflow({
+      schemaVersion: 1,
+      reportId: "018f1a80-7b5a-7c61-a9be-2f38de60ec98",
+      expectedRevision: 2,
+      mutationId: "mutation-3",
+      changes: { status: "resolved", assignedTo: "Support primary", internalNote: "Verified the safe retry path.", resolution: "Retry now completes after the transfer." },
+    }, "operator-a", new Date("2026-09-03T11:00:00.000Z"));
+
+    expect(report).toMatchObject({ assignedTo: "Support primary", revision: 3, status: "resolved", resolution: "Retry now completes after the transfer." });
+    expect(report.internalNotes).toEqual([expect.objectContaining({ authorId: "operator-a", body: "Verified the safe retry path." })]);
+    expect(firestoreMock.transactionSet).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ revision: 3, status: "resolved" }));
+  });
+
   it("does not send email when provider settings are missing", async () => {
     const result = await sendBugReportEmail({
       id: "report-1",
@@ -149,6 +193,7 @@ describe("bug report storage", () => {
 
   it("records disabled delivery without contacting Resend in free mode", async () => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    vi.stubEnv("IROGUIDE_CAPABILITY_BUG_REPORT_EMAIL", "false");
     process.env.RESEND_API_KEY = "configured-but-disabled";
     process.env.BUG_REPORT_TO_EMAIL = "bugs@example.com";
     process.env.BUG_REPORT_FROM_EMAIL = "IroGuide <bugs@iroguide.com>";
