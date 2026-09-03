@@ -15,7 +15,7 @@ The public review route continues to explain that personalized critique is unava
 
 ## Blockers
 
-- All Phase 9 blockers, including 77 missing owned cases, human adjudication, approved provider terms/budget, and live failure drills.
+- All remaining Phase 9 blockers, including human adjudication, approved provider terms/budget, named support ownership, and live failure drills. The 77 missing owned cases were completed offline without provider calls.
 - `GATE-FREE-01` privileged Firebase/Storage and physical-device blockers.
 - A named limited-cohort owner, support response window, incident owner, quota/cost envelope, provider-processing acknowledgement, retention/deletion policy, and legal/privacy acceptance.
 - Exact-SHA staging evidence for owner isolation, upload expiry/replay, queue states, provider pause, quota exhaustion, cancellation, deletion, accessibility, and rollback.

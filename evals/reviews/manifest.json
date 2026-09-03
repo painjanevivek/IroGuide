@@ -1,37 +1,4507 @@
 {
   "schemaVersion": 1,
+  "corpusId": "iroguide-owned-provider-evaluation-v1",
+  "corpusVersion": "2026-09-03.1",
   "targetCaseCount": 80,
+  "addedAssetCount": 77,
   "adjudication": "two-reviewers-plus-adjudicator",
+  "executionPolicy": {
+    "providerCalls": "disabled",
+    "externalAssetSources": "forbidden",
+    "rendering": "local-deterministic-sharp"
+  },
   "cases": [
+    {
+      "id": "owned-book-cover-001",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: The Quiet Index. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "thumbnail recognition",
+        "title hierarchy",
+        "author distinction",
+        "genre signaling"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "The Quiet Index",
+      "assetSha256": "7c198eeb7067adba365e3422f1bf31b2c53804c7c3b6c87b5cd4e931cbff6add"
+    },
+    {
+      "id": "owned-book-cover-002",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: Borrowed Weather. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "title hierarchy",
+        "author distinction",
+        "genre signaling",
+        "thumbnail recognition"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Borrowed Weather",
+      "assetSha256": "f39a8e544165c5db22f52ee28f4fc008fa87b5f66bb6b9bbce97c4d447f83799"
+    },
+    {
+      "id": "owned-book-cover-003",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: A Map of Almost. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "author distinction",
+        "genre signaling",
+        "thumbnail recognition",
+        "title hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "A Map of Almost",
+      "assetSha256": "62e92afd3237e649c0efc68418d7c53b4d1667896d2a42fa7a31949e818582d1"
+    },
+    {
+      "id": "owned-book-cover-004",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: Night Orchard. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "genre signaling",
+        "thumbnail recognition",
+        "title hierarchy",
+        "author distinction"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Night Orchard",
+      "assetSha256": "32f0825d2e9db2b06d2585308660f11d5389f23a1e64858ff3c737038147cbab"
+    },
+    {
+      "id": "owned-book-cover-005",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: Ways of Seeing Slowly. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "thumbnail recognition",
+        "title hierarchy",
+        "author distinction",
+        "genre signaling"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Ways of Seeing Slowly",
+      "assetSha256": "aca255bc491f7d70c5dc6dd6c5bafc0c72bd2c26ed28b20629e3f7de65820ca0"
+    },
+    {
+      "id": "owned-book-cover-006",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: The Fifth Window. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "title hierarchy",
+        "author distinction",
+        "genre signaling",
+        "thumbnail recognition"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "The Fifth Window",
+      "assetSha256": "825243b0c2e1bfff7e39857e1e1f5006c42220072959e706682ef34e5f071faf"
+    },
+    {
+      "id": "owned-book-cover-007",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: Ordinary Satellites. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "author distinction",
+        "genre signaling",
+        "thumbnail recognition",
+        "title hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Ordinary Satellites",
+      "assetSha256": "2ef2b0a00c1d0e12c38cba0d5e89922f609b75e09d0b4f85716c142c2c4675be"
+    },
+    {
+      "id": "owned-book-cover-008",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: Notes for Tomorrow. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "genre signaling",
+        "thumbnail recognition",
+        "title hierarchy",
+        "author distinction"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Notes for Tomorrow",
+      "assetSha256": "574134e75de9b3f2d00544e489c65201c4a9e83ade4f5a973a877b95ef533cda"
+    },
+    {
+      "id": "owned-book-cover-009",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: The Shape of Waiting. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "thumbnail recognition",
+        "title hierarchy",
+        "author distinction",
+        "genre signaling"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "The Shape of Waiting",
+      "assetSha256": "bdead6202c9ff365311c4d49f5a34eb5e87256646e86f4275fa2be8c0566c4e0"
+    },
+    {
+      "id": "owned-book-cover-010",
+      "category": "book-cover",
+      "assetPath": "evals/reviews/assets/book-cover/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Readers browsing a fictional independent-publishing catalogue",
+        "purpose": "Signal genre, establish title hierarchy, and remain recognizable at thumbnail size",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge title hierarchy, authorship clarity, mood, contrast, and compositional focus",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Book cover: A Useful Distance. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "title hierarchy",
+        "author distinction",
+        "genre signaling",
+        "thumbnail recognition"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "book-cover-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "book-cover-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "A Useful Distance",
+      "assetSha256": "d8e6549a99ca1f4b212a95546029677796fb4858f20859659522c84a330b53d3"
+    },
+    {
+      "id": "owned-logo-001",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Northloom. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "mark-to-wordmark balance",
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Northloom",
+      "assetSha256": "90441032df6ed7da9e3b2806e24dd243cd221e7da744f166ae93f926668e77bf"
+    },
+    {
+      "id": "owned-logo-002",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Pollen House. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette",
+        "mark-to-wordmark balance"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Pollen House",
+      "assetSha256": "9ff37daa017d725a45d9a288aa5d7da3916e4e9292bb92df35e8c16696531c15"
+    },
+    {
+      "id": "owned-logo-003",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Kindred Arc. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "palette coherence",
+        "distinctive silhouette",
+        "mark-to-wordmark balance",
+        "small-size legibility"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Kindred Arc",
+      "assetSha256": "81b661a4e2e877aa1fb0c06895a4a341592230df431798d733b632cc9fae3a0b"
+    },
+    {
+      "id": "owned-logo-004",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Morrow Field. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "distinctive silhouette",
+        "mark-to-wordmark balance",
+        "small-size legibility",
+        "palette coherence"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Morrow Field",
+      "assetSha256": "33691a6c37a9005258e3724062a893aa09b0e8e50c60c178412c324144d0ef05"
+    },
+    {
+      "id": "owned-logo-005",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Tandem Vale. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "mark-to-wordmark balance",
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "Tandem Vale",
+      "assetSha256": "63d8887c043594462f90561895ab0b9910a3f0d7a4be6dddcec4b19850b72900"
+    },
+    {
+      "id": "owned-logo-006",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Luma Parcel. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette",
+        "mark-to-wordmark balance"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Luma Parcel",
+      "assetSha256": "9db42dfab9ec549bfed90ac983247569b6887e3c0e259f667712718b8d79ca85"
+    },
+    {
+      "id": "owned-logo-007",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Cedar Signal. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "palette coherence",
+        "distinctive silhouette",
+        "mark-to-wordmark balance",
+        "small-size legibility"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Cedar Signal",
+      "assetSha256": "57f3002b2ba032f35d25fd486033c1300d8e7f59611f85fa2178120008ec173d"
+    },
+    {
+      "id": "owned-logo-008",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Orbit & Oak. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "distinctive silhouette",
+        "mark-to-wordmark balance",
+        "small-size legibility",
+        "palette coherence"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Orbit & Oak",
+      "assetSha256": "fe0aa636bdd5f05a10361e3c9c25efb154c6741d640f1ac0dbf19da087ec0b50"
+    },
+    {
+      "id": "owned-logo-009",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Quiet Current. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "mark-to-wordmark balance",
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Quiet Current",
+      "assetSha256": "6321797d62ad9c7142c6ef738bf3ea5d82042c99c0e6eaad143f0d25acb3b6c3"
+    },
+    {
+      "id": "owned-logo-010",
+      "category": "logo",
+      "assetPath": "evals/reviews/assets/logo/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent founders selecting an identity for a new service",
+        "purpose": "Present a fictional identity mark, wordmark, palette, and small-size application",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge distinctiveness, hierarchy, legibility, and system coherence from visible evidence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Logo identity board: Vela Works. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "small-size legibility",
+        "palette coherence",
+        "distinctive silhouette",
+        "mark-to-wordmark balance"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "logo-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "logo-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Vela Works",
+      "assetSha256": "f343fb2aef8881c99f3fa1f2909c4853dcc56bb046cd4db6edf4ffc04ffc1c44"
+    },
+    {
+      "id": "owned-other-001",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Museum wayfinding. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "route clarity",
+        "step labeling",
+        "scan order",
+        "decision ambiguity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Museum wayfinding",
+      "assetSha256": "22bb5eba2869244403360fe8896062e99e2e16660aaa69880a92819051d541d5"
+    },
+    {
+      "id": "owned-other-002",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Community timetable. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "step labeling",
+        "scan order",
+        "decision ambiguity",
+        "route clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Community timetable",
+      "assetSha256": "c7d9ee873d5df102e5f9c024ee6219d35acdef39defa15401b009016998ff54f"
+    },
+    {
+      "id": "owned-other-003",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Festival map. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "scan order",
+        "decision ambiguity",
+        "route clarity",
+        "step labeling"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Festival map",
+      "assetSha256": "55b69fb2a36a9ff9511b07464831dd4339f2d0bd3ec9adb673a30d3cf8033acc"
+    },
+    {
+      "id": "owned-other-004",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Workshop menu. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "decision ambiguity",
+        "route clarity",
+        "step labeling",
+        "scan order"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Workshop menu",
+      "assetSha256": "2addd800a1f8c37739507f0c7b81b53912b1fbeda87e6bd03172c2dc5fba66dd"
+    },
+    {
+      "id": "owned-other-005",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Library guide. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "route clarity",
+        "step labeling",
+        "scan order",
+        "decision ambiguity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Library guide",
+      "assetSha256": "7cd5820afbb85c44866d5b41cc14eb21c5e0a8c386aca40509caa42b001a4ed4"
+    },
+    {
+      "id": "owned-other-006",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Transit explainer. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "step labeling",
+        "scan order",
+        "decision ambiguity",
+        "route clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Transit explainer",
+      "assetSha256": "393f574bd18e0fb3bcfefda5d9b9a5116f07215513efc01f586f24602f94cf9d"
+    },
+    {
+      "id": "owned-other-007",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Exhibit index. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "scan order",
+        "decision ambiguity",
+        "route clarity",
+        "step labeling"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Exhibit index",
+      "assetSha256": "54790a578a9e58a3bc5841a33eec0fd209298b5dadc3a26adde3388457f53e8f"
+    },
+    {
+      "id": "owned-other-008",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Public notice. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "decision ambiguity",
+        "route clarity",
+        "step labeling",
+        "scan order"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "Public notice",
+      "assetSha256": "0751bed8a2394a591894c6a1a533e10ebee1ea7f02610e384a6a0ce3a63d06b1"
+    },
+    {
+      "id": "owned-other-009",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Service directory. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "route clarity",
+        "step labeling",
+        "scan order",
+        "decision ambiguity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Service directory",
+      "assetSha256": "7036a0b26178e36dc7b4b22ed10e41671633a23cc420160d052013831c2cb757"
+    },
+    {
+      "id": "owned-other-010",
+      "category": "other",
+      "assetPath": "evals/reviews/assets/other/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Visitors using a fictional public program, exhibit, or service",
+        "purpose": "Organize mixed information and make one route or decision easy to follow",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge information structure, labeling, visual order, contrast, and ambiguity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Information graphic: Learning pathway. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "step labeling",
+        "scan order",
+        "decision ambiguity",
+        "route clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "other-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "other-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Learning pathway",
+      "assetSha256": "b38d6f04f43879968fd8c5cb93d491417276fe733893d156faf29dfa0a52d98b"
+    },
+    {
+      "id": "owned-packaging-001",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Moss Tea. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "product-type clarity",
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Moss Tea",
+      "assetSha256": "57dee38c4fbec92cd18113a5996c030297abfae17ef2ee32fc56f93edbfbd03f"
+    },
+    {
+      "id": "owned-packaging-002",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Sunday Oats. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability",
+        "product-type clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Sunday Oats",
+      "assetSha256": "cc1dbb764153782669050f50402e695e119a60ca07bc889969c97ea9639e3dc1"
+    },
+    {
+      "id": "owned-packaging-003",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Good Grain. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "variant distinction",
+        "shelf readability",
+        "product-type clarity",
+        "brand hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Good Grain",
+      "assetSha256": "bbc10833fffde4c1ad705843f76e7414ad6394b650196f673271773249a40ef1"
+    },
+    {
+      "id": "owned-packaging-004",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Clear Spring. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "shelf readability",
+        "product-type clarity",
+        "brand hierarchy",
+        "variant distinction"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Clear Spring",
+      "assetSha256": "610e7fa1964f44a00d64076e063c0f33adb9b4b741538712a0c8fdf42d777b93"
+    },
+    {
+      "id": "owned-packaging-005",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Little Ember. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "product-type clarity",
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Little Ember",
+      "assetSha256": "48c48f0c16c5f212ea81128555fbf4bd343ffc71a2539d09dd29c62a24242c84"
+    },
+    {
+      "id": "owned-packaging-006",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Common Salt. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability",
+        "product-type clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Common Salt",
+      "assetSha256": "674d66b595f8705a09ef946d9a4815822dcdeef56ad40d08e3de904fe27e114e"
+    },
+    {
+      "id": "owned-packaging-007",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Daymark Soap. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "variant distinction",
+        "shelf readability",
+        "product-type clarity",
+        "brand hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Daymark Soap",
+      "assetSha256": "9634ae587735d80d57ba86060c330baadba52bf264ed9335cd06c0a3e891d46f"
+    },
+    {
+      "id": "owned-packaging-008",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Field Cocoa. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "shelf readability",
+        "product-type clarity",
+        "brand hierarchy",
+        "variant distinction"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Field Cocoa",
+      "assetSha256": "b68177fca3a68bec72c4bdb7aca2c0238ff6901bfe2fcc8c6a63acadd67201f6"
+    },
+    {
+      "id": "owned-packaging-009",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Soft Citrus. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "product-type clarity",
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "Soft Citrus",
+      "assetSha256": "c5a556c6d17f02be71505f1b6ec303ae02907edb7e0f7194b1648ddec5e37425"
+    },
+    {
+      "id": "owned-packaging-010",
+      "category": "packaging",
+      "assetPath": "evals/reviews/assets/packaging/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Retail shoppers comparing a fictional everyday product on shelf",
+        "purpose": "Communicate product type, variant, key detail, and recognizable brand",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge shelf hierarchy, variant clarity, information density, contrast, and system consistency",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product packaging concept: Still Coffee. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "brand hierarchy",
+        "variant distinction",
+        "shelf readability",
+        "product-type clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "packaging-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "packaging-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Still Coffee",
+      "assetSha256": "a7417defe25befda9d96b3862297202813cd27153fe2592c7a8b1f99a38f1728"
+    },
+    {
+      "id": "owned-poster-001",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Afterlight. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "headline hierarchy",
+        "event logistics",
+        "registration action",
+        "expressive-type restraint"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Afterlight",
+      "assetSha256": "b69c2480596f4c437f04d159024d26b4e6a4b5876ca73c5cfa0a36f10eb00203"
+    },
+    {
+      "id": "owned-poster-002",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Common Form. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "event logistics",
+        "registration action",
+        "expressive-type restraint",
+        "headline hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Common Form",
+      "assetSha256": "ae695538b76456d26d90334cf4b4ecf08abfb71d87b51341598cadd793c1898d"
+    },
+    {
+      "id": "owned-poster-003",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Field Notes. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "registration action",
+        "expressive-type restraint",
+        "headline hierarchy",
+        "event logistics"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Field Notes",
+      "assetSha256": "c94731e66f7dbe8c467b0fd45df8570054cb9f01184e5610168dbd0c30b5e736"
+    },
+    {
+      "id": "owned-poster-004",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: New Grain. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "expressive-type restraint",
+        "headline hierarchy",
+        "event logistics",
+        "registration action"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "New Grain",
+      "assetSha256": "3d9c01cbe9240db507aaafbd1f9c5b59c247d15a2162eab8f121bcaa66efc659"
+    },
+    {
+      "id": "owned-poster-005",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Open Signal. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "headline hierarchy",
+        "event logistics",
+        "registration action",
+        "expressive-type restraint"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Open Signal",
+      "assetSha256": "697cdc930871a59c9b51aafca814331bbc083e8738175af8706a4e67543a0ef2"
+    },
+    {
+      "id": "owned-poster-006",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Parallel Practice. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "event logistics",
+        "registration action",
+        "expressive-type restraint",
+        "headline hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Parallel Practice",
+      "assetSha256": "3ccd55d8510baca0660ba69f482d348aee6dd76a2ba7e3ce9ae0f5d5bc6af450"
+    },
+    {
+      "id": "owned-poster-007",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Soft Geometry. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "registration action",
+        "expressive-type restraint",
+        "headline hierarchy",
+        "event logistics"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Soft Geometry",
+      "assetSha256": "04148c7f5b3114abe98cc5a7ca562195502c919db683d81fb1ac6c254cd071b8"
+    },
+    {
+      "id": "owned-poster-008",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Type Assembly. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "expressive-type restraint",
+        "headline hierarchy",
+        "event logistics",
+        "registration action"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Type Assembly",
+      "assetSha256": "8fc52076c685ba55159bcab7e4f28f3fc1269f2e9e3cd02c9eef1dd069789bcf"
+    },
+    {
+      "id": "owned-poster-009",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Visible Rhythm. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "headline hierarchy",
+        "event logistics",
+        "registration action",
+        "expressive-type restraint"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Visible Rhythm",
+      "assetSha256": "eaa6360c93023e5f1c7b7c4022c312a64b7c0e45d889cf5b8865fb8d6e7e76d2"
+    },
+    {
+      "id": "owned-poster-010",
+      "category": "poster",
+      "assetPath": "evals/reviews/assets/poster/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People deciding whether to attend a fictional local creative event",
+        "purpose": "Communicate event theme, date, venue, and one registration action",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge hierarchy, scan order, logistics clarity, contrast, and action prominence",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Event poster: Work in Public. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "event logistics",
+        "registration action",
+        "expressive-type restraint",
+        "headline hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "poster-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "poster-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Work in Public",
+      "assetSha256": "14898479ad5b4d7d736e299e72ff396ed00d4eadd54f95668e534c0ca84a0e9d"
+    },
+    {
+      "id": "owned-social-001",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/001.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Clear geometric system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Make Room. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "mobile focal point",
+        "copy density",
+        "campaign continuity",
+        "next-action clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-1",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-1",
+        "layoutVariant": 1,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Make Room",
+      "assetSha256": "cca5af2346c07254f4b1f7dbb7863caa478298d09d7a4853fd1dc41668a48e2e"
+    },
+    {
+      "id": "owned-social-002",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Studio Sprint. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "copy density",
+        "campaign continuity",
+        "next-action clarity",
+        "mobile focal point"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Studio Sprint",
+      "assetSha256": "2bdba8b3bcc139c8ebfe33cd6cf2791e54f1d59b0a6b3855585c4241a7ab8a23"
+    },
+    {
+      "id": "owned-social-003",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: One Good Hour. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "campaign continuity",
+        "next-action clarity",
+        "mobile focal point",
+        "copy density"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "One Good Hour",
+      "assetSha256": "43a071c882db1816f8d235aaf21cbdd31e3f9cbb4d569383425f823df325594d"
+    },
+    {
+      "id": "owned-social-004",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Fresh Draft. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "next-action clarity",
+        "mobile focal point",
+        "copy density",
+        "campaign continuity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Fresh Draft",
+      "assetSha256": "927a56801d52d81e4cde4d9bba77619e8b84aad5969447c5c26148f0f28902c8"
+    },
+    {
+      "id": "owned-social-005",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Build Together. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "mobile focal point",
+        "copy density",
+        "campaign continuity",
+        "next-action clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Build Together",
+      "assetSha256": "78f86bbb0e0ce04530590f50a003afc347f4412224150996f4de6335d6076435"
+    },
+    {
+      "id": "owned-social-006",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Small Wins Club. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "copy density",
+        "campaign continuity",
+        "next-action clarity",
+        "mobile focal point"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Small Wins Club",
+      "assetSha256": "2011a80a7b83d00796c861ece5fade4b70487f2477351f6dc1eee847533b55b7"
+    },
+    {
+      "id": "owned-social-007",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Open Desk. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "campaign continuity",
+        "next-action clarity",
+        "mobile focal point",
+        "copy density"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Open Desk",
+      "assetSha256": "4c4779777fef58c82542e9695c236a82fcbb38552e90b94c048d9fa8114457e6"
+    },
+    {
+      "id": "owned-social-008",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Sunday System. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "next-action clarity",
+        "mobile focal point",
+        "copy density",
+        "campaign continuity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Sunday System",
+      "assetSha256": "cbca34fbf3556a2603578d2cef5da4a1ba5c5139374e33fb1c02450d26992177"
+    },
+    {
+      "id": "owned-social-009",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Better Briefs. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "mobile focal point",
+        "copy density",
+        "campaign continuity",
+        "next-action clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Better Briefs",
+      "assetSha256": "8c9387f30267363a9a49300fe87e2e8d482f7b427a79c662ef0b2e5eb38d61f9"
+    },
+    {
+      "id": "owned-social-010",
+      "category": "social",
+      "assetPath": "evals/reviews/assets/social/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Mobile-first viewers discovering a fictional workshop or community program",
+        "purpose": "Stop the scroll, explain one offer, and make the next action understandable",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge focal point, copy density, brand continuity, and conversion clarity",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Social campaign tile: Practice Loop. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "copy density",
+        "campaign continuity",
+        "next-action clarity",
+        "mobile focal point"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "social-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "social-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Practice Loop",
+      "assetSha256": "8bf6c976cd6d5b8980d6f0edb0c1f81eaf351c1711aa27ee267836b0272b4be2"
+    },
+    {
+      "id": "owned-ui-002",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/002.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "Clear humanist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Review queue. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk",
+        "primary-task clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-2",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-2",
+        "layoutVariant": 2,
+        "palette": [
+          "#F4F1EA",
+          "#202020",
+          "#1F7A8C",
+          "#E76F51"
+        ]
+      },
+      "displayName": "Review queue",
+      "assetSha256": "ba652d0ea8d36f7ed639efd629b1399c55217c34924f06532db4f2c7b376e68b"
+    },
+    {
+      "id": "owned-ui-003",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Content calendar. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "status hierarchy",
+        "visible readability risk",
+        "primary-task clarity",
+        "control affordance"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#FFF5F5",
+          "#28262C",
+          "#C44569",
+          "#4C956C"
+        ]
+      },
+      "displayName": "Content calendar",
+      "assetSha256": "d9dc4f6a5e991883f211bb3a2baff0cebe43f580d2c2bb395a337b5b8128d003"
+    },
+    {
+      "id": "owned-ui-004",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "playful system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Research notes. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "visible readability risk",
+        "primary-task clarity",
+        "control affordance",
+        "status hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Research notes",
+      "assetSha256": "18a6b2421d850a564e2bbb8b9442e54dbba974407d85ff115dd2c5c0fdd18143"
+    },
+    {
+      "id": "owned-ui-005",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "editorial system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Team pulse. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "primary-task clarity",
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Team pulse",
+      "assetSha256": "637b060a049aedd94f006f6d8d5c06d6601dd44a0089947486dd055051141ca3"
+    },
+    {
+      "id": "owned-ui-006",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Asset library. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk",
+        "primary-task clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Asset library",
+      "assetSha256": "b3975fadaeca172f73c7630486124fa4af9b677fbab469b892e295be8e968a3f"
+    },
+    {
+      "id": "owned-ui-007",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Client handoff. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "status hierarchy",
+        "visible readability risk",
+        "primary-task clarity",
+        "control affordance"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Client handoff",
+      "assetSha256": "034a991b7e4180bc4b6c582bf41481aa0c73feca158f9566af76e081498b1f27"
+    },
+    {
+      "id": "owned-ui-008",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "Experimental modernist system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Focus planner. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "visible readability risk",
+        "primary-task clarity",
+        "control affordance",
+        "status hierarchy"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "ambiguous action priority",
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Focus planner",
+      "assetSha256": "9c656e41fc4ce1ec278df78ad29748b53bc0eeeeec1aff9425e167591a6b0bf0"
+    },
+    {
+      "id": "owned-ui-009",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Feedback inbox. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "primary-task clarity",
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Feedback inbox",
+      "assetSha256": "e33bfd22f906c17d4c770be64647f0a4bbfc1512c77a106316354971a7cf2ef1"
+    },
+    {
+      "id": "owned-ui-010",
+      "category": "ui",
+      "assetPath": "evals/reviews/assets/ui/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Knowledge workers completing a focused task in a fictional web application",
+        "purpose": "Expose a primary task, supporting status, and clear next action",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge task clarity, information hierarchy, affordance, consistency, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Product interface screen: Launch checklist. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk",
+        "primary-task clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "ui-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "ui-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Launch checklist",
+      "assetSha256": "500b501bc77e08c4cf9bd49d45c7a3bc6778aa62f24bec0377390b0123efde8b"
+    },
     {
       "id": "seed-ui-form-together-001",
       "category": "ui",
       "assetPath": "public/samples/form-together-friendly.webp",
-      "assetSha256": "9bc83fc6e3d006d01f33ecbbed8c68ee4c3e71410b7529a4cb63c180021878e8",
       "ownership": "purpose-built",
       "qualityLevel": "strong",
-      "modes": ["mentor", "friendly", "direct"],
-      "status": "unlabeled"
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "People booking a collaborative design workshop",
+        "purpose": "Explain the workshop and lead visitors toward booking",
+        "style": "Warm editorial interface with rounded cards and strong display type",
+        "goal": "Assess task clarity, hierarchy, affordance, consistency, and visible readability",
+        "concern": "Keep all findings limited to what is visible in the static image"
+      },
+      "artifactDescription": "Product interface screen: Form Together. Existing original IroGuide sample.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "primary-task clarity",
+        "control affordance",
+        "status hierarchy",
+        "visible readability risk"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "seed-seed-ui-form-together-001",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "assetSha256": "9bc83fc6e3d006d01f33ecbbed8c68ee4c3e71410b7529a4cb63c180021878e8"
+    },
+    {
+      "id": "owned-website-003",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/003.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "Clear modernist system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Relay Research. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "conversion path",
+        "visible trust support",
+        "offer clarity",
+        "navigation priority"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "high visible contrast",
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-3",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-3",
+        "layoutVariant": 3,
+        "palette": [
+          "#EFF6F3",
+          "#143642",
+          "#0F8B8D",
+          "#EC9A29"
+        ]
+      },
+      "displayName": "Relay Research",
+      "assetSha256": "0166b9b85c6407e3bd695401b0b39d6bb316405806a27a96750c335778420b67"
+    },
+    {
+      "id": "owned-website-004",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/004.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "Clear playful system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Gather Grid. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "visible trust support",
+        "offer clarity",
+        "navigation priority",
+        "conversion path"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "single dominant action",
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-4",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-4",
+        "layoutVariant": 4,
+        "palette": [
+          "#F8F5EF",
+          "#283618",
+          "#606C38",
+          "#DDA15E"
+        ]
+      },
+      "displayName": "Gather Grid",
+      "assetSha256": "a943157bb7494c1cd4157d2873ff175e174ec00630b42e578410ec9d1f5c5dc2"
+    },
+    {
+      "id": "owned-website-005",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/005.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "strong",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "Clear editorial system with controlled contrast, spacing, and one dominant action",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Civic Bloom. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a strong case: clear hierarchy, high visible contrast, consistent alignment, and one dominant path.",
+      "evaluationFocus": [
+        "offer clarity",
+        "navigation priority",
+        "conversion path",
+        "visible trust support"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "controlled hierarchy",
+          "consistent alignment",
+          "high visible contrast",
+          "single dominant action"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-5",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-5",
+        "layoutVariant": 5,
+        "palette": [
+          "#F3F4F6",
+          "#111827",
+          "#2563EB",
+          "#F97316"
+        ]
+      },
+      "displayName": "Civic Bloom",
+      "assetSha256": "d90bb66d9ad45aff1e0319f8e8135bcb41a16f2a4eb865b5221aa775122ad7bb"
+    },
+    {
+      "id": "owned-website-006",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/006.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "geometric system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Lantern Labs. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "navigation priority",
+        "conversion path",
+        "visible trust support",
+        "offer clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-6",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-6",
+        "layoutVariant": 1,
+        "palette": [
+          "#F6F0E5",
+          "#1B2430",
+          "#EF5B3F",
+          "#5B8E7D"
+        ]
+      },
+      "displayName": "Lantern Labs",
+      "assetSha256": "24e2c99cb7de17b9c80cd531cb7da00c7e79a25117257e5bb22fa56841683d1b"
+    },
+    {
+      "id": "owned-website-007",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/007.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "humanist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Good Measure. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "conversion path",
+        "visible trust support",
+        "offer clarity",
+        "navigation priority"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "uneven spacing rhythm",
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-7",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-7",
+        "layoutVariant": 2,
+        "palette": [
+          "#EEF4FF",
+          "#17223B",
+          "#5B5FEF",
+          "#FFB84C"
+        ]
+      },
+      "displayName": "Good Measure",
+      "assetSha256": "60a245a5f67935a9a580b730890274e647977507fc572392d249307357cfcecf"
+    },
+    {
+      "id": "owned-website-008",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/008.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "mixed",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "modernist system with credible structure and a few intentional hierarchy or density conflicts",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Woven Cloud. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "visible trust support",
+        "offer clarity",
+        "navigation priority",
+        "conversion path"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "bounded density tension",
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-8",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-8",
+        "layoutVariant": 3,
+        "palette": [
+          "#FFF7ED",
+          "#312E2B",
+          "#D14D72",
+          "#78A083"
+        ]
+      },
+      "displayName": "Woven Cloud",
+      "assetSha256": "7fcc81337d4503afc1b6e4cd89f009b67f9d3296864241f3840726751b24b78b"
+    },
+    {
+      "id": "owned-website-009",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/009.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "Experimental playful system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Trace Garden. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "offer clarity",
+        "navigation priority",
+        "conversion path",
+        "visible trust support"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-9",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-9",
+        "layoutVariant": 4,
+        "palette": [
+          "#F2F7F5",
+          "#183A37",
+          "#F4A261",
+          "#4D7C8A"
+        ]
+      },
+      "displayName": "Trace Garden",
+      "assetSha256": "54b7b1bf6d35a1df6c2ea13e051f441ca4a608098b4efdce344cb864409863a1"
+    },
+    {
+      "id": "owned-website-010",
+      "category": "website",
+      "assetPath": "evals/reviews/assets/website/010.webp",
+      "ownership": "purpose-built",
+      "qualityLevel": "weak-ambiguous",
+      "modes": [
+        "mentor"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Prospective customers evaluating a fictional product or service",
+        "purpose": "Explain the offer, establish trust, and direct visitors to one primary action",
+        "style": "Experimental editorial system with intentionally competing hierarchy, dense grouping, or ambiguous emphasis",
+        "goal": "Judge hero clarity, navigation, conversion path, visible trust, and visual accessibility risk",
+        "concern": "Evaluate only visible evidence and the supplied brief; do not infer runtime behavior."
+      },
+      "artifactDescription": "Website landing viewport: Framehouse. Original fictional content with no third-party visual inputs.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "navigation priority",
+        "conversion path",
+        "visible trust support",
+        "offer clarity"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority",
+          "competing focal signals"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "website-10",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "generation": {
+        "generatorVersion": "2026-09-03.1",
+        "visualSeed": "website-10",
+        "layoutVariant": 5,
+        "palette": [
+          "#F7F3FF",
+          "#2B2342",
+          "#805AD5",
+          "#E6A15C"
+        ]
+      },
+      "displayName": "Framehouse",
+      "assetSha256": "ccc6e3c6b6f07efc2457b690e7a9a7eee3d86fcf34c777909050d428e0d898db"
     },
     {
       "id": "seed-website-fieldnote-001",
       "category": "website",
       "assetPath": "public/samples/fieldnote-mentor.webp",
-      "assetSha256": "24337343a71327b11f61ed64907dc9f9f32b6882fa6bd6c53737c214cbc299a1",
       "ownership": "purpose-built",
       "qualityLevel": "mixed",
-      "modes": ["mentor", "friendly", "direct"],
-      "status": "unlabeled"
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Independent creatives evaluating a fictional field workshop",
+        "purpose": "Explain the offer and support a registration decision",
+        "style": "Editorial landing page with natural colors and layered content",
+        "goal": "Assess hero clarity, navigation, conversion path, trust, and visible readability",
+        "concern": "Do not infer runtime behavior from the captured viewport"
+      },
+      "artifactDescription": "Website landing viewport: Fieldnote. Existing original IroGuide sample.",
+      "qualityTargetRationale": "Designed to target a mixed case: a usable core with bounded hierarchy, density, or consistency tensions.",
+      "evaluationFocus": [
+        "offer clarity",
+        "navigation priority",
+        "conversion path",
+        "visible trust support"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "usable primary structure",
+          "secondary emphasis competition",
+          "uneven spacing rhythm",
+          "bounded density tension"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "seed-seed-website-fieldnote-001",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "assetSha256": "24337343a71327b11f61ed64907dc9f9f32b6882fa6bd6c53737c214cbc299a1"
     },
     {
       "id": "seed-website-signal-noise-001",
       "category": "website",
       "assetPath": "public/samples/signal-noise-direct.webp",
-      "assetSha256": "23a4caa1336a2f72a87ed946c15019a5584f5edfad9aa60ca8d1a457c2d7e0ce",
       "ownership": "purpose-built",
       "qualityLevel": "weak-ambiguous",
-      "modes": ["mentor", "friendly", "direct"],
-      "status": "unlabeled"
+      "modes": [
+        "mentor",
+        "friendly",
+        "direct"
+      ],
+      "status": "unlabeled",
+      "brief": {
+        "audience": "Designers considering a fictional typography event",
+        "purpose": "Communicate the event and make registration understandable",
+        "style": "Dense experimental typography with high visual energy",
+        "goal": "Assess hierarchy, conversion path, trust, navigation, and visible readability",
+        "concern": "Separate deliberate expression from task-blocking ambiguity"
+      },
+      "artifactDescription": "Website landing viewport: Signal / Noise. Existing original IroGuide sample.",
+      "qualityTargetRationale": "Designed to target a weak/ambiguous case: multiple visible signals compete, while the artifact remains decodable enough for grounded critique.",
+      "evaluationFocus": [
+        "offer clarity",
+        "navigation priority",
+        "conversion path",
+        "visible trust support"
+      ],
+      "constructionNotes": {
+        "intendedVisibleTraits": [
+          "competing focal signals",
+          "reduced visible contrast",
+          "overlapping information groups",
+          "ambiguous action priority"
+        ],
+        "notHumanGroundTruth": true
+      },
+      "provenance": {
+        "rightsHolder": "IroGuide",
+        "rightsStatement": "Original IroGuide-created evaluation asset; no third-party visual inputs.",
+        "creationMethod": "Purpose-built locally from original IroGuide design specifications.",
+        "sourceSeed": "seed-seed-website-signal-noise-001",
+        "thirdPartyAssets": false,
+        "externalProviderUsed": false
+      },
+      "assetSha256": "23a4caa1336a2f72a87ed946c15019a5584f5edfad9aa60ca8d1a457c2d7e0ce"
     }
   ]
 }

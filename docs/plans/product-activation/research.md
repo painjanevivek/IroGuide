@@ -86,7 +86,7 @@
 
 **Decision:** The plan may complete inactive infrastructure and evaluation preparation, but no live call, production entitlement, or provider profile change occurs without approved budget, data terms, evaluation assets, two human reviewers, and named support ownership.
 
-**Rationale:** The current evidence contains only 3 of 80 target cases, no adjudication, and no approved cost envelope.
+**Rationale:** At decision time the evidence contained only 3 of 80 target cases, no adjudication, and no approved cost envelope. The owned corpus has since reached 80/80 offline, but adjudication and the approved cost envelope are still absent, so the activation decision remains unchanged.
 
 ## Decision 12 — Community and billing remain out of the core delivery path
 

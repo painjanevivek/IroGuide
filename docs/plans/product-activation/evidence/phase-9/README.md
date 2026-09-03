@@ -18,12 +18,10 @@
 
 ## Current corpus and gate blockers
 
-The manifest contains 3/80 purpose-built assets and 0/80 adjudicated cases. Missing cases were not created as metadata-only placeholders, copied from third parties, or mislabeled as owned. No provider candidate was called and no quality, latency, cost, retry, privacy, or nondeterminism result was invented.
+The manifest now contains 80/80 purpose-built assets and 0/80 adjudicated cases. The 77-case supplement was created from original local SVG specifications, rendered offline, bound to SHA-256 digests, and mapped in `evals/reviews/corpus-plan.csv`. No third-party asset or provider-generated visual was used. No provider candidate was called and no quality, latency, cost, retry, privacy, or nondeterminism result was invented.
 
 Open blockers are:
 
-- 77 additional owned assets, with ten real cases per supported category and the required quality/mode stratification.
-- Verified ownership/consent, digests, decoded bounds, briefs, rubrics, and scenario status for the completed corpus.
 - Owner-approved provider budget and data terms, daily/monthly caps, named Reviewer A, Reviewer B, adjudicator, security owner, support owner, and incident escalation.
 - An 80-case Mentor run plus the 24-case Friendly/Direct run, two locked independent ratings per output, adjudication, and threshold calculations.
 - Real kill-switch, quota/cap exhaustion, timeout, invalid-output, queue-drain, deletion-propagation, and exact-SHA rollback drills.
@@ -32,7 +30,7 @@ Open blockers are:
 
 | Command | Result |
 |---|---|
-| `npm run eval:reviews:validate` | Manifest valid; reports 3/80 registered and 0 adjudicated without promoting incomplete coverage |
+| `npm run eval:reviews:validate` | Manifest valid; reports 80/80 owned cases, exact distribution/strata, and 0 adjudicated without promoting unreviewed cases |
 | `npm run eval:reviews:unit` | Deterministic candidate coding, canonical hashes, summary hashes, ordering, validation, cost coverage, and latency aggregation pass |
 | Focused manifest-distribution Vitest | Accepts the 3/4/3 eight-category target and rejects easy-case or mode-stratification drift |
 | Provider control and pipeline configuration Vitest | Free profile, kill switch, caps, worker-secret, and adapter denial remain fail-closed |

@@ -25,13 +25,23 @@ export function validateCompletedDistribution(manifest) {
   if (stratifiedCases.length !== 24 || stratifiedCases.some((testCase) => !testCase.modes.includes("friendly") || !testCase.modes.includes("direct"))) {
     errors.push("Exactly 24 stratified cases must include both Friendly and Direct evaluation.");
   }
+  for (const category of supportedReviewCategories) {
+    const categoryStrata = stratifiedCases.filter((testCase) => testCase.category === category);
+    if (categoryStrata.length !== 3) errors.push(`${category}: exactly 3 cases must include the Friendly/Direct stratum.`);
+  }
   return errors;
 }
 
 export function summarizeCoverage(manifest) {
   const cases = Array.isArray(manifest?.cases) ? manifest.cases : [];
-  return Object.fromEntries(supportedReviewCategories.map((category) => [category, {
-    registered: cases.filter((testCase) => testCase.category === category).length,
-    target: 10,
-  }]));
+  return Object.fromEntries(supportedReviewCategories.map((category) => {
+    const categoryCases = cases.filter((testCase) => testCase.category === category);
+    return [category, {
+      registered: categoryCases.length,
+      target: 10,
+      quality: Object.fromEntries(evaluationQualityLevels.map((qualityLevel) => [qualityLevel, categoryCases.filter((testCase) => testCase.qualityLevel === qualityLevel).length])),
+      mentor: categoryCases.filter((testCase) => testCase.modes?.includes("mentor")).length,
+      friendlyDirectStrata: categoryCases.filter((testCase) => testCase.modes?.includes("friendly") && testCase.modes?.includes("direct")).length,
+    }];
+  }));
 }

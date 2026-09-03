@@ -8,15 +8,21 @@ const manifestPath = resolve("evals/reviews/manifest.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 const allowedCategories = new Set(supportedReviewCategories);
 const allowedStatuses = new Set(["unlabeled", "in-review", "adjudicated", "retired"]);
-const allowedOwnership = new Set(["purpose-built", "licensed"]);
+const allowedOwnership = new Set(["purpose-built"]);
 const allowedQualityLevels = new Set(evaluationQualityLevels);
 const allowedModes = new Set(evaluationModes);
 const ids = new Set();
 const errors = [];
 
 if (manifest.schemaVersion !== 1) errors.push("schemaVersion must be 1.");
+if (manifest.corpusId !== "iroguide-owned-provider-evaluation-v1") errors.push("corpusId must identify the owned IroGuide evaluation corpus.");
+if (typeof manifest.corpusVersion !== "string" || !manifest.corpusVersion) errors.push("corpusVersion is required.");
 if (!Number.isInteger(manifest.targetCaseCount) || manifest.targetCaseCount < 80) errors.push("targetCaseCount must be at least 80.");
+if (manifest.addedAssetCount !== 77) errors.push("addedAssetCount must record the 77-case owned supplement.");
 if (manifest.adjudication !== "two-reviewers-plus-adjudicator") errors.push("adjudication must use two reviewers plus an adjudicator.");
+if (manifest.executionPolicy?.providerCalls !== "disabled") errors.push("executionPolicy.providerCalls must remain disabled.");
+if (manifest.executionPolicy?.externalAssetSources !== "forbidden") errors.push("executionPolicy.externalAssetSources must remain forbidden.");
+if (manifest.executionPolicy?.rendering !== "local-deterministic-sharp") errors.push("executionPolicy.rendering must identify the local renderer.");
 if (!Array.isArray(manifest.cases) || manifest.cases.length === 0) errors.push("cases must contain at least one owned seed asset.");
 
 for (const testCase of manifest.cases ?? []) {
@@ -29,8 +35,28 @@ for (const testCase of manifest.cases ?? []) {
     errors.push(`${testCase.id}: modes must be unique, supported, and always include mentor.`);
   }
   if (!allowedStatuses.has(testCase.status)) errors.push(`${testCase.id}: invalid status.`);
-  if (!allowedOwnership.has(testCase.ownership)) errors.push(`${testCase.id}: ownership must be purpose-built or licensed.`);
-  if (typeof testCase.assetPath !== "string" || !testCase.assetPath.startsWith("public/")) errors.push(`${testCase.id}: assetPath must be an owned public asset.`);
+  if (!allowedOwnership.has(testCase.ownership)) errors.push(`${testCase.id}: ownership must be purpose-built for this owned corpus.`);
+  if (!testCase.brief || ["audience", "purpose", "style", "goal", "concern"].some((key) => typeof testCase.brief[key] !== "string" || !testCase.brief[key].trim())) {
+    errors.push(`${testCase.id}: a complete evaluation brief is required.`);
+  }
+  if (typeof testCase.artifactDescription !== "string" || !testCase.artifactDescription.trim()) errors.push(`${testCase.id}: artifactDescription is required.`);
+  if (typeof testCase.qualityTargetRationale !== "string" || !testCase.qualityTargetRationale.trim()) errors.push(`${testCase.id}: qualityTargetRationale is required.`);
+  if (!Array.isArray(testCase.evaluationFocus) || testCase.evaluationFocus.length < 2 || testCase.evaluationFocus.some((item) => typeof item !== "string" || !item.trim())) {
+    errors.push(`${testCase.id}: evaluationFocus requires at least two bounded focus areas.`);
+  }
+  if (!Array.isArray(testCase.constructionNotes?.intendedVisibleTraits) || testCase.constructionNotes.intendedVisibleTraits.length < 2 || testCase.constructionNotes?.notHumanGroundTruth !== true) {
+    errors.push(`${testCase.id}: constructionNotes must remain explicitly separate from human ground truth.`);
+  }
+  const provenance = testCase.provenance;
+  if (!provenance || provenance.rightsHolder !== "IroGuide" || provenance.thirdPartyAssets !== false || provenance.externalProviderUsed !== false) {
+    errors.push(`${testCase.id}: provenance must truthfully record IroGuide ownership, no third-party assets, and no external provider use.`);
+  }
+  if (typeof provenance?.rightsStatement !== "string" || !provenance.rightsStatement.trim() || typeof provenance?.creationMethod !== "string" || !provenance.creationMethod.trim() || typeof provenance?.sourceSeed !== "string" || !provenance.sourceSeed.trim()) {
+    errors.push(`${testCase.id}: provenance requires rights, creation, and reproducibility details.`);
+  }
+  if (typeof testCase.assetPath !== "string" || (!testCase.assetPath.startsWith("public/samples/") && !testCase.assetPath.startsWith("evals/reviews/assets/"))) {
+    errors.push(`${testCase.id}: assetPath must be an owned seed or evaluation holdout asset.`);
+  }
   else if (!existsSync(resolve(testCase.assetPath))) errors.push(`${testCase.id}: asset does not exist at ${testCase.assetPath}.`);
   else {
     const bytes = readFileSync(resolve(testCase.assetPath));

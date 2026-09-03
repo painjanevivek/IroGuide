@@ -19,6 +19,7 @@
     "security:secret-hygiene": "node scripts/verify-repository-secret-hygiene.mjs",
     "billing:gate": "node scripts/verify-billing-gate.mjs",
     "smoke:security": "node scripts/prelaunch-dast.mjs",
+    "eval:reviews:generate": "node scripts/generate-review-eval-corpus.mjs",
     "eval:reviews:validate": "node scripts/validate-review-evals.mjs",
     "eval:reviews:unit": "vitest run src/domain/critique-rubrics.test.ts src/domain/review-evaluation-metrics.test.ts src/server/review-evaluation.test.ts",
     "eval:provider:artifacts": "node scripts/provider-evaluation-runner.mjs",

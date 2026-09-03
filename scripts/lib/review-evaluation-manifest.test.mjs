@@ -7,7 +7,9 @@ function completeCorpus() {
     qualityLevel: index < 3 ? "strong" : index < 7 ? "mixed" : "weak-ambiguous",
     modes: ["mentor"],
   })));
-  for (const testCase of cases.slice(0, 24)) testCase.modes = ["mentor", "friendly", "direct"];
+  for (let categoryIndex = 0; categoryIndex < supportedReviewCategories.length; categoryIndex += 1) {
+    for (const testCase of cases.slice(categoryIndex * 10, categoryIndex * 10 + 3)) testCase.modes = ["mentor", "friendly", "direct"];
+  }
   return { targetCaseCount: 80, cases };
 }
 
@@ -27,5 +29,12 @@ describe("provider evaluation corpus distribution", () => {
     const errors = validateCompletedDistribution(corpus);
     expect(errors.some((error) => error.includes("strong"))).toBe(true);
     expect(errors.some((error) => error.includes("24 stratified"))).toBe(true);
+  });
+
+  it("rejects 24 strata when they are not balanced across categories", () => {
+    const corpus = completeCorpus();
+    corpus.cases[2].modes = ["mentor"];
+    corpus.cases[13].modes = ["mentor", "friendly", "direct"];
+    expect(validateCompletedDistribution(corpus).some((error) => error.includes("exactly 3"))).toBe(true);
   });
 });
