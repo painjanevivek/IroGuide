@@ -48,17 +48,18 @@ describe("secondary review generation routes", () => {
   it.each(routes)("denies authenticated $name generation before its generator runs", async ({ path, post, generator }) => {
     const response = await post(createRequest(path, true));
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
-      error: "AI critique is unavailable during IroGuide's free launch.",
+      error: expect.stringContaining("not available"),
     });
     expect(generator).not.toHaveBeenCalled();
+    expect(verifyFirebaseIdToken).not.toHaveBeenCalled();
   });
 
-  it.each(routes)("preserves unauthenticated 401 behavior for $name", async ({ path, post, generator }) => {
+  it.each(routes)("fails closed before authentication for $name", async ({ path, post, generator }) => {
     const response = await post(createRequest(path, false));
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
     expect(verifyFirebaseIdToken).not.toHaveBeenCalled();
     expect(generator).not.toHaveBeenCalled();
   });

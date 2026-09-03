@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { productEvidenceEventSchema } from "@/domain/product-evidence";
 import { enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
+import { enforceCapabilityBeforeEffects } from "@/server/capability-policy";
 import { createRequestContext, jsonHeaders, logRequestEvent } from "@/server/observability";
 import { recordProductEvidenceEvent } from "@/server/product-evidence";
 import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
@@ -12,6 +13,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createRequestContext(request, "api.product_evidence.create");
+  const capability = enforceCapabilityBeforeEffects({
+    capability: "productEvidence",
+    context,
+    eventPrefix: "product_evidence",
+    message: "Product evidence collection is disabled.",
+  });
+  if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "product_evidence");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "product_evidence");

@@ -21,7 +21,7 @@ export async function getDashboardGuide(userId: string) {
     briefs: briefs.map((record) => ({ category: record.category, status: record.status, updatedAt: record.updatedAt })),
     access: bundle.accessInterest ? { status: bundle.accessInterest.status, preferredCategory: bundle.accessInterest.preferredCategory, updatedAt: bundle.accessInterest.updatedAt } : null,
     ...operational,
-    aiCritique: capabilities.aiCritique,
+    liveCritique: capabilities.liveCritique,
   });
 }
 

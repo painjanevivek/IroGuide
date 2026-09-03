@@ -1,22 +1,18 @@
 import { describe, expect, it } from "vitest";
-import type { LaunchCapabilities } from "@/domain/launch-capabilities";
+import { productCapabilityNames, type LaunchCapabilities } from "@/domain/launch-capabilities";
 import { createRequestContext } from "./observability";
 import { enforceReviewGenerationPolicy } from "./review-generation-policy";
 
 const freeCapabilities: LaunchCapabilities = {
   profile: "free",
-  aiCritique: false,
-  bugReportEmail: false,
-  community: false,
-  guidedLearning: false,
-  sourceImageStorage: false,
+  ...Object.fromEntries(productCapabilityNames.map((capability) => [capability, false])) as Record<(typeof productCapabilityNames)[number], boolean>,
 };
 
 const fullCapabilities: LaunchCapabilities = {
+  ...freeCapabilities,
   profile: "full",
-  aiCritique: true,
+  liveCritique: true,
   bugReportEmail: true,
-  community: false,
   guidedLearning: true,
   sourceImageStorage: true,
 };
@@ -34,7 +30,7 @@ describe("review generation policy", () => {
     if (result.allowed) throw new Error("Expected free mode to be denied.");
     expect(result.response.status).toBe(403);
     await expect(result.response.json()).resolves.toEqual({
-      error: "AI critique is unavailable during IroGuide's free launch.",
+      error: "Live critique is unavailable. Continue with the free guided practice instead.",
     });
   });
 

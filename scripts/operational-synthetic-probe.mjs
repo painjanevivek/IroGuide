@@ -10,7 +10,7 @@ export function evaluateReadiness(payload) {
   if (!payload?.capabilities) return failures;
   if (payload?.capabilities?.profile !== "free") failures.push("launch profile drifted from free");
   if (payload?.capabilities?.guidedLearning !== true) failures.push("guided learning is not enabled");
-  for (const capability of ["aiCritique", "bugReportEmail", "community", "sourceImageStorage"]) {
+  for (const capability of ["liveCritique", "improvementTracking", "revisionComparison", "followUpConversation", "privatePortfolio", "publicPortfolio", "community", "billing", "bugReportEmail", "reviewPipeline", "sourceImageStorage"]) {
     if (payload?.capabilities?.[capability] !== false) failures.push(`${capability} must remain disabled`);
   }
   if (payload?.operations?.communityGate !== "closed") failures.push("Community gate must remain closed");

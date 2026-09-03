@@ -4,7 +4,7 @@
 **Date:** 2026-08-28
 **Starting SHA:** `4a40dd9965b4723880d64c5fbbc87a6d66d65be8`
 **Branch:** `codex/product-activation`
-**Rollback:** redeploy or check out the starting SHA. The server-owned Phase 2 records remain versioned; disabling `IROGUIDE_GUIDED_LEARNING_ENABLED` hides account tools while retaining the static public example.
+**Rollback:** redeploy or check out the starting SHA. The server-owned Phase 2 records remain versioned; disabling `IROGUIDE_CAPABILITY_GUIDED_LEARNING` hides account tools while retaining the static public example.
 
 ## Entry and capability outcome
 

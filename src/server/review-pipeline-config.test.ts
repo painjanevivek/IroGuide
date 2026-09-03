@@ -12,17 +12,20 @@ describe("review pipeline configuration", () => {
     });
   });
 
-  it("requires the full profile and a sufficiently strong worker key", () => {
+  it("requires both exact capabilities and a sufficiently strong worker key", () => {
     const workerKey = "w".repeat(32);
     expect(getReviewPipelineStatus({
       NODE_ENV: "production",
-      IROGUIDE_LAUNCH_PROFILE: "full",
+      IROGUIDE_LAUNCH_PROFILE: "free",
+      IROGUIDE_CAPABILITY_LIVE_CRITIQUE: "true",
+      IROGUIDE_CAPABILITY_REVIEW_PIPELINE: "true",
       IROGUIDE_REVIEW_PIPELINE_MODE: "internal",
       IROGUIDE_INTERNAL_WORKER_KEY: workerKey,
     }).enabled).toBe(true);
     expect(getReviewPipelineStatus({
       NODE_ENV: "production",
-      IROGUIDE_LAUNCH_PROFILE: "free",
+      IROGUIDE_LAUNCH_PROFILE: "full",
+      IROGUIDE_CAPABILITY_LIVE_CRITIQUE: "true",
       IROGUIDE_REVIEW_PIPELINE_MODE: "internal",
       IROGUIDE_INTERNAL_WORKER_KEY: workerKey,
     }).enabled).toBe(false);

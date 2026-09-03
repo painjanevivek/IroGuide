@@ -17,7 +17,7 @@ const landingSections = [
 
 export function LandingScrollHeader() {
   const { user, loading } = useAuth();
-  const { aiCritique } = useLaunchCapabilities();
+  const { liveCritique } = useLaunchCapabilities();
   const reducedMotion = usePrefersReducedMotion();
   const [activeHref, setActiveHref] = useState<(typeof landingSections)[number]["href"]>("#how-it-works");
   const rootRef = useRef<HTMLElement>(null);
@@ -234,12 +234,12 @@ export function LandingScrollHeader() {
         {loading ? <span className="auth-status">Checking session...</span> : user ? <UserMenu /> : null}
         {user ? (
           <Link
-            aria-label={aiCritique ? "Start a new review" : "Explore the example critique"}
+            aria-label={liveCritique ? "Start a new review" : "Explore the example critique"}
             className="button button-small landing-scroll-cta"
-            href={aiCritique ? "/review/new" : "/learn#practice"}
+            href={liveCritique ? "/review/new" : "/learn#practice"}
             prefetch={false}
           >
-            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Start learning"}</span>
+            <span className="landing-scroll-cta-label">{liveCritique ? "Start review" : "Start learning"}</span>
             <ArrowRight size={16} />
           </Link>
         ) : (

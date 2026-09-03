@@ -18,13 +18,13 @@ export function ReviewLaunchLink({
   enabledLabel: string;
   eventName?: string;
 }) {
-  const { aiCritique } = useLaunchCapabilities();
-  const label = aiCritique ? enabledLabel : disabledLabel;
+  const { liveCritique } = useLaunchCapabilities();
+  const label = liveCritique ? enabledLabel : disabledLabel;
 
   return (
     <Link
       className={className}
-      href={aiCritique ? "/review/new" : disabledHref}
+      href={liveCritique ? "/review/new" : disabledHref}
       prefetch={false}
       {...(eventName ? { "data-analytics-event": eventName } : {})}
     >

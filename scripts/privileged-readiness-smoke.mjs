@@ -55,7 +55,7 @@ export function getPrivilegedReadinessFailures(status, payload) {
   if (payload.ok !== true) failures.push("readiness is not green");
   if (payload.capabilities?.profile !== "free") failures.push("launch profile is not free");
   if (payload.capabilities?.guidedLearning !== true) failures.push("guided learning is not enabled");
-  for (const key of ["aiCritique", "bugReportEmail", "community", "sourceImageStorage"]) {
+  for (const key of ["liveCritique", "improvementTracking", "revisionComparison", "followUpConversation", "privatePortfolio", "publicPortfolio", "community", "billing", "bugReportEmail", "reviewPipeline", "sourceImageStorage"]) {
     if (payload.capabilities?.[key] !== false) failures.push(`${key} must remain disabled`);
   }
   for (const key of ["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "providerControls", "rateLimitAdapter", "requestBudgets", "reviewPipeline"]) {
@@ -69,7 +69,7 @@ function summarizeReadiness(payload) {
   return {
     profile: payload?.capabilities?.profile ?? "unknown",
     guidedLearning: payload?.capabilities?.guidedLearning === true,
-    gatedCapabilitiesClosed: ["aiCritique", "bugReportEmail", "community", "sourceImageStorage"].every((key) => payload?.capabilities?.[key] === false),
+    gatedCapabilitiesClosed: ["liveCritique", "improvementTracking", "revisionComparison", "followUpConversation", "privatePortfolio", "publicPortfolio", "community", "billing", "bugReportEmail", "reviewPipeline", "sourceImageStorage"].every((key) => payload?.capabilities?.[key] === false),
     coreChecksReady: ["accountStorage", "clientIdentity", "firebaseProjectMatch", "productEvidence", "providerControls", "rateLimitAdapter", "requestBudgets", "reviewPipeline"].every((key) => payload?.checks?.[key] === true),
     communityGate: payload?.operations?.communityGate ?? "unknown",
   };

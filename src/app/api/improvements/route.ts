@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { createDemoImprovementPlan } from "@/domain/demo-review";
 import { improvementRequestSchema } from "@/domain/improvement";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
+import { enforceCapabilityBeforeEffects } from "@/server/capability-policy";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
@@ -13,6 +13,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createPublicRequestContext(request, "api.improvements.create");
+  const capability = enforceCapabilityBeforeEffects({
+    capability: "improvementTracking",
+    context,
+    eventPrefix: "improvement",
+    message: "Improvement tracking is not available yet. Continue with guided practice.",
+  });
+  if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "improvement");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "improvement");
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
       target: parsed.target,
       user: auth.userLogId,
     });
-    return NextResponse.json(createDemoImprovementPlan(parsed), { headers: jsonHeaders(context) });
+    return NextResponse.json({ error: "Improvement tracking is awaiting verified review persistence." }, { status: 501, headers: jsonHeaders(context) });
   } catch (error) {
     const bodyError = getRequestBodyError(error);
     if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });

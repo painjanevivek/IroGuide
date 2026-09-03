@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { comparisonRequestSchema } from "@/domain/comparison";
-import { createDemoComparison } from "@/domain/demo-comparison";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
+import { enforceCapabilityBeforeEffects } from "@/server/capability-policy";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
@@ -13,6 +13,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createPublicRequestContext(request, "api.comparisons.create");
+  const capability = enforceCapabilityBeforeEffects({
+    capability: "revisionComparison",
+    context,
+    eventPrefix: "comparison",
+    message: "Revision comparison is not available yet. Continue with guided practice.",
+  });
+  if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "comparison");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "comparison");
@@ -37,12 +44,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await readJsonBody(request, REQUEST_BODY_LIMITS.reviewExtensionJson);
-    const parsed = comparisonRequestSchema.parse(body);
-    logRequestEvent("info", "comparison.created", context, {
-      provider: "demo",
+    comparisonRequestSchema.parse(body);
+    logRequestEvent("info", "comparison.validated_but_closed", context, {
       user: auth.userLogId,
     });
-    return NextResponse.json(createDemoComparison(parsed), { headers: jsonHeaders(context) });
+    return NextResponse.json({ error: "Revision comparison is awaiting the verified upload pipeline." }, { status: 501, headers: jsonHeaders(context) });
   } catch (error) {
     const bodyError = getRequestBodyError(error);
     if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });
