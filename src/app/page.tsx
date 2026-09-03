@@ -49,9 +49,9 @@ const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
-    ["What is IroGuide?", "IroGuide is an AI design critique workspace for creative feedback, project reviews, portfolio refinement, and clearer next steps."],
-    ["What kinds of design can IroGuide review?", "The planned IroGuide critique contract supports logos, posters, social posts, UI screens, websites, book covers, packaging, and other visual design work; new critique is currently gated in the free launch profile."],
-    ["Is IroGuide private?", "IroGuide is private by default. Uploaded work and saved critiques stay in the signed-in workspace unless a user explicitly chooses to share."],
+    ["What is IroGuide?", "IroGuide teaches a structured design critique method using owned examples and clear evidence-to-action explanations."],
+    ["What can I use now?", "The free launch includes a public example critique. Personalized design analysis remains invite-only and unavailable in the free profile."],
+    ["Does the free example upload my work?", "No. The example is illustrative and does not upload or analyze your design."],
     ["Does IroGuide replace a designer?", "No. IroGuide provides structured critique and practical next steps so designers, students, creators, and founders can make better decisions."],
   ].map(([question, answer]) => ({
     "@type": "Question",

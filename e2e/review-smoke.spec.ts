@@ -88,7 +88,6 @@ async function mockLocalReviewApi(
       body: sourceImageBytes,
       contentType: "image/png",
       headers: {
-        "Cache-Control": "private, max-age=300",
         "X-IroGuide-E2E-Storage-Path": storagePath,
       },
       status: 200,
@@ -157,9 +156,11 @@ async function writePngFixture(path: string) {
 
 function getPngFixtureBytes() {
   return Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAXElEQVR4nO3PQQ3AIADAQEDJ6KcH" +
-    "NxxYwLSV8D29d94D+GgDcAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYAHYA" +
-    "HYAHYAHYAHYAHYAPYD3lwG+qEB3tAZAAAAABJRU5ErkJggg==",
+    "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAvElE" +
+    "QVR4nOXOMQEAIAzAsKqbCBTjisnIwZE/nbnvZ+mAlg5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAl" +
+    "g5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAlg" +
+    "5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAlg5o6YCWDmjpgJYOaOmAlg5o6YC2FW1yO3zIl5wAAA" +
+    "AASUVORK5CYII=",
     "base64",
   );
 }

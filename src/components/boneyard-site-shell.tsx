@@ -9,6 +9,10 @@ export function BoneyardSiteShell({ children }: { children: ReactNode }) {
   const routeLoading = pendingPathname !== null && pendingPathname !== pathname;
 
   useEffect(() => {
+    document.documentElement.dataset.appHydrated = "true";
+  }, []);
+
+  useEffect(() => {
     if (!routeLoading) return;
     const timeoutId = window.setTimeout(() => setPendingPathname(null), 1400);
     return () => window.clearTimeout(timeoutId);

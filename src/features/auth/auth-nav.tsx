@@ -70,9 +70,17 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
 export function LandingHeroAuthButton() {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
-  if (user) return <Link className="button-secondary hero-auth-button" href="/dashboard" prefetch={false} data-analytics-event="hero_workspace_click">Open workspace <ArrowRight size={18} /></Link>;
-  return <AuthTransitionLink className="button-secondary hero-auth-button" href="/auth?mode=sign-up" prefetch={false} data-analytics-event="hero_sign_up_click">Sign up free <ArrowRight size={18} /></AuthTransitionLink>;
+  return (
+    <span className="hero-auth-slot">
+      {loading ? (
+        <span className="button-secondary hero-auth-button hero-auth-placeholder" aria-hidden="true">Sign up free <ArrowRight size={18} /></span>
+      ) : user ? (
+        <Link className="button-secondary hero-auth-button" href="/dashboard" prefetch={false} data-analytics-event="hero_workspace_click">Open workspace <ArrowRight size={18} /></Link>
+      ) : (
+        <AuthTransitionLink className="button-secondary hero-auth-button" href="/auth?mode=sign-up" prefetch={false} data-analytics-event="hero_sign_up_click">Sign up free <ArrowRight size={18} /></AuthTransitionLink>
+      )}
+    </span>
+  );
 }
 
 export function LandingFinalAuthActions() {

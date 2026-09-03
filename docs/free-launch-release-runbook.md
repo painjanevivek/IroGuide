@@ -1,5 +1,7 @@
 # Free-Profile Release Runbook
 
+For the executable proof sequence, credential boundary, evidence files, and physical-device handoff, use `docs/free-launch-production-proof-runbook.md`.
+
 ## Release invariant
 
 The external launch profile is `free`. A healthy release permits authentication, account settings, private review text and drafts, deletion, and stored bug reports. It does not invoke AI critique, source-image cloud storage, bug-report email delivery, or Community mutations.

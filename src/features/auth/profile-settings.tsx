@@ -255,6 +255,23 @@ export function ProfileSettings() {
         </div>
       </section>
 
+      <section className="account-security learning-preferences-panel">
+        <div>
+          <p className="eyebrow">Learning preferences</p>
+          <h2>Keep recommendations useful.</h2>
+          <p>Edit your role, primary goal, preferred categories, and critique style, or clear that setup without deleting your reviews.</p>
+        </div>
+        <div className="security-panels">
+          <div className="security-panel security-state">
+            <header><ShieldCheck /><div><h3>Private recommendation controls</h3><p>These choices affect presentation and next-step suggestions only.</p></div></header>
+            <div className="avatar-actions">
+              <Link className="button" href="/onboarding?mode=edit">Edit preferences <ArrowRight size={16} /></Link>
+              <Link className="button-secondary" href="/onboarding?mode=clear">Clear preferences</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="account-danger">
         <div>
           <p className="eyebrow">Deletion</p>
@@ -262,7 +279,7 @@ export function ProfileSettings() {
           <p>Delete saved critique history on its own, or remove this Firebase account after clearing its stored reviews and drafts.</p>
         </div>
         <div className="danger-panels">
-          <form className="danger-panel" onSubmit={onPurgeReviews}>
+          <form className="danger-panel" id="review-data" onSubmit={onPurgeReviews}>
             <header><Trash2 /><div><h3>Delete review history</h3><p>Removes saved reviews, review drafts, and local dashboard cache for this signed-in account.</p></div></header>
             <label><span>Type {REVIEW_PURGE_CONFIRMATION}</span><input value={reviewConfirm} onChange={(event) => setReviewConfirm(event.target.value)} autoComplete="off" /></label>
             <button className="danger-button" type="submit" disabled={reviewDeleting || reviewConfirm !== REVIEW_PURGE_CONFIRMATION}>
@@ -270,7 +287,7 @@ export function ProfileSettings() {
             </button>
           </form>
 
-          <form className="danger-panel danger-panel-critical" onSubmit={onDeleteAccount}>
+          <form className="danger-panel danger-panel-critical" id="account-deletion" onSubmit={onDeleteAccount}>
             <header><UserX /><div><h3>Delete account</h3><p>Permanently removes this account after deleting its saved reviews, drafts, avatar cache, and sign-in record.</p></div></header>
             <label><span>Type {ACCOUNT_DELETE_CONFIRMATION}</span><input value={accountConfirm} onChange={(event) => setAccountConfirm(event.target.value)} autoComplete="off" /></label>
             <button className="danger-button" type="submit" disabled={accountDeleting || accountConfirm !== ACCOUNT_DELETE_CONFIRMATION}>

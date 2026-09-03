@@ -12,11 +12,17 @@ const INFRASTRUCTURE_HEADERS = [
   "x-vercel-id",
 ] as const;
 
+function isLoopbackHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isDevelopment = process.env.NODE_ENV !== "production";
   const contentSecurityPolicy = buildContentSecurityPolicy(
     nonce,
-    process.env.NODE_ENV !== "production",
+    isDevelopment,
+    !isDevelopment && !isLoopbackHostname(request.nextUrl.hostname),
   );
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);

@@ -2,22 +2,47 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDemoReview } from "@/domain/demo-review";
 import { createImportedReviewDocument } from "@/domain/review-storage";
 import type { ReviewRequest } from "@/domain/review";
+import { AccountDeletionInProgressError } from "./account-deletion-lock";
 import { deleteReviewDataForUser, ReviewDeletionIncompleteError, saveReviewForUser, syncReviewDocumentsForUser } from "./review-storage";
 
 const firestoreMock = vi.hoisted(() => {
-  type QueryDoc = { ref: { path: string } };
+  type QueryDoc = { data?: () => Record<string, unknown>; ref: { path: string } };
   type QuerySnapshot = { docs: QueryDoc[]; empty: boolean };
   const set = vi.fn();
-  const doc = vi.fn(() => ({ set }));
+  const docDelete = vi.fn();
+  const docGet = vi.fn(() => Promise.resolve({ exists: false }));
+  const doc = vi.fn((id: string) => ({ delete: docDelete, get: docGet, id, set }));
   const commit = vi.fn();
   const batchDelete = vi.fn();
-  const batch = vi.fn(() => ({ commit, delete: batchDelete }));
+  const batchUpdate = vi.fn();
+  const batch = vi.fn(() => ({ commit, delete: batchDelete, update: batchUpdate }));
   const get = vi.fn<() => Promise<QuerySnapshot>>(() => Promise.resolve({ docs: [], empty: true }));
-  const limit = vi.fn(() => ({ get }));
-  const where = vi.fn(() => ({ limit }));
-  const collection = vi.fn(() => ({ doc, where }));
+  const sessionGet = vi.fn<() => Promise<QuerySnapshot>>(() => Promise.resolve({ docs: [], empty: true }));
+  const limit = vi.fn();
+  const where = vi.fn();
+  const runTransaction = vi.fn(async (work: (transaction: {
+    get: (reference: { get: () => Promise<unknown> }) => Promise<unknown>;
+    set: (_reference: unknown, value: unknown, options: unknown) => void;
+  }) => Promise<unknown>) => work({
+    get: (reference) => reference.get(),
+    set: (_reference, value, options) => set(value, options),
+  }));
+  const collection = vi.fn((name: string) => ({
+    doc,
+    where: (...args: unknown[]) => {
+      where(...args);
+      const queryGet = name === "reviewUploadSessions" ? sessionGet : get;
+      return {
+        get: queryGet,
+        limit: (...limitArgs: unknown[]) => {
+          limit(...limitArgs);
+          return { get: queryGet };
+        },
+      };
+    },
+  }));
 
-  return { batch, batchDelete, collection, commit, doc, get, limit, set, where };
+  return { batch, batchDelete, batchUpdate, collection, commit, doc, docDelete, docGet, get, limit, runTransaction, sessionGet, set, where };
 });
 
 const firestoreFieldValueMock = vi.hoisted(() => ({
@@ -26,8 +51,8 @@ const firestoreFieldValueMock = vi.hoisted(() => ({
 
 const storageMock = vi.hoisted(() => {
   const save = vi.fn();
-  const file = vi.fn(() => ({ save }));
   const fileDelete = vi.fn();
+  const file = vi.fn(() => ({ delete: fileDelete, save }));
   const getFiles = vi.fn<() => Promise<[Array<{ delete: typeof fileDelete }>]>>(() => Promise.resolve([[]]));
 
   return { file, fileDelete, getFiles, save };
@@ -37,6 +62,7 @@ vi.mock("./firebase-admin", () => ({
   getFirebaseAdminFirestore: () => ({
     batch: firestoreMock.batch,
     collection: firestoreMock.collection,
+    runTransaction: firestoreMock.runTransaction,
   }),
   getFirebaseAdminStorageBucket: () => ({
     file: storageMock.file,
@@ -67,14 +93,21 @@ describe("review storage", () => {
     firestoreMock.collection.mockClear();
     firestoreMock.batch.mockClear();
     firestoreMock.batchDelete.mockClear();
+    firestoreMock.batchUpdate.mockClear();
     firestoreMock.commit.mockClear();
     firestoreMock.doc.mockClear();
+    firestoreMock.docDelete.mockClear();
+    firestoreMock.docGet.mockReset();
+    firestoreMock.docGet.mockResolvedValue({ exists: false });
     firestoreMock.get.mockReset();
     firestoreMock.limit.mockClear();
+    firestoreMock.runTransaction.mockClear();
     firestoreMock.set.mockClear();
     firestoreMock.where.mockClear();
     firestoreFieldValueMock.serverTimestamp.mockClear();
     firestoreMock.get.mockResolvedValue({ docs: [], empty: true });
+    firestoreMock.sessionGet.mockReset();
+    firestoreMock.sessionGet.mockResolvedValue({ docs: [], empty: true });
     storageMock.file.mockClear();
     storageMock.fileDelete.mockClear();
     storageMock.getFiles.mockReset();
@@ -250,5 +283,94 @@ describe("review storage", () => {
     expect(firestoreMock.collection).toHaveBeenCalledWith("reviews");
     expect(firestoreMock.collection).toHaveBeenCalledWith("reviewDrafts");
     expect(firestoreMock.collection).toHaveBeenCalledWith("reviewFeedback");
+  });
+
+  it("rejects a write that loses the race to the account deletion lock", async () => {
+    const review = createDemoReview(request);
+    firestoreMock.docGet
+      .mockResolvedValueOnce({ exists: false })
+      .mockResolvedValueOnce({ exists: true });
+
+    await expect(saveReviewForUser({ userId: "verified-user", review, category: "logo" }))
+      .rejects.toBeInstanceOf(AccountDeletionInProgressError);
+    expect(firestoreMock.set).not.toHaveBeenCalled();
+  });
+
+  it("removes an uploaded image when deletion locks before the document transaction", async () => {
+    const review = createDemoReview(request);
+    firestoreMock.docGet
+      .mockResolvedValueOnce({ exists: false })
+      .mockResolvedValueOnce({ exists: true });
+
+    await expect(saveReviewForUser({
+      userId: "verified-user",
+      review,
+      category: "logo",
+      sourceImage: {
+        file: request.file,
+        image: { mimeType: "image/png", dataBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB" },
+      },
+    })).rejects.toBeInstanceOf(AccountDeletionInProgressError);
+    expect(storageMock.fileDelete).toHaveBeenCalledWith({ ignoreNotFound: true });
+  });
+
+  it("revokes an active signed upload and keeps account deletion retryable until it expires", async () => {
+    const uploadReference = { path: "reviewUploadSessions/upload-a" };
+    firestoreMock.sessionGet.mockResolvedValue({
+      docs: [{
+        data: () => ({ expiresAt: new Date(Date.now() + 60_000).toISOString(), state: "authorized" }),
+        ref: uploadReference,
+      }],
+      empty: false,
+    });
+
+    const deletion = deleteReviewDataForUser("verified-user", { retainDeletionLock: true });
+
+    await expect(deletion).rejects.toMatchObject({
+      result: {
+        failures: [{ operation: "pipeline-documents", reason: "activeuploadcapability" }],
+        status: "retry-required",
+      },
+    });
+    expect(firestoreMock.batchUpdate).toHaveBeenCalledWith(uploadReference, expect.objectContaining({
+      failureClass: "revoked",
+      state: "rejected",
+    }));
+    expect(firestoreMock.batchDelete).not.toHaveBeenCalledWith(uploadReference);
+    expect(storageMock.getFiles).toHaveBeenCalledWith({ maxResults: 100, prefix: "users/verified-user/review-uploads/" });
+  });
+
+  it("keeps a rejected but unexpired signed upload retryable on immediate deletion retry", async () => {
+    firestoreMock.sessionGet.mockResolvedValue({
+      docs: [{
+        data: () => ({ expiresAt: new Date(Date.now() + 60_000).toISOString(), state: "rejected" }),
+        ref: { path: "reviewUploadSessions/upload-a" },
+      }],
+      empty: false,
+    });
+
+    await expect(deleteReviewDataForUser("verified-user", { retainDeletionLock: true })).rejects.toMatchObject({
+      result: {
+        failures: [{ operation: "pipeline-documents", reason: "activeuploadcapability" }],
+        status: "retry-required",
+      },
+    });
+  });
+
+  it("removes expired upload-session tombstones during the deletion retry", async () => {
+    const uploadReference = { path: "reviewUploadSessions/upload-a" };
+    firestoreMock.sessionGet.mockResolvedValue({
+      docs: [{
+        data: () => ({ expiresAt: "2020-01-01T00:00:00.000Z", state: "rejected" }),
+        ref: uploadReference,
+      }],
+      empty: false,
+    });
+
+    const result = await deleteReviewDataForUser("verified-user", { retainDeletionLock: true });
+
+    expect(result.status).toBe("complete");
+    expect(result.pipelineDocumentsDeleted).toBe(1);
+    expect(firestoreMock.batchDelete).toHaveBeenCalledWith(uploadReference);
   });
 });

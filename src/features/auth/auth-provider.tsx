@@ -25,7 +25,7 @@ type AuthState = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, nextPath?: string) => Promise<void>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   linkGoogleProvider: () => Promise<void>;
@@ -216,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(credential.user);
       setAvatarUrl(getStoredAvatar(credential.user));
       setProviderIds(getProviderIds(credential.user));
+      void recordSignUpCompletion(credential.user);
       void recordSignInCompletion(credential.user, "email");
     } catch (signUpError) {
       const message = getAuthErrorMessage(signUpError);
@@ -224,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  const resetPassword = useCallback(async (email: string, nextPath = "/dashboard") => {
     setError("");
     if (isE2ELocalAuthEnabled()) return;
 
@@ -234,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         import("firebase/auth"),
       ]);
       await sendPasswordResetEmail(getFirebaseClientAuth(), email.trim(), {
-        url: `${window.location.origin}/auth/sign-in`,
+        url: `${window.location.origin}/auth/sign-in?next=${encodeURIComponent(nextPath)}`,
       });
     } catch (resetError) {
       const message = getAuthErrorMessage(resetError);
@@ -566,6 +567,7 @@ function isAuthSensitivePath(pathname: string) {
     || pathname.startsWith("/admin")
     || pathname.startsWith("/community")
     || pathname.startsWith("/dashboard")
+    || pathname.startsWith("/onboarding")
     || pathname.startsWith("/profile")
     || pathname.startsWith("/review")
   );
@@ -574,4 +576,9 @@ function isAuthSensitivePath(pathname: string) {
 async function recordSignInCompletion(user: User, method: "email" | "google") {
   const { captureProductEvidence } = await import("@/lib/product-evidence");
   await captureProductEvidence(user, { name: "sign_in_completed", method });
+}
+
+async function recordSignUpCompletion(user: User) {
+  const { captureProductEvidence } = await import("@/lib/product-evidence");
+  await captureProductEvidence(user, { name: "sign_up_completed", method: "email" });
 }

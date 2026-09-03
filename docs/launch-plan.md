@@ -1,5 +1,7 @@
 # IroGuide Launch Plan
 
+> Execution note (2026-08-28): use `docs/plans/product-activation/revision.md` for the current Phase 0–15 activation order. This launch record remains authoritative for the free profile and independent provider, Community, billing, email, and publishing gates.
+
 Status: Current staged-launch plan
 Product state: Free production profile; paid provider and Community gated
 

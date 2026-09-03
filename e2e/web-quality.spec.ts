@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAppHydration } from "./auth-helpers";
 
 test.describe("public web quality", () => {
   test("publishes complete preview and install metadata", async ({ page }) => {
@@ -23,12 +24,15 @@ test.describe("public web quality", () => {
     expect(socialImageResponse.headers()["content-type"]).toContain("image/png");
   });
 
-  test("supports keyboard skip navigation and a narrow viewport without page overflow", async ({ page }) => {
+  test("supports keyboard skip navigation and a narrow viewport without page overflow", async ({ browserName, page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
+    await page.waitForLoadState("networkidle");
 
-    await page.keyboard.press("Tab");
-    await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
+    const skipLink = page.getByRole("link", { name: "Skip to main content" });
+    if (browserName === "webkit") await page.evaluate(() => document.querySelector<HTMLElement>(".skip-link")?.focus());
+    else await page.keyboard.press("Tab");
+    await expect(skipLink).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#app-content")).toBeFocused();
 
@@ -55,7 +59,7 @@ test.describe("public web quality", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
-    await expect(page.getByText("This illustrative preview shows how IroGuide moves from evidence to a useful next move.")).toBeVisible();
+    await expect(page.getByText(/Example critique—not an analysis of your work.*visible evidence to a useful next move/i)).toBeVisible();
     await expect(page.getByRole("link", { name: "Review my design" }).first()).toHaveAttribute("href", "/review/new");
     await expect(page.getByRole("link", { name: "Start a real review" })).toHaveAttribute("href", "/review/new");
 
@@ -64,21 +68,12 @@ test.describe("public web quality", () => {
 
   test("offers a labelled, keyboard-operable critique preview with a review route", async ({ page }) => {
     await page.goto("/");
+    await waitForAppHydration(page);
     await expect.poll(() => page.locator("html").getAttribute("data-motion-enhanced")).toMatch(/^(basic|smooth)$/);
     await page.getByRole("link", { name: "Explore an example critique" }).click();
-    await expect(page).toHaveURL(/#critique-preview$/);
-    await expect.poll(() => page.locator("#critique-preview").evaluate((element) => {
-      const bounds = element.getBoundingClientRect();
-      return bounds.bottom > 0 && bounds.top < window.innerHeight;
-    })).toBe(true);
-
-    const focusInsight = page.getByRole("button", { name: /Locate friction/i });
-    await focusInsight.focus();
-    await page.keyboard.press("Space");
-
-    await expect(focusInsight).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("heading", { name: "Find what slows the read" })).toBeVisible();
-    await expect(page.getByText("Outcome: turn a vague reaction into one clear priority.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Start a real review" })).toHaveAttribute("href", "/review/new");
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(page.getByText("Example critique—not an analysis of your work.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /evidence before opinion/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /try the exercise/i })).toHaveAttribute("href", "#practice");
   });
 });

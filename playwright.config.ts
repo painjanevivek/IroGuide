@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3200";
 const serverPort = new URL(baseURL).port || "3000";
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
 
@@ -9,6 +9,7 @@ export default defineConfig({
     timeout: 15_000,
   },
   fullyParallel: false,
+  workers: 1,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
   retries: process.env.CI ? 1 : 0,
   testDir: "./e2e",
@@ -19,16 +20,17 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${serverPort}`,
+    command: `npm run dev -- --webpack --hostname 127.0.0.1 --port ${serverPort}`,
     env: {
       ...process.env,
       ...(useFirebaseFlow ? {} : {
         IROGUIDE_LAUNCH_PROFILE: "full",
+        IROGUIDE_GUIDED_LEARNING_ENABLED: "true",
         IROGUIDE_REVIEW_PROVIDER: "demo",
         NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
       }),
     },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     url: baseURL,
   },
@@ -36,6 +38,14 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
   ],
 });

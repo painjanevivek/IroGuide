@@ -1,28 +1,48 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import Link from "next/link";
-import { GalleryVerticalEnd, LayoutDashboard, LogOut, MessageSquareText, PenLine, UserRound } from "lucide-react";
+import { BookOpenText, LayoutDashboard, LogOut, PenLine, UserRound } from "lucide-react";
 import { useAuth } from "./auth-provider";
 import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "New review", href: "/review/new", icon: PenLine },
-  { label: "Portfolio", href: "/portfolio", icon: GalleryVerticalEnd },
-  { label: "Community", href: "/community", icon: MessageSquareText },
+  { label: "Learning studio", href: "/learn", icon: BookOpenText },
   { label: "Profile", href: "/profile", icon: UserRound },
 ] as const;
 
 export function UserMenu() {
   const { user, avatarUrl, loading, signOut } = useAuth();
-  const { aiCritique, community } = useLaunchCapabilities();
+  const { aiCritique } = useLaunchCapabilities();
+  const menuRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const menu = menuRef.current;
+      if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      const menu = menuRef.current;
+      if (event.key !== "Escape" || !menu?.open) return;
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    };
+
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   if (loading) return <span className="auth-status">Checking session...</span>;
   if (!user) return <span className="auth-status">Google sign-in required</span>;
 
   return (
-    <details className="user-menu">
+    <details className="user-menu" ref={menuRef}>
       <summary aria-label="Open workspace menu">
         <UserAvatar label={getUserLabel(user.displayName, user.email, user.phoneNumber)} src={avatarUrl} />
       </summary>
@@ -31,16 +51,23 @@ export function UserMenu() {
           <span>Workspace</span>
           <strong>{getUserLabel(user.displayName, user.email, user.phoneNumber)}</strong>
         </div>
-        {menuItems.filter((item) => item.href !== "/community" || community).map((item, index) => {
+        {menuItems.map((item, index) => {
           const Icon = item.icon;
-          const label = item.href === "/review/new" && !aiCritique ? "Review availability" : item.label;
+          const isReviewLink = item.href === "/review/new";
+          const label = isReviewLink && !aiCritique ? "Example critique" : item.label;
+          const href = isReviewLink && !aiCritique ? "/learn#practice" : item.href;
           return (
-            <Link key={item.href} className="user-menu-item" href={item.href} style={{ "--item-index": index } as CSSProperties}>
+            <Link key={item.href} className="user-menu-item" href={href} onClick={() => {
+              if (menuRef.current) menuRef.current.open = false;
+            }} style={{ "--item-index": index } as CSSProperties}>
               <Icon size={16} /> {label}
             </Link>
           );
         })}
-        <button className="user-menu-item" type="button" onClick={() => void signOut()} style={{ "--item-index": menuItems.length } as CSSProperties}>
+        <button className="user-menu-item" type="button" onClick={() => {
+          if (menuRef.current) menuRef.current.open = false;
+          void signOut();
+        }} style={{ "--item-index": menuItems.length } as CSSProperties}>
           <LogOut size={16} /> Sign out
         </button>
       </div>

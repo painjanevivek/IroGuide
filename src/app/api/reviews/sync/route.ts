@@ -3,6 +3,7 @@ import { Buffer } from "node:buffer";
 import { z, ZodError } from "zod";
 import { importedReviewDocumentSchema } from "@/domain/review-storage";
 import { reviewFileSchema, reviewImageSchema } from "@/domain/review";
+import { AccountDeletionInProgressError } from "@/server/account-deletion-lock";
 import { enforceSameOriginRequest, requireContentType, requireTrustedClientKey } from "@/server/api-security";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
@@ -76,6 +77,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof ReviewSyncValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400, headers: jsonHeaders(context) });
+    }
+    if (error instanceof AccountDeletionInProgressError) {
+      return NextResponse.json({ error: error.message }, { status: error.status, headers: jsonHeaders(context) });
     }
     if (error instanceof ZodError) {
       logRequestEvent("warn", "review_sync.provenance_rejected", context, {

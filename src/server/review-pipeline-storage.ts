@@ -13,6 +13,7 @@ import {
   type ReviewUploadSession,
 } from "@/domain/review-pipeline";
 import { feedbackModes, reviewBriefSchema, type ReviewCategory } from "@/domain/review";
+import { ACCOUNT_DELETION_LOCKS_COLLECTION } from "./account-deletion-lock";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
 import { validateReviewImage } from "./review-image-validator";
 import {
@@ -25,7 +26,7 @@ import {
 import { createReview } from "./review-provider";
 import { saveReviewForUser } from "./review-storage";
 
-const UPLOAD_TTL_MS = 10 * 60 * 1_000;
+const UPLOAD_TTL_MS = 2 * 60 * 1_000;
 const JOB_DEADLINE_MS = 2 * 60 * 1_000;
 const ATTEMPT_LEASE_MS = 35 * 1_000;
 const OUTBOX_LEASE_MS = 60 * 1_000;
@@ -69,17 +70,25 @@ export async function createReviewUploadSession({
   });
   const [db, bucket] = await Promise.all([getFirebaseAdminFirestore(), getFirebaseAdminStorageBucket()]);
   const reference = db.collection("reviewUploadSessions").doc(id);
-  await reference.create(session);
+  await db.runTransaction(async (transaction) => {
+    const deletionLock = await transaction.get(db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId));
+    if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
+    transaction.create(reference, session);
+  });
   try {
-    const uploadHeaders = { "Content-Type": contentType, "x-goog-meta-upload-nonce": session.nonce } as const;
-    const [uploadUrl] = await bucket.file(storagePath).getSignedUrl({
-      action: "write",
-      contentType,
-      extensionHeaders: { "x-goog-meta-upload-nonce": session.nonce },
+    const [policy] = await bucket.file(storagePath).generateSignedPostPolicyV4({
+      conditions: [
+        ["content-length-range", 1, MAX_UPLOAD_BYTES],
+        ["eq", "$Content-Type", contentType],
+        ["eq", "$x-goog-meta-upload-nonce", session.nonce],
+      ],
       expires: expiresAt,
-      version: "v4",
+      fields: {
+        "Content-Type": contentType,
+        "x-goog-meta-upload-nonce": session.nonce,
+      },
     });
-    return { session, uploadHeaders, uploadUrl };
+    return { session, uploadFields: policy.fields, uploadMethod: "POST" as const, uploadUrl: policy.url };
   } catch (error) {
     await reference.delete().catch(() => undefined);
     throw error;
@@ -131,6 +140,8 @@ export async function finalizeReviewUpload({ id, userId, now = new Date() }: { i
     updatedAt: now.toISOString(),
   });
   await db.runTransaction(async (transaction) => {
+    const deletionLock = await transaction.get(db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId));
+    if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
     const current = parseUpload((await transaction.get(reference)).data());
     assertOwnedUpload(current, userId);
     if (current.state !== "authorized") throw new ReviewPipelineError("This upload was already finalized.", 409);
@@ -252,10 +263,12 @@ export async function createReviewJob({
   });
 
   return db.runTransaction(async (transaction) => {
-    const [uploadSnapshot, existingSnapshot] = await Promise.all([
+    const [deletionLock, uploadSnapshot, existingSnapshot] = await Promise.all([
+      transaction.get(db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId)),
       transaction.get(uploadReference),
       transaction.get(jobReference),
     ]);
+    if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
     const upload = parseUpload(uploadSnapshot.data());
     assertOwnedUpload(upload, userId);
     if (upload.state !== "validated") throw new ReviewPipelineError("The review upload is not validated.", 409);
@@ -287,6 +300,8 @@ export async function cancelOwnedReviewJob(id: string, userId: string, now = new
   if (!job || job.userId !== userId) throw new ReviewPipelineError("Review job was not found.", 404);
   if (!canTransitionReviewJob(job.status, "cancelled")) throw new ReviewPipelineError("Review job can no longer be cancelled.", 409);
   await db.runTransaction(async (transaction) => {
+    const deletionLock = await transaction.get(db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(userId));
+    if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
     const current = parseJob((await transaction.get(document.ref)).data());
     if (current.userId !== userId) throw new ReviewPipelineError("Review job was not found.", 404);
     if (!canTransitionReviewJob(current.status, "cancelled")) throw new ReviewPipelineError("Review job can no longer be cancelled.", 409);
@@ -588,7 +603,15 @@ function toReviewJobProjection(job: ReviewJob) {
 
 async function transitionUpload(reference: FirebaseFirestore.DocumentReference, session: ReviewUploadSession, state: ReviewUploadSession["state"], now: Date, patch: Record<string, unknown>) {
   if (!canTransitionReviewUpload(session.state, state)) throw new ReviewPipelineError("Invalid review upload transition.", 409);
-  await reference.update({ ...patch, state, updatedAt: now.toISOString() });
+  const db = await getFirebaseAdminFirestore();
+  await db.runTransaction(async (transaction) => {
+    const deletionLock = await transaction.get(db.collection(ACCOUNT_DELETION_LOCKS_COLLECTION).doc(session.userId));
+    if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
+    const current = parseUpload((await transaction.get(reference)).data());
+    assertOwnedUpload(current, session.userId);
+    if (!canTransitionReviewUpload(current.state, state)) throw new ReviewPipelineError("Invalid review upload transition.", 409);
+    transaction.update(reference, { ...patch, state, updatedAt: now.toISOString() });
+  });
 }
 
 function parseUpload(value: unknown) {

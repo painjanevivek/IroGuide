@@ -30,7 +30,7 @@ describe("review finding feedback route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireVerifiedFirebaseUser).mockResolvedValue({
-      user: { uid: "owner", sub: "owner", iat: 1 },
+      user: { uid: "owner", sub: "owner", auth_time: 1, iat: 1 },
       userLogId: "owner",
     });
     vi.mocked(saveReviewFindingFeedback).mockResolvedValue({ id: "feedback-1" });

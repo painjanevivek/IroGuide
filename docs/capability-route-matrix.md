@@ -1,7 +1,7 @@
 # Capability and Route Matrix
 
 Status: Authoritative launch contract
-Last verified: 2026-08-24
+Last verified: 2026-08-28
 
 The server-resolved capability object is authoritative. UI labels may explain a denial but never grant access. Invalid production configuration resolves to `free`.
 
@@ -9,6 +9,7 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 
 | Capability | Development | Free production | Later full production | Authority |
 | --- | --- | --- | --- | --- |
+| Guided learning | disabled until Phase 2 persistence is present | enabled only by valid server snapshot after Phase 2 | same | server policy, then owner-scoped APIs |
 | AI critique | deterministic demo | off | provider + entitlement + readiness | server policy, then API |
 | Source-image creation/read | off by default | off; historical deletion still runs | private owned Storage only | server + Storage rules |
 | Bug-report storage | on with Firebase Admin | on | on | API repository |
@@ -21,6 +22,8 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 | Route | Audience | Free behavior | Full behavior | Data boundary |
 | --- | --- | --- | --- | --- |
 | `/`, `/about`, `/docs` | public | product education with honest availability labels | same plus enabled review action | no private data |
+| `/learn`, `/learn/examples/[sampleId]` | public/auth-aware | owned examples; signed-in progress only when guided learning is enabled | same | public sample data; private progress via API |
+| `/onboarding` | signed-in | resumable three-decision setup after Phase 3 | same | owner-scoped account experience API |
 | `/projects` | public | active workspace plus clearly labeled planned workflows | capability-aware | no private data |
 | `/pricing` | public | research preview; no checkout or promised quota | unchanged until billing approval | no payment state |
 | `/community` | public shell | explicit gated state; no live documents | gated | Firestore reads denied |
@@ -36,6 +39,11 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 
 | Route | Free result | Full prerequisite | Body budget |
 | --- | --- | --- | --- |
+| `GET/PATCH /api/account/experience` | owner-scoped activation state when guided learning is enabled | same | 32 KiB mutation |
+| `GET/POST/PATCH/DELETE /api/self-reviews` | owner-scoped image-free learning records | same | 32 KiB |
+| `GET/PUT/DELETE /api/design-briefs` | owner-scoped image-free drafts | same | 32 KiB |
+| `POST/DELETE /api/access-interest` | idempotent contact preference; no email | approved operator invitation for later entitlement | 8 KiB |
+| `POST /api/account/export` | bounded owner-scoped JSON attachment after Phase 6 | same | no creative request body |
 | `POST /api/reviews` | policy denial before body/provider | verified email, entitlement, live readiness | JSON 512 KiB; multipart 4.45 MB |
 | `POST /api/reviews/sync` | owned text sync; source image not persisted | Storage capability for image persistence | JSON 2 MiB; multipart 4.45 MB |
 | `POST /api/follow-ups` | policy denial | owned trusted review and AI capability | 4.45 MB hard ceiling; schema is smaller |

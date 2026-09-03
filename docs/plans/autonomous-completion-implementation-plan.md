@@ -1,5 +1,7 @@
 # IroGuide Autonomous Completion Implementation Plan
 
+> Supersession note (2026-08-28): completed infrastructure and safety evidence in this document remains valid. New product-activation execution follows `docs/plans/product-activation/revision.md` and its authoritative `tasks.md` ledger; no existing capability gate is relaxed.
+
 **Status:** In execution
 
 **Created:** 2026-08-24
@@ -431,20 +433,20 @@ feat(portfolio): persist private evidence-backed case studies
 
 ### Tasks
 
-- [ ] `AUT-0601` Replace the legacy full-review Community document with the strict public projection.
-- [ ] `AUT-0602` Implement project-specific consent, withdrawal, immediate hiding, and derivative deletion.
-- [ ] `AUT-0603` Implement author post edit/delete and comment-author delete.
-- [ ] `AUT-0604` Implement bidirectional discovery/interaction blocking.
-- [ ] `AUT-0605` Implement rate-limited reporting for post, comment, and account targets.
-- [ ] `AUT-0606` Build least-privilege moderator queues for removal, restore, warn, restrict, ban, and evidence-safe review.
-- [ ] `AUT-0607` Implement appeals with conflict-of-review constraints and reversal linkage.
-- [ ] `AUT-0608` Add immutable moderation audit records and operator export without private review content.
-- [ ] `AUT-0609` Replace hot counters with sharded/asynchronous repairable counters and reconciliation.
-- [ ] `AUT-0610` Propagate consent withdrawal and account deletion across projections, comments, interactions, reports, notifications, and derived counters.
-- [ ] `AUT-0611` Add per-account/client/target abuse limits, risky-account limits, link/mention controls, and report-abuse controls.
-- [ ] `AUT-0612` Add moderation, deletion-backlog, counter-drift, privacy-report, and abuse alerts.
-- [ ] `AUT-0613` Add rules, route, cross-user, role, replay, deletion, counter, load, accessibility, and browser tests.
-- [ ] `AUT-0614` Run synthetic staff-fixture and incident exercises with the capability still closed.
+- [x] `AUT-0601` Replace the legacy full-review Community document with the strict public projection.
+- [x] `AUT-0602` Implement project-specific consent, withdrawal, immediate hiding, and derivative deletion.
+- [x] `AUT-0603` Implement author post edit/delete and comment-author delete.
+- [x] `AUT-0604` Implement bidirectional discovery/interaction blocking.
+- [x] `AUT-0605` Implement rate-limited reporting for post, comment, and account targets.
+- [x] `AUT-0606` Build least-privilege moderator queues for removal, restore, warn, restrict, ban, and evidence-safe review.
+- [x] `AUT-0607` Implement appeals with conflict-of-review constraints and reversal linkage.
+- [x] `AUT-0608` Add immutable moderation audit records and operator export without private review content.
+- [x] `AUT-0609` Replace hot counters with sharded/asynchronous repairable counters and reconciliation.
+- [x] `AUT-0610` Propagate consent withdrawal and account deletion across projections, comments, interactions, reports, notifications, and derived counters.
+- [x] `AUT-0611` Add per-account/client/target abuse limits, risky-account limits, link/mention controls, and report-abuse controls.
+- [x] `AUT-0612` Add moderation, deletion-backlog, counter-drift, privacy-report, and abuse alerts.
+- [x] `AUT-0613` Add rules, route, cross-user, role, replay, deletion, counter, load, accessibility, and browser tests.
+- [x] `AUT-0614` Run synthetic staff-fixture and incident exercises with the capability still closed.
 
 ### Owner gate `GATE-COMMUNITY-01`
 

@@ -6,9 +6,12 @@ import { ArrowLeft, ArrowRight, LoaderCircle, Mail, ShieldCheck } from "lucide-r
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
 import { AuthTemplateShell } from "./auth-template-shell";
+import { withAuthReturn } from "@/domain/auth-return";
+import type { Route } from "next";
 
 type EmailAuthPageProps = {
   mode: "sign-in" | "sign-up";
+  nextPath: Route;
 };
 
 const AUTH_ATTEMPT_LIMIT = 5;
@@ -27,7 +30,7 @@ type AuthAttemptRecord = {
   lockedUntil?: number;
 };
 
-export function EmailAuthPage({ mode }: EmailAuthPageProps) {
+export function EmailAuthPage({ mode, nextPath }: EmailAuthPageProps) {
   const router = useRouter();
   const { error, resetPassword, signInWithEmail, signUpWithEmail, user } = useAuth();
   const [displayName, setDisplayName] = useState("");
@@ -40,12 +43,12 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
   const isSignUp = mode === "sign-up";
 
   useEffect(() => {
-    router.prefetch("/dashboard");
-  }, [router]);
+    router.prefetch(nextPath);
+  }, [nextPath, router]);
 
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [router, user]);
+    if (user) router.replace(nextPath);
+  }, [nextPath, router, user]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,7 +68,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
         await signInWithEmail(email, password);
       }
       clearAuthAttempts(mode, email);
-      router.replace("/dashboard");
+      router.replace(nextPath);
     } catch (submitError) {
       const failureLimit = recordAuthFailure(mode, email);
       setFormError(failureLimit.blocked ? failureLimit.message : submitError instanceof Error ? submitError.message : "Authentication failed. Please try again.");
@@ -88,16 +91,19 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
       setFormError(rateLimit.message);
       return;
     }
+    const reservedAttempt = recordPasswordResetAttempt(email);
+    if (reservedAttempt.blocked) {
+      setFormError(reservedAttempt.message);
+      return;
+    }
 
     setResetSubmitting(true);
     try {
-      await resetPassword(email);
-      recordAuthFailure("password-reset", email);
+      await resetPassword(email, nextPath);
       setFormSuccess(PASSWORD_RESET_SUCCESS_MESSAGE);
     } catch (resetError) {
-      const failureLimit = recordAuthFailure("password-reset", email);
       const message = resetError instanceof Error ? resetError.message : "Password reset is unavailable right now.";
-      setFormError(failureLimit.blocked ? failureLimit.message : getPasswordResetErrorMessage(message));
+      setFormError(getPasswordResetErrorMessage(message));
     } finally {
       setResetSubmitting(false);
     }
@@ -162,11 +168,11 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
         )}
 
         <div className="auth-form-links">
-          <Link className="button-secondary" href="/auth"><ArrowLeft size={16} /> Back to Google</Link>
+          <Link className="button-secondary" href={withAuthReturn("/auth", nextPath, mode)}><ArrowLeft size={16} /> Back to Google</Link>
           {isSignUp ? (
-            <Link className="text-link" href="/auth/sign-in">Already have an account? Sign in <ArrowRight size={15} /></Link>
+            <Link className="text-link" href={withAuthReturn("/auth/sign-in", nextPath)}>Already have an account? Sign in <ArrowRight size={15} /></Link>
           ) : (
-            <Link className="text-link" href="/auth/sign-up">Need an account? Sign up <ArrowRight size={15} /></Link>
+            <Link className="text-link" href={withAuthReturn("/auth/sign-up", nextPath)}>Need an account? Sign up <ArrowRight size={15} /></Link>
           )}
         </div>
       </form>
@@ -195,6 +201,21 @@ function recordAuthFailure(mode: AuthRateLimitMode, email: string, now = Date.no
 
   if (!lockedUntil) return { blocked: false, message: "" };
   return { blocked: true, message: getAuthLockoutMessage(lockedUntil, now) };
+}
+
+function recordPasswordResetAttempt(email: string, now = Date.now()) {
+  const storageKey = getAuthAttemptStorageKey("password-reset", email);
+  const currentRecord = readAuthAttemptRecord(storageKey);
+  const attempts = currentRecord.attempts.filter((attemptedAt) => now - attemptedAt < RESET_ATTEMPT_WINDOW_MS);
+
+  if (attempts.length >= RESET_ATTEMPT_LIMIT) {
+    const lockedUntil = now + RESET_LOCKOUT_MS;
+    writeAuthAttemptRecord(storageKey, { attempts, lockedUntil });
+    return { blocked: true, message: getAuthLockoutMessage(lockedUntil, now) };
+  }
+
+  writeAuthAttemptRecord(storageKey, { attempts: [...attempts, now] });
+  return { blocked: false, message: "" };
 }
 
 function clearAuthAttempts(mode: AuthRateLimitMode, email: string) {

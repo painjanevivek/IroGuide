@@ -6,8 +6,13 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function accountAccessAllowed() {
+      return signedIn()
+        && !firestore.exists(/databases/(default)/documents/reviewDeletionLocks/$(request.auth.uid));
+    }
+
     function ownsUserPath(userId) {
-      return signedIn() && request.auth.uid == userId;
+      return accountAccessAllowed() && request.auth.uid == userId;
     }
 
     match /users/{userId}/reviews/{reviewId}/source.png {

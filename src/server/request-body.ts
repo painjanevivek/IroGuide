@@ -1,4 +1,5 @@
 export const REQUEST_BODY_LIMITS = Object.freeze({
+  activationJson: 32 * 1024,
   bugReportJson: 32 * 1024,
   communityJson: 64 * 1024,
   productEvidenceJson: 4 * 1024,
@@ -51,6 +52,9 @@ export function getRequestBodyError(error: unknown) {
     return { message: "Request body is too large.", status: error.status } as const;
   }
   if (error instanceof TypeError && /encoded data was not valid|form data/i.test(error.message)) {
+    return { message: "Request body is malformed.", status: 400 } as const;
+  }
+  if (error instanceof SyntaxError) {
     return { message: "Request body is malformed.", status: 400 } as const;
   }
   return null;

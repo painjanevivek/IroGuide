@@ -43,7 +43,11 @@ const FORM_ACTIONS = [
   "https://*.web.app",
 ] as const;
 
-export function buildContentSecurityPolicy(nonce: string, isDevelopment: boolean) {
+export function buildContentSecurityPolicy(
+  nonce: string,
+  isDevelopment: boolean,
+  upgradeInsecureRequests = !isDevelopment,
+) {
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""} ${SCRIPT_SOURCES.join(" ")}`,
@@ -63,7 +67,7 @@ export function buildContentSecurityPolicy(nonce: string, isDevelopment: boolean
     "base-uri 'self'",
     `form-action 'self' ${FORM_ACTIONS.join(" ")}`,
     "frame-ancestors 'none'",
-    ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
+    ...(upgradeInsecureRequests ? ["upgrade-insecure-requests"] : []),
   ];
 
   return directives.join("; ");

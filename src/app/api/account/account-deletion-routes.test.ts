@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   deleteCommunityDataForUser: vi.fn(),
   deleteFirebaseUser: vi.fn(),
+  deleteActivationDataForUser: vi.fn(),
   deleteReviewDataForUser: vi.fn(),
   logRequestEvent: vi.fn(),
   verifyRecentFirebaseIdToken: vi.fn(),
@@ -14,6 +15,11 @@ vi.mock("@/server/api-security", () => ({
 }));
 
 vi.mock("@/server/community-storage", () => ({
+  CommunityDeletionIncompleteError: class CommunityDeletionIncompleteError extends Error {
+    constructor(readonly result: unknown, readonly failures: string[]) {
+      super("Community cleanup is incomplete.");
+    }
+  },
   deleteCommunityDataForUser: mocks.deleteCommunityDataForUser,
 }));
 
@@ -47,10 +53,21 @@ vi.mock("@/server/review-storage", () => ({
   },
 }));
 
+vi.mock("@/server/product-activation-storage", () => ({
+  ActivationDeletionIncompleteError: class ActivationDeletionIncompleteError extends Error {
+    constructor(readonly result: unknown) {
+      super("Activation cleanup is incomplete.");
+    }
+  },
+  deleteActivationDataForUser: mocks.deleteActivationDataForUser,
+}));
+
 import { DELETE as deleteAccount } from "./route";
 import { DELETE as deleteReviews } from "./reviews/route";
 import { ReviewDeletionIncompleteError } from "@/server/review-storage";
+import { CommunityDeletionIncompleteError } from "@/server/community-storage";
 import type { ReviewDeleteResult } from "@/server/review-storage";
+import { ActivationDeletionIncompleteError } from "@/server/product-activation-storage";
 
 const completeDeletion = {
   draftsDeleted: 1,
@@ -66,8 +83,18 @@ const completeDeletion = {
 describe("account deletion routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.verifyRecentFirebaseIdToken.mockResolvedValue({ uid: "owner", sub: "owner", iat: 1 });
+    mocks.verifyRecentFirebaseIdToken.mockResolvedValue({ uid: "owner", sub: "owner", auth_time: 1, iat: 1 });
     mocks.deleteReviewDataForUser.mockResolvedValue(completeDeletion);
+    mocks.deleteActivationDataForUser.mockResolvedValue({
+      accountExperiencesDeleted: 1,
+      briefsDeleted: 1,
+      decisionAuditDeleted: 0,
+      interestsDeleted: 1,
+      sampleProgressDeleted: 1,
+      selfReviewsDeleted: 1,
+      failures: [],
+      status: "complete",
+    });
     mocks.deleteCommunityDataForUser.mockResolvedValue({ commentsDeleted: 0, interactionsDeleted: 0, postsDeleted: 0 });
     mocks.deleteFirebaseUser.mockResolvedValue(undefined);
   });
@@ -76,8 +103,9 @@ describe("account deletion routes", () => {
     const response = await deleteAccount(request("/api/account"));
 
     expect(response.status).toBe(200);
-    expect(mocks.deleteReviewDataForUser).toHaveBeenCalledWith("owner");
+    expect(mocks.deleteReviewDataForUser).toHaveBeenCalledWith("owner", { retainDeletionLock: true });
     expect(mocks.deleteCommunityDataForUser).toHaveBeenCalledWith("owner");
+    expect(mocks.deleteActivationDataForUser).toHaveBeenCalledWith("owner");
     expect(mocks.deleteFirebaseUser).toHaveBeenCalledWith("owner");
     expect(mocks.deleteFirebaseUser.mock.invocationCallOrder[0]).toBeGreaterThan(
       mocks.deleteReviewDataForUser.mock.invocationCallOrder[0]!,
@@ -99,6 +127,45 @@ describe("account deletion routes", () => {
     expect(response.status).toBe(503);
     expect(mocks.deleteFirebaseUser).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toMatchObject({ deleted: false, retryToken: "retry-token", status: "retry-required" });
+  });
+
+  it("keeps the identity recoverable when Community cleanup needs a retry", async () => {
+    const communityResult = {
+      blocksDeleted: 1,
+      commentsDeleted: 2,
+      consentsDeleted: 1,
+      interactionsDeleted: 3,
+      notificationsDeleted: 0,
+      postsDeleted: 0,
+      reportsDeleted: 1,
+    };
+    mocks.deleteCommunityDataForUser.mockRejectedValue(new CommunityDeletionIncompleteError(communityResult, ["owned-projections"]));
+
+    const response = await deleteAccount(request("/api/account"));
+
+    expect(response.status).toBe(503);
+    expect(mocks.deleteFirebaseUser).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({ deleted: false, retryRequired: true, community: communityResult });
+  });
+
+  it("keeps the identity recoverable when activation cleanup needs a retry", async () => {
+    const activationResult = {
+      accountExperiencesDeleted: 1,
+      briefsDeleted: 0,
+      decisionAuditDeleted: 0,
+      interestsDeleted: 1,
+      sampleProgressDeleted: 1,
+      selfReviewsDeleted: 0,
+      failures: ["briefs", "self-reviews"],
+      status: "retry-required" as const,
+    };
+    mocks.deleteActivationDataForUser.mockRejectedValue(new ActivationDeletionIncompleteError(activationResult));
+
+    const response = await deleteAccount(request("/api/account"));
+
+    expect(response.status).toBe(503);
+    expect(mocks.deleteFirebaseUser).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({ deleted: false, retryRequired: true, activation: activationResult });
   });
 
   it("surfaces retry state when review-history cleanup is partial", async () => {

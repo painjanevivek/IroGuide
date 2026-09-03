@@ -13,11 +13,11 @@ test("stops free-launch users before the critique workflow begins", async ({ pag
   });
 
   await signInWithEmail(page, email, "iroguide-e2e-password");
-  await expect(page.getByRole("link", { name: /review availability/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /start learning/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /new review|review a design|practice with a new design|continue draft/i })).toHaveCount(0);
 
   await page.locator('summary[aria-label="Open workspace menu"]').first().click();
-  await expect(page.getByRole("link", { name: /review availability/i }).last()).toBeVisible();
+  await expect(page.getByRole("link", { name: /example critique/i }).last()).toBeVisible();
 
   await seedSavedReview(page, email);
   await page.reload();
@@ -27,11 +27,11 @@ test("stops free-launch users before the critique workflow begins", async ({ pag
   await expect(page.getByRole("button", { name: /compare version|send|generate improvement plan/i })).toHaveCount(0);
 
   await page.goto("/");
-  await expect(page.getByRole("link", { name: /review availability/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /start review/i })).toHaveCount(0);
 
   await page.goto("/profile");
-  await expect(page.getByRole("link", { name: /review availability/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /explore example critique/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /new review/i })).toHaveCount(0);
 
   await page.goto("/review/new");

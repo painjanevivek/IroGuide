@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
 import { gsap, registerIroGuideGsap, ScrollTrigger } from "@/components/motion/gsap-runtime";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
 import { useAuth } from "@/features/auth/auth-provider";
@@ -12,8 +12,7 @@ import { useLaunchCapabilities } from "@/features/capabilities/launch-capabiliti
 
 const landingSections = [
   { label: "How it works", href: "#how-it-works" },
-  { label: "Modes", href: "#modes" },
-  { label: "Example review", href: "#example" },
+  { label: "Example critique", href: "#critique-preview" },
 ] as const;
 
 export function LandingScrollHeader() {
@@ -24,8 +23,29 @@ export function LandingScrollHeader() {
   const rootRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const markerRef = useRef<HTMLSpanElement>(null);
+  const mobileMenuRef = useRef<HTMLDetailsElement>(null);
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const activeHrefRef = useRef(activeHref);
+
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const menu = mobileMenuRef.current;
+      if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      const menu = mobileMenuRef.current;
+      if (event.key !== "Escape" || !menu?.open) return;
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    };
+
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   const selectSection = useCallback((href: (typeof landingSections)[number]["href"]) => {
     if (href === activeHrefRef.current) return;
@@ -174,6 +194,7 @@ export function LandingScrollHeader() {
 
       <nav className="landing-scroll-nav" aria-label="Landing page sections" ref={navRef}>
         <span className="landing-scroll-marker" aria-hidden="true" ref={markerRef} />
+        <Link href="/learn" prefetch={false}><span>Learn</span></Link>
         {landingSections.map((item) => (
           <Link
             aria-current={activeHref === item.href ? "location" : undefined}
@@ -191,17 +212,34 @@ export function LandingScrollHeader() {
         ))}
       </nav>
 
+      <details className="landing-mobile-menu" ref={mobileMenuRef}>
+        <summary aria-label="Open navigation menu"><Menu size={19} /></summary>
+        <nav aria-label="Mobile navigation">
+          <Link href="/learn" onClick={() => {
+            if (mobileMenuRef.current) mobileMenuRef.current.open = false;
+          }}>Free learning</Link>
+          {landingSections.map((item) => (
+            <Link href={item.href} key={item.href} onClick={() => {
+              if (mobileMenuRef.current) mobileMenuRef.current.open = false;
+            }}>{item.label}</Link>
+          ))}
+          <Link href="/docs" onClick={() => {
+            if (mobileMenuRef.current) mobileMenuRef.current.open = false;
+          }} prefetch={false}>Learning guide</Link>
+        </nav>
+      </details>
+
       <div className="landing-scroll-actions">
         {!loading && !user && <AuthTransitionLink className="text-link desktop-only" href="/auth?mode=sign-in" prefetch={false}>Sign in</AuthTransitionLink>}
         {loading ? <span className="auth-status">Checking session...</span> : user ? <UserMenu /> : null}
         {user ? (
           <Link
-            aria-label={aiCritique ? "Start a new review" : "Review availability"}
+            aria-label={aiCritique ? "Start a new review" : "Explore the example critique"}
             className="button button-small landing-scroll-cta"
-            href="/review/new"
+            href={aiCritique ? "/review/new" : "/learn#practice"}
             prefetch={false}
           >
-            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Review availability"}</span>
+            <span className="landing-scroll-cta-label">{aiCritique ? "Start review" : "Start learning"}</span>
             <ArrowRight size={16} />
           </Link>
         ) : (

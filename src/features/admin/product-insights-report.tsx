@@ -5,12 +5,14 @@ import { AlertCircle, BarChart3, LoaderCircle, RefreshCw, ShieldCheck } from "lu
 import { useAuth } from "@/features/auth/auth-provider";
 import { requestJsonWithFallback } from "@/lib/api-client";
 
-type Metric = { observed: boolean; total: number };
+type Metric = { observed: boolean; status?: "observed" | "not-observed"; total: number };
+type Funnel = { denominator: number; numerator: number; rate: number | null; status: "not-observed" | "insufficient-sample" | "measured-zero" | "measured" };
 type InsightsReport = {
   collectionMode: "firestore" | "noop";
   environment: string;
   eventCount: number;
   feedback: { responseCount: number; researchConsentCount: number };
+  funnels: Record<string, Funnel>;
   from: string;
   generatedAt: string;
   metrics: Record<string, Metric>;
@@ -19,6 +21,12 @@ type InsightsReport = {
 };
 
 const metricLabels: Record<string, string> = {
+  landingActivation: "Landing to sample",
+  onboardingActivation: "Onboarding activation",
+  sampleLearning: "Sample learning",
+  selfReviewLearning: "Self-review learning",
+  briefReadiness: "Brief readiness",
+  accessInterest: "Access interest",
   signInCompletion: "Sign-in completion",
   dashboardReturn: "Dashboard return",
   documentationEngagement: "Documentation engagement",
@@ -26,6 +34,8 @@ const metricLabels: Record<string, string> = {
   deletionSuccess: "Deletion success",
   caseStudyInterest: "Case-study interest",
 };
+
+const funnelLabels: Record<string, string> = { landingToSample: "Landing → sample", signUpToSample: "Sign-up → sample", sampleCompletion: "Sample completion", briefReadiness: "Brief readiness", accessInterest: "Access interest", accessRevocation: "Interest revocation", sevenDayReturn: "Seven-day return" };
 
 export function ProductInsightsReport() {
   const { user } = useAuth();
@@ -88,6 +98,7 @@ export function ProductInsightsReport() {
         <article><span>Research responses</span><strong>{report.feedback.responseCount}</strong></article>
         <article><span>Research consent</span><strong>{report.feedback.researchConsentCount}</strong></article>
       </section>
+      <section className="insights-funnels" aria-label="Activation funnel evidence">{Object.entries(funnelLabels).map(([key, label]) => { const funnel = report.funnels[key] ?? { denominator: 0, numerator: 0, rate: null, status: "not-observed" }; return <article key={key} data-status={funnel.status}><span>{label}</span><strong>{funnel.rate === null ? "—" : `${Math.round(funnel.rate * 100)}%`}</strong><p>{formatFunnelStatus(funnel)}</p></article>; })}</section>
       {report.partial && <p className="form-error" role="status"><AlertCircle /> This bounded report reached its 5,000-row limit; use a shorter approved reporting window before making decisions.</p>}
     </main>
   );
@@ -100,6 +111,14 @@ function isReportPayload(value: unknown): value is { report: InsightsReport } {
     && "collectionMode" in report && (report.collectionMode === "noop" || report.collectionMode === "firestore")
     && "metrics" in report && typeof report.metrics === "object" && report.metrics !== null
     && "feedback" in report && typeof report.feedback === "object" && report.feedback !== null
+    && "funnels" in report && typeof report.funnels === "object" && report.funnels !== null
     && "eventCount" in report && typeof report.eventCount === "number"
     && "uniqueAccountCount" in report && typeof report.uniqueAccountCount === "number";
+}
+
+function formatFunnelStatus(funnel: Funnel) {
+  if (funnel.status === "not-observed") return "Not observed";
+  if (funnel.status === "insufficient-sample") return `Insufficient sample · ${funnel.numerator}/${funnel.denominator}`;
+  if (funnel.status === "measured-zero") return `Measured zero · 0/${funnel.denominator}`;
+  return `${funnel.numerator}/${funnel.denominator} de-identified accounts`;
 }

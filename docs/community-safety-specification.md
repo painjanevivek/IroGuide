@@ -52,4 +52,4 @@ Promotion requires a signed evaluation from `evaluateCommunityLaunch`; the produ
 
 The machine-testable gates cover public projection, consent, author/comment deletion, reporting, blocking, moderator removal, appeals, audit log, abuse limits, deletion propagation, counter integrity, incident runbook, load test, end-to-end tests, and retention evidence. A named moderation owner plus separate product and safety approvals are also mandatory.
 
-Today these implementation and operating proofs do not exist, so the correct evaluation is `launchable: false`.
+The repository now contains the closed-mode technical contracts and automated safety regressions. The operating proofs still do not exist: there is no approved production load envelope, scheduled production worker evidence, named moderation owner and backup, signed policy/legal review, retention justification, or separate product and safety approval. The correct evaluation therefore remains `launchable: false`.

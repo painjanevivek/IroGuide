@@ -194,6 +194,35 @@ describe("Firebase security rules", () => {
     await assertFails(authenticatedFirestore(OWNER_UID).doc(interactionPath).set({ userId: OWNER_UID, liked: false }));
   });
 
+  it("blocks stale direct Firebase access after account deletion starts", async () => {
+    await seedFirestoreDocument(`reviews/${REVIEW_ID}`, { id: REVIEW_ID, userId: OWNER_UID, status: "complete" });
+    await seedFirestoreDocument(`reviewDeletionLocks/${OWNER_UID}`, { schemaVersion: 1, state: "deleting", userId: OWNER_UID });
+
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviews/${REVIEW_ID}`).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(`reviewDrafts/${DRAFT_ID}`).set(validDraftRecord()));
+  });
+
+  it.each([
+    "communityProjections/post-a",
+    "communityConsents/consent-a",
+    "communityComments/comment-a",
+    "communityInteractions/interaction-a",
+    "communityReports/report-a",
+    "communityBlocks/block-a",
+    "communityModerationActions/action-a",
+    "communityAccountModeration/account-a",
+    "communityAppeals/appeal-a",
+    "communityAudit/audit-a",
+    "communityOutbox/event-a",
+    "communityCounterShards/shard-a",
+    "communityNotifications/notification-a",
+  ])("denies direct client access to server-owned Community data at %s", async (path) => {
+    await seedFirestoreDocument(path, { schemaVersion: 1, userId: OWNER_UID });
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(path).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(path).set({ schemaVersion: 1, userId: OTHER_UID }));
+    await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
+  });
+
   it.each([
     ["source.png", "image/png"],
     ["source.jpg", "image/jpeg"],
@@ -207,6 +236,14 @@ describe("Firebase security rules", () => {
     await assertFails(testEnv.unauthenticatedContext().storage().ref(sourcePath).getMetadata());
   });
 
+  it("blocks stale source-image reads after account deletion starts", async () => {
+    const sourcePath = `users/${OWNER_UID}/reviews/${REVIEW_ID}/source.png`;
+    await seedStorageObject(sourcePath, "image/png");
+    await seedFirestoreDocument(`reviewDeletionLocks/${OWNER_UID}`, { schemaVersion: 1, state: "deleting", userId: OWNER_UID });
+
+    await assertFails(authenticatedStorage(OWNER_UID).ref(sourcePath).getMetadata());
+  });
+
   it("does not expose other review files outside the source image path", async () => {
     const nonSourcePath = `users/${OWNER_UID}/reviews/${REVIEW_ID}/thumbnail.png`;
     await seedStorageObject(nonSourcePath, "image/png");
@@ -214,7 +251,7 @@ describe("Firebase security rules", () => {
     await assertFails(authenticatedStorage(OWNER_UID).ref(nonSourcePath).getMetadata());
   });
 
-  it.each(["productEvidenceEvents/event-a", "researchFeedback/response-a", "reviewUploadSessions/upload-a", "reviewJobs/job-a", "reviewJobOutbox/event-a", "providerUsageReservations/reservation-a", "providerUsageAggregates/day-a"])(
+  it.each(["productEvidenceEvents/event-a", "productEvidenceDailyAggregates/day-a", "researchFeedback/response-a", "reviewUploadSessions/upload-a", "reviewDeletionLocks/user-a", "reviewJobs/job-a", "reviewJobOutbox/event-a", "providerUsageReservations/reservation-a", "providerUsageAggregates/day-a"])(
     "keeps server-owned evidence private at %s",
     async (path) => {
       await seedFirestoreDocument(path, { accountHash: "a".repeat(64), environment: "test" });
@@ -223,6 +260,21 @@ describe("Firebase security rules", () => {
       await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
     },
   );
+
+  it.each([
+    `accountExperiences/${OWNER_UID}`,
+    `sampleCritiqueProgress/${OWNER_UID}_form-together-friendly_v1`,
+    `selfReviewSessions/${OWNER_UID}_session-a`,
+    `designBriefDrafts/${OWNER_UID}_brief-a`,
+    `reviewAccessInterests/${OWNER_UID}_provider-alpha-v1`,
+    "reviewAccessDecisionAudit/event-a",
+  ])("denies every client access path to server-owned activation data at %s", async (path) => {
+    await seedFirestoreDocument(path, { schemaVersion: 1, userId: OWNER_UID });
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(path).get());
+    await assertFails(authenticatedFirestore(OTHER_UID).doc(path).get());
+    await assertFails(authenticatedFirestore(OWNER_UID).doc(path).set({ schemaVersion: 1, userId: OWNER_UID }));
+    await assertFails(testEnv.unauthenticatedContext().firestore().doc(path).get());
+  });
 
   it("denies Firebase client access to direct-upload staging objects", async () => {
     const path = `users/${OWNER_UID}/review-uploads/upload-a/source`;

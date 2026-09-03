@@ -36,6 +36,7 @@ export class FirebaseTokenVerificationError extends Error {
 }
 
 type VerifiedFirebaseToken = FirebaseJwtPayload & {
+  auth_time: number;
   iat: number;
   sub: string;
   uid: string;
@@ -46,7 +47,9 @@ export async function verifyFirebaseIdToken(idToken: string): Promise<VerifiedFi
   if (!projectId) throw new FirebaseAdminUnavailableError();
 
   try {
-    return await verifyFirebaseSecureToken(idToken, projectId);
+    const decodedToken = await verifyFirebaseSecureToken(idToken, projectId);
+    await assertFirebaseUserTokenCurrent(decodedToken);
+    return decodedToken;
   } catch (error) {
     if (isFirebaseAdminUnavailableError(error)) throw error;
     throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error), getFirebaseAuthErrorDetail(error));
@@ -66,17 +69,7 @@ export async function verifyRecentFirebaseIdToken(idToken: string) {
     throw new FirebaseTokenVerificationError("auth/requires-recent-login");
   }
 
-  try {
-    const user = await (await getFirebaseAdminAuth()).getUser(decodedToken.uid);
-    const validAfter = user.tokensValidAfterTime ? Date.parse(user.tokensValidAfterTime) / 1000 : Number.NaN;
-    if (user.disabled || (Number.isFinite(validAfter) && decodedToken.iat < validAfter)) {
-      throw new Error("Firebase ID token is no longer valid.");
-    }
-    return decodedToken;
-  } catch (error) {
-    if (isFirebaseAdminUnavailableError(error)) throw error;
-    throw new FirebaseTokenVerificationError(getFirebaseAuthErrorCode(error), getFirebaseAuthErrorDetail(error));
-  }
+  return decodedToken;
 }
 
 export async function getFirebaseAdminFirestore() {
@@ -157,6 +150,16 @@ function getFirebaseAuthErrorDetail(error: unknown) {
   return error.message.replace(/[\r\n]+/g, " ").slice(0, 180);
 }
 
+async function assertFirebaseUserTokenCurrent(decodedToken: VerifiedFirebaseToken) {
+  const user = await (await getFirebaseAdminAuth()).getUser(decodedToken.uid);
+  const validAfter = user.tokensValidAfterTime ? Date.parse(user.tokensValidAfterTime) / 1_000 : Number.NaN;
+  if (user.disabled || (Number.isFinite(validAfter) && decodedToken.auth_time < validAfter)) {
+    const error = new Error("Firebase ID token is no longer valid.") as Error & { code?: string };
+    error.code = user.disabled ? "auth/user-disabled" : "auth/id-token-revoked";
+    throw error;
+  }
+}
+
 async function verifyFirebaseSecureToken(idToken: string, projectId: string): Promise<VerifiedFirebaseToken> {
   const [encodedHeader, encodedPayload, encodedSignature] = idToken.split(".");
   if (!encodedHeader || !encodedPayload || !encodedSignature) {
@@ -184,6 +187,9 @@ async function verifyFirebaseSecureToken(idToken: string, projectId: string): Pr
   }
   if (typeof payload.iat !== "number" || payload.iat > now + MAX_TOKEN_AGE_SKEW_SECONDS) {
     throw new Error("Firebase ID token issued-at time is invalid.");
+  }
+  if (typeof payload.auth_time !== "number" || payload.auth_time > now + MAX_TOKEN_AGE_SKEW_SECONDS) {
+    throw new Error("Firebase ID token authentication time is invalid.");
   }
 
   const cert = await getFirebaseSecureTokenCert(header.kid);

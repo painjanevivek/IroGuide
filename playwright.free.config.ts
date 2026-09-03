@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
   retries: process.env.CI ? 1 : 0,
   testDir: "./e2e",
-  testMatch: "free-mode-review.spec.ts",
+  testMatch: ["free-mode-review.spec.ts", "public-activation.spec.ts", "free-learning.spec.ts"],
   timeout: 90_000,
   use: {
     baseURL,
@@ -21,6 +21,7 @@ export default defineConfig({
     env: {
       ...process.env,
       IROGUIDE_LAUNCH_PROFILE: "free",
+      IROGUIDE_GUIDED_LEARNING_ENABLED: "true",
       NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
     },
     reuseExistingServer: false,

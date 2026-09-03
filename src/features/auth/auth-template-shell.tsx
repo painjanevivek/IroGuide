@@ -110,16 +110,16 @@ export function AuthTemplateShell({ children, mode }: AuthTemplateShellProps) {
             <Sparkles size={15} />
             {isSignUp ? "Create profile" : "Welcome back"}
           </p>
-          <h1>{isSignUp ? "Start a private design critique workspace." : "Return to your critique workspace."}</h1>
+          <h2>{isSignUp ? "Start a private design learning workspace." : "Return to your learning workspace."}</h2>
           <p>
-            Save reviews, drafts, source images, and practical next steps in one signed-in IroGuide account.
+            Practice with owned examples, learn a self-review rubric, and prepare a stronger brief. Personalized critique remains invite-only.
           </p>
         </div>
 
         <div className="auth-preview-card" aria-hidden="true">
           <div className="auth-preview-topline">
-            <span>Private review</span>
-            <strong>8.4</strong>
+            <span>Guided example</span>
+            <strong>3/4</strong>
           </div>
           <div className="auth-preview-art">
             <span className="auth-preview-primary"><span className="auth-preview-scan-line" /></span>
@@ -128,7 +128,7 @@ export function AuthTemplateShell({ children, mode }: AuthTemplateShellProps) {
           </div>
           <div className="auth-preview-note">
             <LockKeyhole size={16} />
-            <p>Context, critique, and saved progress stay tied to your account.</p>
+            <p>Your preferences and confirmed learning progress stay tied to your account.</p>
           </div>
         </div>
 

@@ -16,6 +16,8 @@ import { getFirebaseAdminFirestore } from "@/server/firebase-admin";
 const EVENT_COLLECTION = "productEvidenceEvents";
 const FEEDBACK_COLLECTION = "researchFeedback";
 const MAX_REPORT_ROWS = 5_000;
+const RAW_EVENT_RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
+const AGGREGATE_RETENTION_MS = 365 * 24 * 60 * 60 * 1_000;
 
 type EvidenceWriteResult = "duplicate" | "noop" | "recorded" | "sampled-out";
 
@@ -53,13 +55,34 @@ export async function recordProductEvidenceEvent({
   const stored: StoredProductEvidenceEvent = {
     ...parsed,
     accountHash,
+    consent: "analytics-v1",
     environment: getProductEvidenceEnvironment(env),
     occurredAt: now.toISOString(),
+    retentionExpiresAt: new Date(now.getTime() + RAW_EVENT_RETENTION_MS).toISOString(),
+    sampleRate,
+    schemaVersion: 1,
   };
 
   try {
-    const db = await getFirebaseAdminFirestore();
-    await db.collection(EVENT_COLLECTION).doc(dedupeKey).create(stored);
+    const [db, { FieldValue, Timestamp }] = await Promise.all([getFirebaseAdminFirestore(), import("firebase-admin/firestore")]);
+    const eventReference = db.collection(EVENT_COLLECTION).doc(dedupeKey);
+    const day = now.toISOString().slice(0, 10);
+    const aggregateReference = db.collection("productEvidenceDailyAggregates").doc(`${stored.environment}_${day}_${parsed.name}`);
+    await db.runTransaction(async (transaction) => {
+      transaction.create(eventReference, {
+        ...stored,
+        retentionExpiresAt: Timestamp.fromDate(new Date(stored.retentionExpiresAt)),
+      });
+      transaction.set(aggregateReference, {
+        day,
+        environment: stored.environment,
+        eventCount: FieldValue.increment(1),
+        eventName: parsed.name,
+        retentionExpiresAt: Timestamp.fromMillis(now.getTime() + AGGREGATE_RETENTION_MS),
+        schemaVersion: 1,
+        updatedAt: now.toISOString(),
+      }, { merge: true });
+    });
     return "recorded";
   } catch (error) {
     if (isAlreadyExistsError(error)) return "duplicate";
@@ -174,15 +197,31 @@ export function shouldSampleProductEvidence(eventId: string, rate: number) {
 
 function parseStoredEvent(value: unknown): StoredProductEvidenceEvent | null {
   if (!isRecord(value)) return null;
-  const { accountHash, environment, occurredAt, ...event } = value;
+  const { accountHash, consent, environment, occurredAt, retentionExpiresAt: rawRetentionExpiresAt, sampleRate, schemaVersion, ...event } = value;
   const parsed = productEvidenceEventSchema.safeParse(event);
+  const retentionExpiresAt = toIsoTimestamp(rawRetentionExpiresAt);
   if (
     !parsed.success
     || typeof accountHash !== "string"
+    || consent !== "analytics-v1"
     || !isEnvironment(environment)
     || typeof occurredAt !== "string"
+    || retentionExpiresAt === null
+    || typeof sampleRate !== "number"
+    || schemaVersion !== 1
   ) return null;
-  return { ...parsed.data, accountHash, environment, occurredAt };
+  return { ...parsed.data, accountHash, consent, environment, occurredAt, retentionExpiresAt, sampleRate, schemaVersion };
+}
+
+function toIsoTimestamp(value: unknown) {
+  if (typeof value === "string" && Number.isFinite(Date.parse(value))) return new Date(value).toISOString();
+  if (!isRecord(value) || typeof value.toDate !== "function") return null;
+  try {
+    const date = Reflect.apply(value.toDate, value, []);
+    return date instanceof Date && Number.isFinite(date.getTime()) ? date.toISOString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function parseStoredFeedback(value: unknown): StoredResearchFeedback | null {

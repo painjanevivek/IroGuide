@@ -30,7 +30,7 @@ describe("product evidence route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireVerifiedFirebaseUser.mockResolvedValue({
-      user: { uid: "user-a", sub: "user-a", iat: 1, email_verified: true },
+      user: { uid: "user-a", sub: "user-a", auth_time: 1, iat: 1, email_verified: true },
       userLogId: "safe-user-a",
     });
     mocks.recordProductEvidenceEvent.mockResolvedValue("recorded");

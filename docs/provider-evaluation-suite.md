@@ -6,9 +6,13 @@ This gate evaluates review, revision-comparison, follow-up, and derived-action q
 
 ## Approved scenarios
 
-The executable scenario manifest is `src/domain/provider-evaluation.ts`. It includes the three public sample designs, the deliberately sparse brand mark, and a checked-in incomplete-output fixture. The set covers website hierarchy, poster density, social conversion, uncertainty, and fail-closed behavior. A release evaluation must not replace difficult scenarios with near-duplicates of the public samples.
+The canonical owned-corpus manifest is `evals/reviews/manifest.json`. It contains 80 purpose-built cases: the three existing public samples plus 77 original local-rendered holdout assets. Each of the eight categories contains ten cases with a `3 strong / 4 mixed / 3 weak-ambiguous` construction target. Mentor covers all 80 cases; exactly three cases per category (24 total) also form the Friendly/Direct tone stratum. `evals/reviews/corpus-plan.csv` maps every added case.
+
+`src/domain/provider-evaluation.ts` remains a small contract-smoke list for scoring and malformed-output behavior; it is not the activation corpus. A release evaluation must use the frozen owned manifest and must not replace difficult cases with near-duplicates of the public samples.
 
 For each visual scenario, preserve the same category, brief, rubric version, image bytes, and expected evidence regions across providers. Record the provider, model, prompt/contract version, timestamp, and reviewer pseudonym.
+
+The manifest's quality target, evaluation focus, and construction notes are sampling metadata, not adjudicated answers. They must not be treated as expected findings or exposed to candidate providers as hints. Human expected criteria remain absent until two reviewers and an adjudicator complete the documented process.
 
 ## Human scoring guide
 

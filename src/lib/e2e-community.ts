@@ -1,12 +1,5 @@
 "use client";
 
-import type { CommunityPostInput } from "@/domain/community";
-
-export type E2ELocalCommunityPost = CommunityPostInput & {
-  id: string;
-  createdAtMs: number;
-};
-
 export type E2ELocalCommunityComment = {
   id: string;
   authorName: string;
@@ -16,46 +9,7 @@ export type E2ELocalCommunityComment = {
 
 const COMMENT_STORAGE_KEY = "iroguide:e2e-community-comments:v1";
 const FAIL_NEXT_INTERACTION_KEY = "iroguide:e2e-community-fail-next-interaction";
-const E2E_POST_ID = "e2e-community-optimistic";
 const E2E_DELAY_MS = 250;
-
-export function getE2ELocalCommunityPosts(now = Date.now()): E2ELocalCommunityPost[] {
-  return [{
-    id: E2E_POST_ID,
-    authorId: "community-e2e-author",
-    authorName: "June Interaction Lab",
-    reviewId: "e2e-optimistic-review",
-    title: "Optimistic critique thread",
-    note: "A deterministic public post for the optimistic community interaction smoke.",
-    category: "Product UI",
-    visibility: "public",
-    stats: { comments: 0, likes: 4, saves: 1 },
-    createdAtMs: now - 1000 * 60 * 10,
-    review: {
-      id: "e2e-optimistic-review",
-      createdAt: new Date(now - 1000 * 60 * 15).toISOString(),
-      overallScore: 8.1,
-      summary: "The critique thread is focused enough to test optimistic community updates.",
-      strengths: ["The interaction has one clear feedback target."],
-      scores: [{ label: "Clarity", score: 8.1 }],
-      rubricVersion: "e2e-community-v1",
-      issues: [{
-        id: "e2e-optimistic-issue",
-        category: "Interaction",
-        score: 8,
-        priority: "medium",
-        observation: "The feedback loop should feel immediate while network state resolves.",
-        impact: "Designers need confidence that community actions are recorded or recoverable.",
-        recommendation: "Show instant UI feedback, then reconcile to the persisted state.",
-        actions: ["Apply optimistic state immediately.", "Restore clear retry affordances after failure."],
-      }],
-      annotations: [],
-      checklist: [{ label: "Confirm rollback and retry behavior.", priority: "medium" }],
-      followUps: ["Did the optimistic state reconcile after reload?"],
-      provider: "demo",
-    },
-  }];
-}
 
 export async function persistE2ELocalCommunityInteraction(postId: string, key: string) {
   await delay(E2E_DELAY_MS);

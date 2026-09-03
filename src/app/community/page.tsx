@@ -2,21 +2,20 @@ import type { Metadata } from "next";
 import "@/app/route-styles.css";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, LockKeyhole, MessageSquareText, ShieldCheck, Sparkles, Trophy, Users } from "lucide-react";
-import { HeaderAuthLinks } from "@/features/auth/auth-nav";
 import { CommunityBoard } from "@/features/community/community-board";
 import { CommunityPrivateCritiqueLink } from "@/features/community/community-private-critique-link";
 import { siteConfig } from "@/config/site";
 import { getServerLaunchCapabilities } from "@/server/launch-capabilities";
 
 export const metadata: Metadata = {
-  title: "IroGuide Community - Structured Creative Feedback",
-  description: "Explore the IroGuide community concept for thoughtful design critique, weekly practice, and more useful creative feedback.",
+  title: "IroGuide Community - Closed Preview",
+  description: "Community remains closed while IroGuide proves that private learning is useful, safe, and sustainable.",
   alternates: {
     canonical: "/community",
   },
   openGraph: {
-    title: "IroGuide Community - Structured Creative Feedback",
-    description: "Explore the IroGuide community concept for thoughtful design critique, weekly practice, and more useful creative feedback.",
+    title: "IroGuide Community - Closed Preview",
+    description: "Community remains closed while IroGuide proves that private learning is useful, safe, and sustainable.",
     url: `${siteConfig.url}/community`,
   },
   robots: { index: false, follow: false },
@@ -29,7 +28,7 @@ export default function CommunityPage() {
     <div className="community-page">
       <header className="simple-header community-nav">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
-        <nav><HeaderAuthLinks /></nav>
+        <nav><Link href="/docs">Learning guide</Link></nav>
       </header>
       <main>
         <section className="community-hero">
@@ -83,7 +82,7 @@ function CommunityUnavailable() {
     <div className="community-page">
       <header className="simple-header community-nav">
         <Link href="/" className="wordmark"><span className="wordmark-mark">I</span>IroGuide</Link>
-        <nav><HeaderAuthLinks /></nav>
+        <nav><Link href="/docs">Learning guide</Link></nav>
       </header>
       <main>
         <section className="community-hero">
@@ -96,8 +95,7 @@ function CommunityUnavailable() {
               <span><strong>An intentional boundary</strong> Your private review history is not published. Community will remain closed until retention, moderation, deletion, and abuse-safety gates are proven.</span>
             </div>
             <div className="community-gated-actions">
-              <Link className="button button-lime" href="/dashboard">Open your workspace <ArrowRight size={17} /></Link>
-              <Link className="button-secondary" href="/docs">Read how IroGuide works</Link>
+              <Link className="button button-lime" href="/#critique-preview">Explore an example critique <ArrowRight size={17} /></Link>
             </div>
           </div>
           <div className="community-orbit" aria-hidden="true">

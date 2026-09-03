@@ -4,10 +4,8 @@ import { siteConfig } from "@/config/site";
 const routes = [
   { path: "", priority: 1, changeFrequency: "weekly" },
   { path: "/about", priority: 0.85, changeFrequency: "monthly" },
+  { path: "/learn", priority: 0.9, changeFrequency: "weekly" },
   { path: "/docs", priority: 0.82, changeFrequency: "monthly" },
-  { path: "/projects", priority: 0.8, changeFrequency: "monthly" },
-  { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/portfolio", priority: 0.65, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.4, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.4, changeFrequency: "yearly" },

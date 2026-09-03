@@ -18,21 +18,17 @@ import {
 } from "lucide-react";
 import {
   collection,
-  doc,
-  getDoc,
   limit,
   onSnapshot,
   query,
   where,
-  type DocumentData,
 } from "firebase/firestore";
-import { communityCommentSchema, communityPostSchema, type CommunityMutation, type CommunityPostInput } from "@/domain/community";
-import type { ReviewOutput } from "@/domain/review";
+import { communityCommentSchema, type CommunityMutation } from "@/domain/community";
+import { communityProjectionViewSchema, communityPublicCommentSchema, type CommunityPublicProjection } from "@/domain/community-safety";
 import { useAuth } from "@/features/auth/auth-provider";
 import { requestJsonWithFallback } from "@/lib/api-client";
 import { isE2ELocalAuthEnabled } from "@/lib/e2e-local-auth";
 import {
-  getE2ELocalCommunityPosts,
   persistE2ELocalCommunityComment,
   persistE2ELocalCommunityInteraction,
   readE2ELocalCommunityComments,
@@ -45,9 +41,10 @@ import {
 } from "@/lib/community-reviews";
 import { createOptimisticMutationScope, runOptimisticMutation } from "@/lib/optimistic-mutation";
 
-type CommunityPost = CommunityPostInput & {
+type CommunityPost = CommunityPublicProjection & {
   id: string;
   createdAtMs: number;
+  viewerOwned: boolean;
 };
 
 type CommunityComment = {
@@ -92,45 +89,9 @@ const navigationItems: Array<{ id: CommunityView; label: string; icon: typeof Ho
 ];
 
 const fallbackPosts: CommunityPost[] = [
-  {
-    id: "sample-identity",
-    authorId: "sample",
-    authorName: "Anika Rao",
-    reviewId: "sample-identity",
-    title: "A quieter identity for a noisy category",
-    note: "The tighter symbol-to-wordmark relationship made the system feel intentional at every size.",
-    category: "Brand identity",
-    visibility: "public",
-    stats: { comments: 2, likes: 18, saves: 7 },
-    createdAtMs: Date.now() - 1000 * 60 * 60 * 24,
-    review: makeSampleReview("sample-identity", 8.2, "The brand identity has a stronger foundation after simplifying the first read."),
-  },
-  {
-    id: "sample-editorial",
-    authorId: "sample",
-    authorName: "Milo Chen",
-    reviewId: "sample-editorial",
-    title: "Independent culture, set in motion",
-    note: "Strong energy. The date and venue still need a calmer secondary reading zone.",
-    category: "Editorial",
-    visibility: "public",
-    stats: { comments: 1, likes: 12, saves: 4 },
-    createdAtMs: Date.now() - 1000 * 60 * 60 * 48,
-    review: makeSampleReview("sample-editorial", 7.6, "The editorial poster has strong motion, but the supporting details need calmer hierarchy."),
-  },
-  {
-    id: "sample-product",
-    authorId: "sample",
-    authorName: "Nora Studio",
-    reviewId: "sample-product",
-    title: "Rethinking the first-run workspace",
-    note: "Progressive disclosure keeps the interface capable without making the first session feel dense.",
-    category: "Product UI",
-    visibility: "public",
-    stats: { comments: 3, likes: 24, saves: 11 },
-    createdAtMs: Date.now() - 1000 * 60 * 60 * 72,
-    review: makeSampleReview("sample-product", 8.7, "The product UI feels more approachable when advanced controls arrive later."),
-  },
+  makeSamplePost("sample-identity", "Anika Rao", "A quieter identity for a noisy category", "Brand identity", "The brand identity has a stronger foundation after simplifying the first read.", 24, { comments: 2, likes: 18, saves: 7 }),
+  makeSamplePost("sample-editorial", "Milo Chen", "Independent culture, set in motion", "Editorial", "The editorial poster has strong motion, but the supporting details need calmer hierarchy.", 48, { comments: 1, likes: 12, saves: 4 }),
+  makeSamplePost("sample-product", "Nora Studio", "Rethinking the first-run workspace", "Product UI", "The product UI feels more approachable when advanced controls arrive later.", 72, { comments: 3, likes: 24, saves: 11 }),
 ];
 
 export function CommunityBoard() {
@@ -185,60 +146,22 @@ export function CommunityBoard() {
   }, [sampleComments, interactionsReady]);
 
   useEffect(() => {
-    if (!user || posts.length === 0) {
+    if (!user || isE2ELocalAuthEnabled()) {
+      queueMicrotask(() => setLoadingPosts(false));
       return;
     }
-    if (isE2ELocalAuthEnabled()) {
-      return;
-    }
-
     let active = true;
-    const db = getFirebaseClientFirestore();
-
-    void Promise.all(posts.filter((post) => !isSamplePost(post)).map(async (post) => {
-      const snapshot = await getDoc(doc(db, "communityPosts", post.id, "interactions", user.uid));
-      return [post.id, toPostInteraction(snapshot.data())] as const;
-    })).then((entries) => {
-      if (!active || entries.length === 0) return;
-      setInteractions((current) => ({ ...current, ...toInteractionMap(entries) }));
-    }).catch(() => {
+    void loadCommunityFeed(user).then(({ nextInteractions, nextPosts }) => {
       if (!active) return;
-      setShareMessage("Community reactions are available locally until the live feed reconnects.");
+      setPosts(nextPosts);
+      setInteractions((current) => ({ ...current, ...nextInteractions }));
+    }).catch(() => {
+      if (active) setPosts([]);
+    }).finally(() => {
+      if (active) setLoadingPosts(false);
     });
-
-    return () => {
-      active = false;
-    };
-  }, [posts, user]);
-
-  useEffect(() => {
-    if (isE2ELocalAuthEnabled()) {
-      queueMicrotask(() => {
-        setPosts(getE2ELocalCommunityPosts());
-        setLoadingPosts(false);
-      });
-      return;
-    }
-
-    const db = getFirebaseClientFirestore();
-    const postsQuery = query(collection(db, "communityPosts"), where("visibility", "==", "public"), limit(40));
-
-    return onSnapshot(
-      postsQuery,
-      (snapshot) => {
-        const nextPosts = snapshot.docs
-          .map((postDoc) => toCommunityPost(postDoc.id, postDoc.data()))
-          .filter((post): post is CommunityPost => post !== null)
-          .sort((left, right) => right.createdAtMs - left.createdAtMs);
-        setPosts(nextPosts);
-        setLoadingPosts(false);
-      },
-      () => {
-        setPosts([]);
-        setLoadingPosts(false);
-      },
-    );
-  }, []);
+    return () => { active = false; };
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -285,7 +208,7 @@ export function CommunityBoard() {
     [publishableReviews, selectedReviewId],
   );
   const visiblePosts = posts.length > 0 ? posts : fallbackPosts;
-  const myPosts = user ? visiblePosts.filter((post) => post.authorId === user.uid) : [];
+  const myPosts = user ? visiblePosts.filter((post) => post.viewerOwned) : [];
   const savedPosts = visiblePosts.filter((post) => interactions[post.id]?.saved);
   const notifications = useMemo(() => getNotifications(visiblePosts, interactions), [interactions, visiblePosts]);
   const currentFeed = activeView === "profile" ? myPosts : activeView === "saved" ? savedPosts : visiblePosts;
@@ -306,6 +229,8 @@ export function CommunityBoard() {
       await mutateCommunity(user, {
         action: "publish",
         reviewId: selectedReview.savedDocId,
+        consent: true,
+        consentVersion: "community-consent-v1",
         ...(title.trim() ? { title: title.trim() } : {}),
         ...(note.trim() ? { note: note.trim() } : {}),
       });
@@ -379,7 +304,7 @@ export function CommunityBoard() {
     const href = `${window.location.origin}${window.location.pathname}#${post.id}`;
     const shareData = {
       title: post.title,
-      text: `${post.authorName} shared an IroGuide critique: ${post.title}`,
+      text: `${post.publicAuthor.displayName} shared an IroGuide critique: ${post.title}`,
       url: href,
     };
 
@@ -655,7 +580,6 @@ function CommunityPostCard({
   pendingInteraction: Partial<Record<keyof PostInteraction, boolean>>;
   post: CommunityPost;
 }) {
-  const firstIssue = post.review.issues[0];
   const likedCount = post.stats.likes + (isLocalOnly && interaction.liked ? 1 : 0);
   const savedCount = post.stats.saves + (isLocalOnly && interaction.saved ? 1 : 0);
   const commentCount = post.stats.comments + localComments.length;
@@ -663,10 +587,10 @@ function CommunityPostCard({
   return (
     <article className="community-feed-post" id={post.id}>
       <header>
-        <div className="community-avatar">{getInitial(post.authorName)}</div>
+        <div className="community-avatar">{getInitial(post.publicAuthor.displayName)}</div>
         <div>
-          <strong>{post.authorName}</strong>
-          <span>@{slugify(post.authorName)} · {formatRelativeTime(post.createdAtMs)}</span>
+          <strong>{post.publicAuthor.displayName}</strong>
+          <span>@{slugify(post.publicAuthor.displayName)} · {formatRelativeTime(post.createdAtMs)}</span>
         </div>
       </header>
       <h3>{post.title}</h3>
@@ -675,13 +599,11 @@ function CommunityPostCard({
         <div className="community-review-toolbar">
           <span><MessageSquareText size={15} /> Critique</span>
           <strong>{post.category}</strong>
-          <em>{post.review.provider === "live" ? "Live vision" : "Local fallback"}</em>
+          <em>Public excerpt</em>
         </div>
         <div className="community-review-body">
-          <div className="community-score-orb"><strong>{post.review.overallScore}</strong><small>/10</small></div>
           <div>
-            <p>{post.review.summary}</p>
-            {firstIssue && <div className="community-issue-strip"><span>{firstIssue.priority} priority</span>{firstIssue.recommendation}</div>}
+            <p>{post.critiqueExcerpt}</p>
           </div>
         </div>
       </div>
@@ -732,19 +654,15 @@ function CommunityComments({
       queueMicrotask(() => setComments(readE2ELocalCommunityComments(post.id)));
       return;
     }
-
-    const db = getFirebaseClientFirestore();
-
-    return onSnapshot(collection(db, "communityPosts", post.id, "comments"), (snapshot) => {
-      const nextComments = snapshot.docs
-        .map((commentDoc) => toCommunityComment(commentDoc.id, commentDoc.data()))
-        .filter((comment): comment is CommunityComment => comment !== null)
-        .sort((left, right) => left.createdAtMs - right.createdAtMs)
-        .slice(-4);
+    if (!user) return;
+    let active = true;
+    void loadCommunityComments(user, post.id).then((nextComments) => {
+      if (!active) return;
       setComments(nextComments);
       commitOptimisticComments(optimisticCommentsRef.current.filter((comment) => !nextComments.some((nextComment) => nextComment.id === comment.id)));
-    });
-  }, [isSample, post.id]);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [isSample, post.id, user]);
 
   async function submitComment(event: FormEvent) {
     event.preventDefault();
@@ -878,28 +796,51 @@ function EmptyCommunityState({ activeView }: { activeView: CommunityView }) {
   );
 }
 
-function toCommunityPost(id: string, data: DocumentData): CommunityPost | null {
-  const parsed = communityPostSchema.safeParse(data);
-  if (!parsed.success) return null;
-
+async function loadCommunityFeed(user: { getIdToken: () => Promise<string> }) {
+  const payload = await requestJsonWithFallback({
+    path: "/api/community",
+    init: { method: "GET", headers: { Authorization: `Bearer ${await user.getIdToken()}` } },
+    unavailableMessage: "Community is not available right now.",
+    failureMessage: "Could not load Community.",
+  }) as { projections?: unknown };
+  const views = Array.isArray(payload.projections)
+    ? payload.projections.flatMap((value) => {
+      const parsed = communityProjectionViewSchema.safeParse(value);
+      return parsed.success ? [parsed.data] : [];
+    })
+    : [];
   return {
-    ...parsed.data,
-    id,
-    createdAtMs: toMillis(data.createdAt) ?? Date.parse(parsed.data.review.createdAt),
+    nextInteractions: views.reduce<InteractionMap>((result, view) => {
+      result[view.projection.postId] = { liked: view.viewer.liked, saved: view.viewer.saved, shared: view.viewer.shared };
+      return result;
+    }, {}),
+    nextPosts: views.map(({ projection, viewer }) => ({
+      ...projection,
+      id: projection.postId,
+      createdAtMs: Date.parse(projection.publishedAt),
+      viewerOwned: viewer.owned,
+    })),
   };
 }
 
-function toCommunityComment(id: string, data: DocumentData): CommunityComment | null {
-  const body = typeof data.body === "string" ? data.body.trim() : "";
-  const authorName = typeof data.authorName === "string" ? data.authorName : "Designer";
-  if (body.length < 2) return null;
-
-  return {
-    id,
-    authorName,
-    body,
-    createdAtMs: toMillis(data.createdAt) ?? 0,
-  };
+async function loadCommunityComments(user: { getIdToken: () => Promise<string> }, postId: string) {
+  const payload = await requestJsonWithFallback({
+    path: `/api/community?postId=${encodeURIComponent(postId)}`,
+    init: { method: "GET", headers: { Authorization: `Bearer ${await user.getIdToken()}` } },
+    unavailableMessage: "Community comments are not available right now.",
+    failureMessage: "Could not load Community comments.",
+  }) as { comments?: unknown };
+  return Array.isArray(payload.comments)
+    ? payload.comments.flatMap((value) => {
+      const parsed = communityPublicCommentSchema.safeParse(value);
+      return parsed.success ? [{
+        id: parsed.data.id,
+        authorName: parsed.data.authorName,
+        body: parsed.data.body,
+        createdAtMs: Date.parse(parsed.data.createdAt),
+      }] : [];
+    }).slice(-4)
+    : [];
 }
 
 async function persistPostInteraction(postId: string, user: { getIdToken: () => Promise<string> }, key: keyof PostInteraction, nextValue: boolean) {
@@ -927,7 +868,7 @@ async function mutateCommunity(user: { getIdToken: () => Promise<string> }, muta
   });
 }
 
-function toPostInteraction(data: DocumentData | undefined): PostInteraction {
+function toPostInteraction(data: Record<string, unknown> | undefined): PostInteraction {
   return {
     liked: typeof data?.liked === "boolean" ? data.liked : false,
     saved: typeof data?.saved === "boolean" ? data.saved : false,
@@ -947,24 +888,16 @@ function getNotifications(posts: CommunityPost[], interactions: InteractionMap):
 
   const feedNotifications = posts.slice(0, 4).map((post) => ({
     id: `post-${post.id}`,
-    title: `${post.authorName} shared a critique`,
-    body: `${post.category} · ${post.review.overallScore}/10 · ${post.stats.comments} comments`,
+    title: `${post.publicAuthor.displayName} shared a critique`,
+    body: `${post.category} · ${post.stats.comments} comments`,
     createdAtMs: post.createdAtMs,
   }));
 
   return [...savedNotifications, ...feedNotifications].slice(0, 8);
 }
 
-function toMillis(value: unknown) {
-  if (typeof value === "object" && value !== null && "toMillis" in value && typeof value.toMillis === "function") {
-    return value.toMillis() as number;
-  }
-  if (typeof value === "string") return Date.parse(value);
-  return null;
-}
-
 function isSamplePost(post: CommunityPost) {
-  return post.authorId === "sample";
+  return post.postId.startsWith("sample-");
 }
 
 function setPendingInteraction(
@@ -1008,7 +941,7 @@ function readStoredInteractions(): InteractionMap {
 
     return Object.entries(parsed).reduce<InteractionMap>((storedInteractions, [postId, value]) => {
       storedInteractions[postId] = toPostInteraction(
-        typeof value === "object" && value !== null ? value as DocumentData : undefined,
+        typeof value === "object" && value !== null ? value as Record<string, unknown> : undefined,
       );
       return storedInteractions;
     }, {});
@@ -1049,13 +982,6 @@ function readStoredSampleComments(): CommentMap {
   } catch {
     return {};
   }
-}
-
-function toInteractionMap(entries: ReadonlyArray<readonly [string, PostInteraction]>): InteractionMap {
-  return entries.reduce<InteractionMap>((nextInteractions, [postId, interaction]) => {
-    nextInteractions[postId] = interaction;
-    return nextInteractions;
-  }, {});
 }
 
 function mergeComments(serverComments: CommunityComment[], pendingComments: CommunityComment[]) {
@@ -1109,28 +1035,29 @@ function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 18) || "designer";
 }
 
-function makeSampleReview(id: string, score: number, summary: string): ReviewOutput {
+function makeSamplePost(
+  id: string,
+  displayName: string,
+  title: string,
+  category: string,
+  critiqueExcerpt: string,
+  ageHours: number,
+  stats: CommunityPublicProjection["stats"],
+): CommunityPost {
+  const publishedAt = new Date(Date.now() - ageHours * 60 * 60 * 1000).toISOString();
   return {
+    schemaVersion: 1,
+    postId: id,
     id,
-    createdAt: new Date().toISOString(),
-    overallScore: score,
-    summary,
-    strengths: ["Specific context made the critique easier to apply."],
-    scores: [{ label: "Clarity", score }],
-    rubricVersion: "community-sample",
-    issues: [{
-      id: `${id}-issue`,
-      category: "Hierarchy",
-      score,
-      priority: "medium",
-      observation: summary,
-      impact: "Other designers can understand the design decision and discuss the tradeoff.",
-      recommendation: "Keep comments focused on the decision, its effect, and one possible next move.",
-      actions: ["Name what works.", "Suggest one practical change."],
-    }],
-    annotations: [],
-    checklist: [{ label: "Invite one specific response from peers.", priority: "medium" }],
-    followUps: ["What should I improve first?"],
-    provider: "demo",
+    publicAuthor: { displayName },
+    title,
+    note: "A privacy-safe sample showing the kind of focused discussion Community may support.",
+    category,
+    critiqueExcerpt,
+    stats,
+    publishedAt,
+    consent: { version: "community-consent-v1", grantedAt: publishedAt, withdrawalState: "active" },
+    createdAtMs: Date.parse(publishedAt),
+    viewerOwned: false,
   };
 }
