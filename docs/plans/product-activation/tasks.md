@@ -717,6 +717,16 @@ This ledger preserves all 185 legacy activation tasks, corrects their dependency
   Prerequisites: `ACT-1508` | Subsystem: `billing` | Source: `ACT-1409`
   Verify: billing absence check and closed-gate documentation | Evidence: phase 15 evidence record
 
+## System completion remediation overlay
+
+The authoritative remediation plan is
+`docs/plans/iroguide-system-completion-remediation-plan.md`; its Spec Kit mirror is
+`specs/002-product-completion/`. The new `REM-*` task index is maintained in
+`specs/002-product-completion/tasks.md` and maps every remediation phase to the
+original open `ACT-*` ranges without renumbering or prematurely closing them.
+`npm run planning:verify` mechanically enforces plan/mirror phase parity and the
+canonical source digest.
+
 ## Requirement traceability
 
 | Requirement range | Primary tasks | Verification evidence |
