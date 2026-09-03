@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createRequestContext, jsonHeaders, logRequestEvent } from "@/server/observability";
-import { isValidStagingProofSecret, runDisposableAccountProof, runPrivilegedReadinessProof, runStorageBoundaryProof } from "@/server/staging-release-proof";
+import { isValidStagingProofSecret, runDisposableAccountProof, runPrivilegedReadinessProof, runStorageBoundaryProof, runTokenRevocationProof } from "@/server/staging-release-proof";
 
-const requestSchema = z.object({ action: z.enum(["admin-readiness", "account-journey", "storage-boundary"]) }).strict();
+const requestSchema = z.object({ action: z.enum(["admin-readiness", "account-journey", "storage-boundary", "token-revocation"]) }).strict();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +27,9 @@ export async function POST(request: Request) {
       ? await runPrivilegedReadinessProof(proofContext)
       : parsed.data.action === "account-journey"
         ? await runDisposableAccountProof(proofContext)
-        : await runStorageBoundaryProof();
+        : parsed.data.action === "storage-boundary"
+          ? await runStorageBoundaryProof()
+          : await runTokenRevocationProof(proofContext);
     logRequestEvent(proof.ok ? "info" : "warn", "staging_release_proof.completed", context, { action: parsed.data.action, ok: proof.ok });
     return NextResponse.json(proof, { status: proof.ok ? 200 : 503, headers: jsonHeaders(context) });
   } catch (error) {

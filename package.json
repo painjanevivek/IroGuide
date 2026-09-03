@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:free": "playwright test --config playwright.free.config.ts",
+    "test:e2e:proof": "playwright test --config playwright.proof.config.ts",
     "test:e2e:install": "playwright install chromium firefox webkit",
     "test:rules": "firebase emulators:exec --project demo-iroguide-rules --only firestore,storage \"vitest run --config vitest.rules.config.mts\"",
     "dast:prelaunch": "node scripts/prelaunch-dast.mjs",
@@ -29,6 +30,9 @@
     "smoke:admin-readiness": "node scripts/privileged-readiness-smoke.mjs",
     "smoke:storage-boundary": "node scripts/storage-boundary-smoke.mjs",
     "smoke:staging-runtime": "node scripts/staging-runtime-proof.mjs",
+    "proof:free-launch:preflight": "node scripts/free-launch-proof.mjs",
+    "proof:free-launch:local": "node scripts/free-launch-proof.mjs --local",
+    "proof:free-launch:staging": "node scripts/staging-runtime-proof.mjs",
     "perf:budget": "node scripts/performance-budget.mjs",
     "probe:operations": "node scripts/operational-synthetic-probe.mjs"
   },

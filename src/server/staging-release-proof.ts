@@ -67,12 +67,18 @@ export async function runDisposableAccountProof(context: ProofContext) {
     const created = await identityRequest(apiKey, "signUp", { email, password, returnSecureToken: true });
     userId = requiredString(created.localId, "Firebase sign-up did not return an account ID.");
     results.push(result("create disposable account", true));
+    const initialClaims = parseJwtPayload(requiredString(created.idToken, "Firebase sign-up did not return an ID token."));
+    if (initialClaims.email_verified === true) throw new Error("The disposable account unexpectedly started verified.");
+    results.push(result("new account starts unverified", true));
+
     await auth.updateUser(userId, { emailVerified: true });
     results.push(result("verify disposable account", true));
 
     const signedIn = await identityRequest(apiKey, "signInWithPassword", { email, password, returnSecureToken: true });
     const idToken = requiredString(signedIn.idToken, "Firebase sign-in did not return an ID token.");
+    if (parseJwtPayload(idToken).email_verified !== true) throw new Error("Fresh sign-in did not carry the verified-email claim.");
     results.push(result("sign out and sign back in", true));
+    results.push(result("fresh token carries verified-email claim", true));
 
     const initial = await apiRequest(context, "/api/account/experience", idToken);
     expectStatus(results, initial, 200, "load account experience");
@@ -145,6 +151,38 @@ export async function runDisposableAccountProof(context: ProofContext) {
     return { ok: true, results };
   } finally {
     if (userId) await cleanupDisposableAccount(auth, db, userId);
+  }
+}
+
+export async function runTokenRevocationProof(context: ProofContext) {
+  const apiKey = requiredValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "NEXT_PUBLIC_FIREBASE_API_KEY");
+  const auth = await getFirebaseAdminAuth();
+  const db = await getFirebaseAdminFirestore();
+  const stamp = `${Date.now()}-${randomBytes(4).toString("hex")}`;
+  const userId = `token-revocation-${stamp}`;
+  const results: ProofResult[] = [];
+
+  try {
+    await auth.createUser({ uid: userId, email: `${userId}@iroguide.test`, emailVerified: true });
+    const initialToken = await exchangeCustomToken(apiKey, await auth.createCustomToken(userId));
+    expectStatus(results, await apiRequest(context, "/api/account/experience", initialToken), 200, "accept current token");
+
+    const initialAuthTime = requiredNumber(parseJwtPayload(initialToken).auth_time, "Initial token did not contain auth_time.");
+    await waitUntilNextSecond(initialAuthTime);
+    await auth.revokeRefreshTokens(userId);
+    const revokedUser = await auth.getUser(userId);
+    const validAfter = revokedUser.tokensValidAfterTime ? Date.parse(revokedUser.tokensValidAfterTime) / 1_000 : Number.NaN;
+    if (!Number.isFinite(validAfter) || validAfter <= initialAuthTime) throw new Error("Firebase did not advance the token-valid-after boundary.");
+    expectStatus(results, await apiRequest(context, "/api/account/experience", initialToken), 401, "reject token after refresh-token revocation");
+
+    const currentToken = await exchangeCustomToken(apiKey, await auth.createCustomToken(userId));
+    expectStatus(results, await apiRequest(context, "/api/account/experience", currentToken), 200, "accept token from a new authentication session");
+
+    await auth.updateUser(userId, { disabled: true });
+    expectStatus(results, await apiRequest(context, "/api/account/experience", currentToken), 401, "reject token for disabled account");
+    return { ok: results.every((item) => item.ok), results };
+  } finally {
+    await cleanupDisposableAccount(auth, db, userId);
   }
 }
 
@@ -259,3 +297,21 @@ function isDenied(status: number) { return status === 401 || status === 403 || s
 function firstCsvValue(value: string | undefined) { return value?.split(",").map((item) => item.trim()).find(Boolean) ?? ""; }
 function requiredValue(rawValue: string | undefined, name: string) { const value = rawValue?.trim(); if (!value) throw new Error(`${name} is required.`); return value; }
 function requiredString(value: unknown, message: string) { if (typeof value !== "string" || !value) throw new Error(message); return value; }
+function requiredNumber(value: unknown, message: string) { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(message); return value; }
+
+function parseJwtPayload(token: string): Record<string, unknown> {
+  const payload = token.split(".")[1];
+  if (!payload) throw new Error("Firebase ID token is not a JWT.");
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid payload");
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error("Firebase ID token payload could not be decoded.");
+  }
+}
+
+async function waitUntilNextSecond(authTimeSeconds: number) {
+  const remainingMs = ((authTimeSeconds + 1) * 1_000) - Date.now() + 25;
+  if (remainingMs > 0) await new Promise((resolve) => setTimeout(resolve, Math.min(remainingMs, 1_100)));
+}

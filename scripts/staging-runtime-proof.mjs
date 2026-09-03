@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const actions = ["admin-readiness", "account-journey", "storage-boundary"];
+const actions = ["admin-readiness", "account-journey", "storage-boundary", "token-revocation"];
 
 async function main() {
   const baseUrl = normalizeBaseUrl(requiredEnv("SMOKE_BASE_URL"));

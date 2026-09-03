@@ -33,13 +33,19 @@ async function main() {
     const created = await identityRequest(apiKey, "signUp", { email, password, returnSecureToken: true });
     userId = requiredString(created.localId, "Firebase sign-up did not return an account ID.");
     addResult("create disposable account", true);
+    if (parseJwtPayload(requiredString(created.idToken, "Firebase sign-up did not return an ID token.")).email_verified === true) {
+      throw new Error("The disposable account unexpectedly started verified.");
+    }
+    addResult("new account starts unverified", true);
 
     await auth.updateUser(userId, { emailVerified: true });
     addResult("verify disposable account", true);
 
     const signedIn = await identityRequest(apiKey, "signInWithPassword", { email, password, returnSecureToken: true });
     const idToken = requiredString(signedIn.idToken, "Firebase sign-in did not return an ID token.");
+    if (parseJwtPayload(idToken).email_verified !== true) throw new Error("Fresh sign-in did not carry the verified-email claim.");
     addResult("sign out and sign back in", true);
+    addResult("fresh token carries verified-email claim", true);
 
     const initial = await apiRequest(baseUrl, "/api/account/experience", idToken);
     expectStatus(initial, 200, "load account experience");
@@ -190,6 +196,18 @@ function requiredEnv(name) {
 function requiredString(value, message) {
   if (typeof value !== "string" || !value) throw new Error(message);
   return value;
+}
+
+function parseJwtPayload(token) {
+  const payload = token.split(".")[1];
+  if (!payload) throw new Error("Firebase ID token is not a JWT.");
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid payload");
+    return parsed;
+  } catch {
+    throw new Error("Firebase ID token payload could not be decoded.");
+  }
 }
 
 function addResult(name, ok, detail = "") { results.push({ name, ok, detail }); }

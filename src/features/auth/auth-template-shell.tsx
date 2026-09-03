@@ -110,7 +110,7 @@ export function AuthTemplateShell({ children, mode }: AuthTemplateShellProps) {
             <Sparkles size={15} />
             {isSignUp ? "Create profile" : "Welcome back"}
           </p>
-          <h1>{isSignUp ? "Start a private design learning workspace." : "Return to your learning workspace."}</h1>
+          <h2>{isSignUp ? "Start a private design learning workspace." : "Return to your learning workspace."}</h2>
           <p>
             Practice with owned examples, learn a self-review rubric, and prepare a stronger brief. Personalized critique remains invite-only.
           </p>
