@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
+import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, RefreshCcw, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Reveal } from "@/components/motion/reveal";
@@ -37,6 +37,8 @@ export function Dashboard() {
     hasCachedOnlyReviews,
     loadError,
     loading,
+    retry,
+    retrying,
     reviews,
   } = useAccountReviews({ user });
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
@@ -207,7 +209,15 @@ export function Dashboard() {
       ) : loadError && reviews.length === 0 && !dashboardGuide.guide ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-error">
-            <div><LayoutDashboard size={38} /><h2>Could not load reviews</h2><p>{loadError}</p></div>
+            <div>
+              <LayoutDashboard size={38} />
+              <h2>Could not load reviews</h2>
+              <p>{loadError}</p>
+              <button className="button button-dark" type="button" onClick={retry} disabled={retrying || !online}>
+                <RefreshCcw className={retrying ? "spin" : undefined} />
+                {retrying ? "Retrying history sync" : online ? "Retry history sync" : "Retry when online"}
+              </button>
+            </div>
           </div>
         </Reveal>
       ) : reviews.length === 0 ? (
@@ -218,7 +228,7 @@ export function Dashboard() {
         </Reveal>
       ) : (
         <>
-          {recentReview && recentReviewDocument && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} reviewHref={getReviewDetailHref(recentReviewDocument.documentId)} /></Reveal>}
+          {recentReview && recentReviewDocument && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} reviewHref={getReviewDetailHref(recentReviewDocument.documentId)} sourceImageStorage={sourceImageStorage} /></Reveal>}
           {hasCachedOnlyReviews && (
             <Reveal delay={0.09}>
               <div className="workspace-badge workspace-badge-muted">
@@ -232,9 +242,16 @@ export function Dashboard() {
           )}
           {(loadError || !online) && (
             <Reveal delay={0.095}>
-              <div className="workspace-badge workspace-badge-muted" role="status">
+              <div className="workspace-badge workspace-badge-muted workspace-badge-sync" role="status" aria-live="polite">
                 <WifiOff />
-                <div><strong>Readable history, partial sync</strong><span>{!online ? "You are offline." : "Cloud history could not refresh."} The saved reviews below remain readable; edits and sync will retry when the connection recovers.</span></div>
+                <div>
+                  <strong>Readable history — partial sync</strong>
+                  <span>{!online ? "You are offline. Saved reviews remain readable on this device. IroGuide will retry history and pending edits when the connection returns." : "Cloud history could not refresh. Saved reviews remain readable on this device. Retry history and pending edits now."}</span>
+                </div>
+                <button className="workspace-badge-action" type="button" onClick={retry} disabled={retrying || !online}>
+                  <RefreshCcw className={retrying ? "spin" : undefined} />
+                  {retrying ? "Retrying sync" : online ? "Retry sync" : "Retry when online"}
+                </button>
               </div>
             </Reveal>
           )}
