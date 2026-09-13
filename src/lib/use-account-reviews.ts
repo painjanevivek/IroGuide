@@ -31,6 +31,7 @@ export function useAccountReviews({
   const [loadError, setLoadError] = useState("");
   const [retrying, setRetrying] = useState(false);
   const [syncAttempt, setSyncAttempt] = useState(0);
+  const activeUserRef = useRef<string | null>(null);
   const loadedUserRef = useRef<string | null>(null);
   const retry = useCallback(() => {
     setRetrying(true);
@@ -38,16 +39,18 @@ export function useAccountReviews({
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      queueMicrotask(() => {
-        setCloudReviews([]);
-        setCachedReviews([]);
-        setLoadError("");
-        setLoading(false);
-        setRetrying(false);
-        loadedUserRef.current = null;
-      });
-    }
+    const nextUserId = user?.uid ?? null;
+    if (activeUserRef.current === nextUserId) return;
+    activeUserRef.current = nextUserId;
+
+    queueMicrotask(() => {
+      setCloudReviews([]);
+      setCachedReviews([]);
+      setLoadError("");
+      setLoading(false);
+      setRetrying(false);
+      loadedUserRef.current = null;
+    });
   }, [user]);
 
   useEffect(() => {
