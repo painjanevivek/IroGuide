@@ -4,7 +4,7 @@
 **Date:** 2026-08-28
 **Starting SHA:** `94e421a`
 **Branch:** `codex/product-activation`
-**Rollback:** redeploy or check out the starting SHA; the capability remains fail-closed unless `IROGUIDE_GUIDED_LEARNING_ENABLED` is exactly `true`.
+**Rollback:** redeploy or check out the starting SHA; the capability remains fail-closed unless `IROGUIDE_CAPABILITY_GUIDED_LEARNING` is exactly `true`.
 
 ## Entry and capability outcome
 

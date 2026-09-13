@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   recordProductEvidenceEvent: vi.fn(),
@@ -29,11 +29,16 @@ const eventId = "018f1a80-7b5a-7c61-a9be-2f38de60ec98";
 describe("product evidence route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("IROGUIDE_CAPABILITY_PRODUCT_EVIDENCE", "true");
     mocks.requireVerifiedFirebaseUser.mockResolvedValue({
       user: { uid: "user-a", sub: "user-a", auth_time: 1, iat: 1, email_verified: true },
       userLogId: "safe-user-a",
     });
     mocks.recordProductEvidenceEvent.mockResolvedValue("recorded");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("accepts a minimized event and binds it to the verified server identity", async () => {

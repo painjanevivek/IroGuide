@@ -166,6 +166,12 @@ service cloud.firestore {
     match /reviewAccessInterests/{document=**} { allow read, write: if false; }
     match /reviewAccessDecisionAudit/{document=**} { allow read, write: if false; }
 
+    // Projects and mutation receipts are owner-scoped by the server API. Keeping
+    // direct SDK access closed preserves validation, idempotency, transfers, and
+    // account-deletion locking as one enforceable boundary.
+    match /projects/{document=**} { allow read, write: if false; }
+    match /projectMutationReceipts/{document=**} { allow read, write: if false; }
+
     match /reviewUploadSessions/{sessionId} {
       allow read, write: if false;
     }

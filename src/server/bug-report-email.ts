@@ -10,7 +10,10 @@ type BugReportEmailResult = {
   status: "disabled" | "not_configured" | "failed";
 };
 
-export async function sendBugReportEmail(report: StoredBugReport): Promise<BugReportEmailResult> {
+type BugReportEmailInput = Pick<StoredBugReport, "email" | "id" | "name" | "pageUrl" | "problem">
+  & Partial<Pick<StoredBugReport, "createdAtIso" | "emailStatus" | "requestId" | "source" | "status">>;
+
+export async function sendBugReportEmail(report: BugReportEmailInput): Promise<BugReportEmailResult> {
   if (!getServerLaunchCapabilities().bugReportEmail) return { status: "disabled" };
 
   const apiKey = getEnv("RESEND_API_KEY");
@@ -43,7 +46,7 @@ export function isBugReportEmailConfigured() {
   return Boolean(getEnv("RESEND_API_KEY") && getEnv("BUG_REPORT_TO_EMAIL") && getEnv("BUG_REPORT_FROM_EMAIL"));
 }
 
-function getBugReportEmailText(report: StoredBugReport) {
+function getBugReportEmailText(report: BugReportEmailInput) {
   return [
     "New IroGuide bug report",
     "",

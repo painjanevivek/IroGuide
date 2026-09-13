@@ -16,12 +16,12 @@ describe("release smoke safety", () => {
   it("requires a green free profile while keeping external capabilities closed", () => {
     const payload = {
       ok: true,
-      capabilities: { profile: "free", guidedLearning: true, aiCritique: false, bugReportEmail: false, community: false, sourceImageStorage: false },
+      capabilities: { profile: "free", guidedLearning: true, liveCritique: false, improvementTracking: false, revisionComparison: false, followUpConversation: false, privatePortfolio: false, publicPortfolio: false, billing: false, productEvidence: true, bugReportEmail: false, community: false, reviewPipeline: false, sourceImageStorage: false },
       checks: { accountStorage: true, clientIdentity: true, firebaseProjectMatch: true, productEvidence: true, providerControls: true, rateLimitAdapter: true, requestBudgets: true, reviewPipeline: true },
       operations: { communityGate: "closed" },
     };
     expect(getPrivilegedReadinessFailures(200, payload)).toEqual([]);
-    expect(getPrivilegedReadinessFailures(200, { ...payload, capabilities: { ...payload.capabilities, aiCritique: true } })).toContain("aiCritique must remain disabled");
+    expect(getPrivilegedReadinessFailures(200, { ...payload, capabilities: { ...payload.capabilities, liveCritique: true } })).toContain("liveCritique must remain disabled");
   });
 
   it("requires explicit staging approval before mutating the real Storage boundary", () => {
@@ -37,8 +37,8 @@ describe("release smoke safety", () => {
   });
 
   it("fails a route when a Core Web Vital or transfer budget regresses", () => {
-    const budget = { cls: 0.1, lcpMs: 3_000, scriptBytes: 900_000, totalBytes: 2_500_000 };
-    expect(evaluatePerformanceSample("/", { cls: 0.02, lcpMs: 1_800, scriptBytes: 300_000, totalBytes: 800_000 }, budget).ok).toBe(true);
-    expect(evaluatePerformanceSample("/", { cls: 0.2, lcpMs: 3_500, scriptBytes: 1_000_000, totalBytes: 3_000_000 }, budget).failures).toHaveLength(4);
+    const budget = { cls: 0.1, inpMs: 200, lcpMs: 2_500, scriptBytes: 900_000, totalBytes: 2_500_000 };
+    expect(evaluatePerformanceSample("/", { cls: 0.02, inpMs: 80, lcpMs: 1_800, scriptBytes: 300_000, totalBytes: 800_000 }, budget).ok).toBe(true);
+    expect(evaluatePerformanceSample("/", { cls: 0.2, inpMs: 350, lcpMs: 3_500, scriptBytes: 1_000_000, totalBytes: 3_000_000 }, budget).failures).toHaveLength(5);
   });
 });

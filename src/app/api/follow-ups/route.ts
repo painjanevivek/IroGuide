@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { createDemoFollowUp } from "@/domain/demo-follow-up";
 import { followUpRequestSchema } from "@/domain/follow-up";
 import { createPublicRequestContext, enforceRateLimit, enforceSameOriginRequest, requireContentType, requireVerifiedFirebaseUser } from "@/server/api-security";
+import { enforceCapabilityBeforeEffects } from "@/server/capability-policy";
 import { jsonHeaders, logRequestEvent } from "@/server/observability";
 import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
 import { getRequestBodyError, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
@@ -13,6 +13,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createPublicRequestContext(request, "api.follow_ups.create");
+  const capability = enforceCapabilityBeforeEffects({
+    capability: "followUpConversation",
+    context,
+    eventPrefix: "follow_up",
+    message: "Follow-up conversation is not available yet. Continue with guided practice.",
+  });
+  if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "follow_up");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "follow_up");
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
       provider: "demo",
       user: auth.userLogId,
     });
-    return NextResponse.json(createDemoFollowUp(parsed), { headers: jsonHeaders(context) });
+    return NextResponse.json({ error: "Follow-up conversation is awaiting owner-scoped review loading." }, { status: 501, headers: jsonHeaders(context) });
   } catch (error) {
     const bodyError = getRequestBodyError(error);
     if (bodyError) return NextResponse.json({ error: bodyError.message }, { status: bodyError.status, headers: jsonHeaders(context) });

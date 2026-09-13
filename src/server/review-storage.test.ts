@@ -90,6 +90,7 @@ const request: ReviewRequest = {
 describe("review storage", () => {
   beforeEach(() => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "full");
+    vi.stubEnv("IROGUIDE_CAPABILITY_SOURCE_IMAGE_STORAGE", "true");
     firestoreMock.collection.mockClear();
     firestoreMock.batch.mockClear();
     firestoreMock.batchDelete.mockClear();
@@ -200,6 +201,7 @@ describe("review storage", () => {
 
   it("writes review text without contacting Storage in free mode", async () => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    vi.stubEnv("IROGUIDE_CAPABILITY_SOURCE_IMAGE_STORAGE", "false");
     const review = createDemoReview(request);
 
     const document = await saveReviewForUser({

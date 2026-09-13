@@ -22,7 +22,7 @@ type ReadinessPayload = {
   ok: boolean;
   capabilities: {
     profile: "free" | "full" | "development";
-    aiCritique: boolean;
+    liveCritique: boolean;
     bugReportEmail: boolean;
     community: boolean;
     sourceImageStorage: boolean;
@@ -355,7 +355,7 @@ function DiagnosticGroup({
 }
 
 function buildDiagnostics(payload: ReadinessPayload) {
-  const critiqueDisabled = !payload.capabilities.aiCritique;
+  const critiqueDisabled = !payload.capabilities.liveCritique;
   const emailDisabled = !payload.capabilities.bugReportEmail;
   const storageDisabled = !payload.capabilities.sourceImageStorage;
   const firebaseChecks: DiagnosticItem[] = [
@@ -533,7 +533,7 @@ function isReadinessPayload(value: unknown): value is ReadinessPayload {
 
   return typeof value.ok === "boolean"
     && (value.capabilities.profile === "free" || value.capabilities.profile === "full" || value.capabilities.profile === "development")
-    && typeof value.capabilities.aiCritique === "boolean"
+    && typeof value.capabilities.liveCritique === "boolean"
     && typeof value.capabilities.bugReportEmail === "boolean"
     && typeof value.capabilities.community === "boolean"
     && typeof value.capabilities.guidedLearning === "boolean"

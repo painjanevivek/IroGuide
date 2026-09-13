@@ -2,6 +2,7 @@ import { z } from "zod";
 import { reviewOutputSchema, reviewRequestSchema } from "./review";
 
 export const comparisonRequestSchema = z.object({
+  projectId: z.uuid().nullable().default(null),
   originalReview: reviewOutputSchema,
   revisedFile: reviewRequestSchema.shape.file,
 });
@@ -22,5 +23,5 @@ export const comparisonOutputSchema = z.object({
   provider: z.literal("demo"),
 });
 
-export type ComparisonRequest = z.infer<typeof comparisonRequestSchema>;
+export type ComparisonRequest = z.input<typeof comparisonRequestSchema>;
 export type ComparisonOutput = z.infer<typeof comparisonOutputSchema>;

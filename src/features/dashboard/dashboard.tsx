@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
+import { ArrowRight, FileImage, FileText, LayoutDashboard, LoaderCircle, RefreshCcw, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
 import { collection, limit, onSnapshot, query, where, type DocumentData } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
 import { Reveal } from "@/components/motion/reveal";
@@ -30,13 +30,15 @@ type StoredDraft = ReviewDraft & { id: string; updatedAtMs: number | null };
 
 export function Dashboard() {
   const { user } = useAuth();
-  const { aiCritique, sourceImageStorage } = useLaunchCapabilities();
+  const { liveCritique, sourceImageStorage } = useLaunchCapabilities();
   const {
     cachedReviews,
     cloudReviews,
     hasCachedOnlyReviews,
     loadError,
     loading,
+    retry,
+    retrying,
     reviews,
   } = useAccountReviews({ user });
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
@@ -147,8 +149,8 @@ export function Dashboard() {
 
   const progressCohort = getProgressCohort(reviews);
   const progress = calculateProgress(progressCohort.evidence);
-  const reviewActionHref: Route = aiCritique ? "/review/new" : "/learn#practice";
-  const reviewActionLabel = aiCritique ? "New review" : "Start learning";
+  const reviewActionHref: Route = liveCritique ? "/review/new" : "/learn#practice";
+  const reviewActionLabel = liveCritique ? "New review" : "Start learning";
   const recentReview = getRecentReviewSummary(reviews);
   const recentReviewDocument = recentReview ? reviews.find((review) => review.id === recentReview.id) : null;
   const hasPrivateSourceImages = reviews.some((review) => review.sourceImage);
@@ -188,9 +190,9 @@ export function Dashboard() {
                   <FileText />
                   <span>{categoryLabels[draft.category]}</span>
                   <h3>{getDraftTitle(draft)}</h3>
-                  <p>{aiCritique ? draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique." : "Draft context remains saved while new critiques are unavailable."}</p>
+                  <p>{liveCritique ? draft.file ? `${draft.file.name} was selected. Reselect the image before starting critique.` : "Brief context is saved. Add an image before starting critique." : "Draft context remains saved while new critiques are unavailable."}</p>
                   <div><small>Step {draft.step} / 4</small>{draft.updatedAtMs && <time>{new Date(draft.updatedAtMs).toLocaleDateString()}</time>}</div>
-                  <Link className="button button-dark button-small" href={reviewActionHref}>{aiCritique ? "Continue draft" : "Practice with a sample"} <ArrowRight /></Link>
+                  <Link className="button button-dark button-small" href={reviewActionHref}>{liveCritique ? "Continue draft" : "Practice with a sample"} <ArrowRight /></Link>
                 </article>
               ))}
             </div>
@@ -207,18 +209,26 @@ export function Dashboard() {
       ) : loadError && reviews.length === 0 && !dashboardGuide.guide ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-error">
-            <div><LayoutDashboard size={38} /><h2>Could not load reviews</h2><p>{loadError}</p></div>
+            <div>
+              <LayoutDashboard size={38} />
+              <h2>Could not load reviews</h2>
+              <p>{loadError}</p>
+              <button className="button button-dark" type="button" onClick={retry} disabled={retrying || !online}>
+                <RefreshCcw className={retrying ? "spin" : undefined} />
+                {retrying ? "Retrying history sync" : online ? "Retry history sync" : "Retry when online"}
+              </button>
+            </div>
           </div>
         </Reveal>
       ) : reviews.length === 0 ? (
         <Reveal delay={0.08}>
           <div className="dashboard-empty is-empty">
-            <div><LayoutDashboard size={38} /><h2>Your saved critiques will appear here.</h2><p>{aiCritique ? "Complete an entitled critique to build private review history." : "The free launch starts with learning artifacts. Personalized critique remains paused until the provider gate is approved."}</p><Link className="button button-dark" href={(dashboardGuide.guide?.nextAction.href ?? reviewActionHref) as Route}>{dashboardGuide.guide?.nextAction.label ?? reviewActionLabel} <Sparkles /></Link></div>
+            <div><LayoutDashboard size={38} /><h2>Your saved critiques will appear here.</h2><p>{liveCritique ? "Complete an entitled critique to build private review history." : "The free launch starts with learning artifacts. Personalized critique remains paused until the provider gate is approved."}</p><Link className="button button-dark" href={(dashboardGuide.guide?.nextAction.href ?? reviewActionHref) as Route}>{dashboardGuide.guide?.nextAction.label ?? reviewActionLabel} <Sparkles /></Link></div>
           </div>
         </Reveal>
       ) : (
         <>
-          {recentReview && recentReviewDocument && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} reviewHref={getReviewDetailHref(recentReviewDocument.documentId)} /></Reveal>}
+          {recentReview && recentReviewDocument && <Reveal delay={0.08}><RecentReviewPanel review={recentReview} reviewHref={getReviewDetailHref(recentReviewDocument.documentId)} sourceImageStorage={sourceImageStorage} /></Reveal>}
           {hasCachedOnlyReviews && (
             <Reveal delay={0.09}>
               <div className="workspace-badge workspace-badge-muted">
@@ -232,9 +242,16 @@ export function Dashboard() {
           )}
           {(loadError || !online) && (
             <Reveal delay={0.095}>
-              <div className="workspace-badge workspace-badge-muted" role="status">
+              <div className="workspace-badge workspace-badge-muted workspace-badge-sync" role="status" aria-live="polite">
                 <WifiOff />
-                <div><strong>Readable history, partial sync</strong><span>{!online ? "You are offline." : "Cloud history could not refresh."} The saved reviews below remain readable; edits and sync will retry when the connection recovers.</span></div>
+                <div>
+                  <strong>Readable history — partial sync</strong>
+                  <span>{!online ? "You are offline. Saved reviews remain readable on this device. IroGuide will retry history and pending edits when the connection returns." : "Cloud history could not refresh. Saved reviews remain readable on this device. Retry history and pending edits now."}</span>
+                </div>
+                <button className="workspace-badge-action" type="button" onClick={retry} disabled={retrying || !online}>
+                  <RefreshCcw className={retrying ? "spin" : undefined} />
+                  {retrying ? "Retrying sync" : online ? "Retry sync" : "Retry when online"}
+                </button>
               </div>
             </Reveal>
           )}
@@ -247,7 +264,7 @@ export function Dashboard() {
             </Stagger>
           </section>
           <Reveal delay={0.12}>
-            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">VERIFIED LEARNING EVIDENCE</span><h2>{progress.evidenceState === "comparable" ? "One useful constraint." : "Build a trustworthy baseline."}</h2><p>{progress.evidenceState === "comparable" ? progress.lesson : progressCohort.reason}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}{progress.recurringIssues.length > 0 && <ul className="insight-list">{progress.recurringIssues.map((issue) => <li key={issue.category}>{issue.category} recurred in {issue.count} compatible reviews.</li>)}</ul>}</div><Link href={reviewActionHref}>{aiCritique ? "Practice with a new design" : "Explore example critique"} <ArrowRight /></Link></section>
+            <section className="learning-card"><Sparkles className="sparkle-blink-glow" /><div><span className="mono-label">VERIFIED LEARNING EVIDENCE</span><h2>{progress.evidenceState === "comparable" ? "One useful constraint." : "Build a trustworthy baseline."}</h2><p>{progress.evidenceState === "comparable" ? progress.lesson : progressCohort.reason}</p>{progress.insights.length > 0 && <ul className="insight-list">{progress.insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>}{progress.recurringIssues.length > 0 && <ul className="insight-list">{progress.recurringIssues.map((issue) => <li key={issue.category}>{issue.category} recurred in {issue.count} compatible reviews.</li>)}</ul>}</div><Link href={reviewActionHref}>{liveCritique ? "Practice with a new design" : "Explore example critique"} <ArrowRight /></Link></section>
           </Reveal>
           </> : null}
           <Reveal delay={0.14}>

@@ -15,7 +15,7 @@ const menuItems = [
 
 export function UserMenu() {
   const { user, avatarUrl, loading, signOut } = useAuth();
-  const { aiCritique } = useLaunchCapabilities();
+  const { liveCritique } = useLaunchCapabilities();
   const menuRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -54,8 +54,8 @@ export function UserMenu() {
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isReviewLink = item.href === "/review/new";
-          const label = isReviewLink && !aiCritique ? "Example critique" : item.label;
-          const href = isReviewLink && !aiCritique ? "/learn#practice" : item.href;
+          const label = isReviewLink && !liveCritique ? "Example critique" : item.label;
+          const href = isReviewLink && !liveCritique ? "/learn#practice" : item.href;
           return (
             <Link key={item.href} className="user-menu-item" href={href} onClick={() => {
               if (menuRef.current) menuRef.current.open = false;

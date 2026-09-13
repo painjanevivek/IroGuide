@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import {
@@ -29,6 +29,13 @@ export function useAccountReviews({
   const [cachedReviews, setCachedReviews] = useState<AccountStoredReview[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [retrying, setRetrying] = useState(false);
+  const [syncAttempt, setSyncAttempt] = useState(0);
+  const loadedUserRef = useRef<string | null>(null);
+  const retry = useCallback(() => {
+    setRetrying(true);
+    setSyncAttempt((attempt) => attempt + 1);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -37,6 +44,8 @@ export function useAccountReviews({
         setCachedReviews([]);
         setLoadError("");
         setLoading(false);
+        setRetrying(false);
+        loadedUserRef.current = null;
       });
     }
   }, [user]);
@@ -68,21 +77,27 @@ export function useAccountReviews({
       refreshCachedReviews();
       void syncPendingReviews();
     }, 0);
-    window.addEventListener("online", syncPendingReviews);
+    function handleOnline() {
+      retry();
+    }
+
+    window.addEventListener("online", handleOnline);
 
     return () => {
       active = false;
       window.clearTimeout(refreshTimer);
-      window.removeEventListener("online", syncPendingReviews);
+      window.removeEventListener("online", handleOnline);
     };
-  }, [user]);
+  }, [retry, syncAttempt, user]);
 
   useEffect(() => {
     if (!user) return;
     const currentUser = user;
+    const isInitialLoad = loadedUserRef.current !== currentUser.uid;
     queueMicrotask(() => {
-      setLoadError("");
-      setLoading(true);
+      if (isInitialLoad) setLoadError("");
+      setLoading(isInitialLoad);
+      setRetrying(!isInitialLoad);
     });
 
     if (isE2ELocalAuthEnabled()) {
@@ -90,6 +105,8 @@ export function useAccountReviews({
         setCloudReviews([]);
         setLoadError("");
         setLoading(false);
+        setRetrying(false);
+        loadedUserRef.current = currentUser.uid;
       });
       return;
     }
@@ -104,17 +121,20 @@ export function useAccountReviews({
     return onSnapshot(
       reviewsQuery,
       (snapshot) => {
+        loadedUserRef.current = currentUser.uid;
         setCloudReviews(mapAccountReviewSnapshot(snapshot.docs, maxReviews));
         setLoadError("");
         setLoading(false);
+        setRetrying(false);
       },
       (error) => {
-        setCloudReviews([]);
+        loadedUserRef.current = currentUser.uid;
         setLoadError(error.message);
         setLoading(false);
+        setRetrying(false);
       },
     );
-  }, [maxReviews, user]);
+  }, [maxReviews, syncAttempt, user]);
 
   const reviews = useMemo(
     () => mergeAccountReviews(cloudReviews, cachedReviews, maxReviews),
@@ -131,6 +151,8 @@ export function useAccountReviews({
     hasCachedOnlyReviews,
     loadError,
     loading,
+    retry,
+    retrying,
     reviews,
   };
 }

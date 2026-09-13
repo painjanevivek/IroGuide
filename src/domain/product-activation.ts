@@ -164,6 +164,7 @@ export const selfReviewCreateSchema = z.object({
   mutationId: mutationIdSchema,
   rubricVersion: z.literal(SELF_REVIEW_RUBRIC_VERSION),
   category: z.enum(reviewCategories),
+  projectId: z.uuid().nullable().default(null),
   goalLabel: optionalBoundedText(120).default(""),
   responses: uniqueObjectArray(selfReviewResponseSchema, "itemId", 20).default([]),
 }).strict().superRefine(validateSelfReviewItems);
@@ -174,6 +175,7 @@ export const selfReviewPatchSchema = z.object({
   expectedRevision: z.number().int().nonnegative(),
   mutationId: mutationIdSchema,
   changes: z.object({
+    projectId: z.uuid().nullable().optional(),
     goalLabel: optionalBoundedText(120).optional(),
     responses: uniqueObjectArray(selfReviewResponseSchema, "itemId", 20).optional(),
     status: z.enum(selfReviewStatuses).optional(),
@@ -190,6 +192,7 @@ export const selfReviewSessionSchema = z.object({
   revision: z.number().int().nonnegative(),
   rubricVersion: z.literal(SELF_REVIEW_RUBRIC_VERSION),
   category: z.enum(reviewCategories),
+  projectId: z.uuid().nullable().default(null),
   goalLabel: optionalBoundedText(120),
   responses: uniqueObjectArray(selfReviewResponseSchema, "itemId", 20),
   priorityItemIds: uniqueArray(opaqueIdSchema, 3),
@@ -200,6 +203,7 @@ export const selfReviewSessionSchema = z.object({
 }).strict().superRefine(validateSelfReviewItems);
 
 const designBriefFields = {
+  projectId: z.uuid().nullable().default(null),
   category: z.enum(reviewCategories).nullable(),
   audience: optionalBoundedText(240),
   purpose: optionalBoundedText(400),
@@ -442,10 +446,10 @@ export type AccountExperiencePatch = z.infer<typeof accountExperiencePatchSchema
 export type GuestSampleProgress = z.infer<typeof guestSampleProgressSchema>;
 export type SampleCritiqueProgress = z.infer<typeof sampleCritiqueProgressSchema>;
 export type SampleProgressMutation = z.infer<typeof sampleProgressMutationSchema>;
-export type SelfReviewCreate = z.infer<typeof selfReviewCreateSchema>;
+export type SelfReviewCreate = z.input<typeof selfReviewCreateSchema>;
 export type SelfReviewPatch = z.infer<typeof selfReviewPatchSchema>;
 export type SelfReviewSession = z.infer<typeof selfReviewSessionSchema>;
-export type DesignBriefPut = z.infer<typeof designBriefPutSchema>;
+export type DesignBriefPut = z.input<typeof designBriefPutSchema>;
 export type DesignBriefDraft = z.infer<typeof designBriefDraftSchema>;
 export type AccessInterestCreate = z.infer<typeof accessInterestCreateSchema>;
 export type AccessInterestRevoke = z.infer<typeof accessInterestRevokeSchema>;

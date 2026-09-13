@@ -4,7 +4,7 @@ import { deriveDashboardGuide, type GuideInput } from "./dashboard-guide";
 const now = "2026-08-28T10:00:00.000Z";
 const base: GuideInput = {
   role: "beginner-designer" as const, onboardingStatus: "completed" as const, sampleProgress: [], selfReviews: [], briefs: [], access: null,
-  reviewCount: 0, reviewDraftCount: 0, activeReviewJob: false, comparisonDraft: false, caseStudyDraft: false, aiCritique: false,
+  reviewCount: 0, reviewDraftCount: 0, activeReviewJob: false, comparisonDraft: false, caseStudyDraft: false, liveCritique: false,
 };
 
 describe("dashboard guide", () => {
@@ -23,7 +23,7 @@ describe("dashboard guide", () => {
   });
 
   it("prioritizes recoverable live work and never exposes private text in activity", () => {
-    const guide = deriveDashboardGuide({ ...base, activeReviewJob: true, aiCritique: true, briefs: [{ category: "poster", status: "draft", updatedAt: now }] });
+    const guide = deriveDashboardGuide({ ...base, activeReviewJob: true, liveCritique: true, briefs: [{ category: "poster", status: "draft", updatedAt: now }] });
     expect(guide.nextAction.id).toBe("continue-review-job");
     expect(JSON.stringify(guide.recentActivity)).not.toContain("client");
   });

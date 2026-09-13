@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { reviewRequestSchema } from "@/domain/review";
 import { enforceSameOriginRequest, requireContentType, requireTrustedClientKey } from "@/server/api-security";
+import { enforceCapabilityBeforeEffects } from "@/server/capability-policy";
 import { FirebaseAdminUnavailableError, FirebaseTokenVerificationError, verifyFirebaseIdToken } from "@/server/firebase-admin";
 import { createRequestContext, jsonHeaders, logRequestEvent, toLogSafeUserId } from "@/server/observability";
 import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { ProviderControlError } from "@/server/provider-controls";
-import { enforceReviewGenerationPolicy } from "@/server/review-generation-policy";
+import { assertOwnedProject, ProjectStorageError } from "@/server/project-storage";
+import { enforceReviewGenerationPolicy, FREE_LAUNCH_REVIEW_MESSAGE } from "@/server/review-generation-policy";
 import { createReview, ReviewProviderUnavailableError } from "@/server/review-provider";
 import { saveReviewForUser } from "@/server/review-storage";
 import { getRequestBodyError, readFormDataBody, readJsonBody, REQUEST_BODY_LIMITS } from "@/server/request-body";
@@ -21,6 +23,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const context = createRequestContext(request, "api.reviews.create");
+  const capability = enforceCapabilityBeforeEffects({
+    capability: "liveCritique",
+    context,
+    eventPrefix: "review",
+    message: FREE_LAUNCH_REVIEW_MESSAGE,
+  });
+  if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "review");
   if ("response" in originCheck) return originCheck.response;
   const contentTypeCheck = requireContentType(request, context, "review", ["application/json", "multipart/form-data"]);
@@ -63,6 +72,7 @@ export async function POST(request: Request) {
       );
     }
     const parsed = await parseReviewRequest(request);
+    if (parsed.projectId) await assertOwnedProject(decodedToken.uid, parsed.projectId);
     const review = await createReview(parsed, { reservationKey: context.requestId, userId: decodedToken.uid });
     const persistence = await saveReviewToAccount(decodedToken.uid, review, parsed);
     logRequestEvent("info", "review.created", context, {
@@ -108,6 +118,9 @@ export async function POST(request: Request) {
         { status: error.failureClass === "rate-limit" ? 429 : 503, headers: jsonHeaders(context) },
       );
     }
+    if (error instanceof ProjectStorageError) {
+      return NextResponse.json({ error: error.message }, { status: error.status, headers: jsonHeaders(context) });
+    }
     logRequestEvent("error", "review.failed", context);
     return NextResponse.json({ error: "Review failed. Please try again." }, { status: 500, headers: jsonHeaders(context) });
   }
@@ -125,6 +138,7 @@ async function saveReviewToAccount(userId: string, review: Awaited<ReturnType<ty
       userId,
       review,
       category: parsed.category,
+      projectId: parsed.projectId,
       sourceImage: parsed.image ? { file: parsed.file, image: parsed.image } : undefined,
     });
     return {
@@ -152,6 +166,7 @@ async function parseMultipartReviewRequest(request: Request) {
   const formData = await readFormDataBody(request, REQUEST_BODY_LIMITS.reviewMultipart);
   const category = getRequiredString(formData, "category");
   const mode = getRequiredString(formData, "mode");
+  const projectId = getOptionalString(formData, "projectId");
   const brief = parseBrief(getRequiredString(formData, "brief"));
   const image = formData.get("image");
 
@@ -173,6 +188,7 @@ async function parseMultipartReviewRequest(request: Request) {
   return reviewRequestSchema.parse({
     category,
     mode,
+    projectId: projectId || null,
     file: { name: image.name, type: image.type, size: image.size },
     brief,
     image: {
@@ -189,6 +205,13 @@ function getRequiredString(formData: FormData, key: string) {
   }
 
   return value;
+}
+
+function getOptionalString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  if (value === null) return "";
+  if (typeof value !== "string") throw new ReviewRequestValidationError("Review details are incomplete or invalid.");
+  return value.trim();
 }
 
 function parseBrief(value: string) {

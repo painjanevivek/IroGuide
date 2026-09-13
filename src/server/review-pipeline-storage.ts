@@ -15,6 +15,7 @@ import {
 import { feedbackModes, reviewBriefSchema, type ReviewCategory } from "@/domain/review";
 import { ACCOUNT_DELETION_LOCKS_COLLECTION } from "./account-deletion-lock";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
+import { assertOwnedProject } from "./project-storage";
 import { validateReviewImage } from "./review-image-validator";
 import {
   classifyReviewProviderFailure,
@@ -42,13 +43,16 @@ export class ReviewPipelineError extends Error {
 
 export async function createReviewUploadSession({
   contentType,
+  projectId = null,
   userId,
   now = new Date(),
 }: {
   contentType: ReviewUploadSession["expectedContentType"];
+  projectId?: string | null;
   userId: string;
   now?: Date;
 }) {
+  if (projectId) await assertOwnedProject(userId, projectId);
   const id = randomUUID();
   const expiresAt = new Date(now.getTime() + UPLOAD_TTL_MS);
   const storagePath = `users/${sanitizePathSegment(userId)}/review-uploads/${id}/source`;
@@ -56,6 +60,7 @@ export async function createReviewUploadSession({
     schemaVersion: 1,
     id,
     userId,
+    projectId,
     storagePath,
     state: "authorized",
     maxBytes: MAX_UPLOAD_BYTES,
@@ -203,6 +208,7 @@ export async function createReviewJob({
   category,
   idempotencyKey,
   mode,
+  projectId = null,
   uploadSessionId,
   userId,
   now = new Date(),
@@ -211,22 +217,25 @@ export async function createReviewJob({
   category: ReviewCategory;
   idempotencyKey: string;
   mode: FeedbackMode;
+  projectId?: string | null;
   uploadSessionId: string;
   userId: string;
   now?: Date;
 }) {
+  if (projectId) await assertOwnedProject(userId, projectId);
   const parsedBrief = reviewBriefSchema.parse(brief);
   const db = await getFirebaseAdminFirestore();
   const uploadReference = db.collection("reviewUploadSessions").doc(uploadSessionId);
   const jobDocumentId = createReviewJobDocumentId(userId, idempotencyKey);
   const jobReference = db.collection("reviewJobs").doc(jobDocumentId);
-  const requestDigest = createHash("sha256").update(JSON.stringify({ brief: parsedBrief, category, mode, uploadSessionId })).digest("hex");
+  const requestDigest = createHash("sha256").update(JSON.stringify({ brief: parsedBrief, category, mode, projectId, uploadSessionId })).digest("hex");
   const id = randomUUID();
   const outboxId = randomUUID();
   const job = reviewJobSchema.parse({
     schemaVersion: 1,
     id,
     userId,
+    projectId,
     uploadSessionId,
     idempotencyKey,
     requestDigest,
@@ -271,6 +280,7 @@ export async function createReviewJob({
     if (deletionLock.exists) throw new ReviewPipelineError("Account deletion is already in progress.", 409);
     const upload = parseUpload(uploadSnapshot.data());
     assertOwnedUpload(upload, userId);
+    if (upload.projectId !== projectId) throw new ReviewPipelineError("The project does not match the authorized upload.", 409);
     if (upload.state !== "validated") throw new ReviewPipelineError("The review upload is not validated.", 409);
     if (existingSnapshot.exists) {
       const existing = parseJob(existingSnapshot.data());
@@ -363,6 +373,7 @@ export async function runReviewJob(id: string, workerId: string, now = new Date(
     review = await createReview({
       category: leased.category,
       mode: leased.mode,
+      projectId: leased.projectId,
       brief: leased.brief,
       file: {
         name: `review-upload.${upload.validation.detectedFormat === "jpeg" ? "jpg" : upload.validation.detectedFormat}`,
@@ -382,6 +393,7 @@ export async function runReviewJob(id: string, workerId: string, now = new Date(
     const saved = await saveReviewForUser({
       category: leased.category,
       documentId: `pipeline_${leased.id}`,
+      projectId: leased.projectId,
       review,
       sourceImage: {
         file: {

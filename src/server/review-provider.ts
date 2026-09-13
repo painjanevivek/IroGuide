@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { createDemoReview } from "@/domain/demo-review";
 import { critiqueRubricVersion, validateGroundedFindings } from "@/domain/critique-rubrics";
 import { categoryLabels, reviewIssueSchema, reviewOutputSchema, type ReviewOutput, type ReviewRequest } from "@/domain/review";
 import { commitProviderUsage, getProviderControlStatus, reserveProviderUsage } from "./provider-controls";
@@ -77,11 +76,6 @@ type ReviewProvider = {
 };
 
 type ProviderExecutionContext = { reservationKey: string; userId: string };
-
-const demoReviewProvider: ReviewProvider = {
-  name: "demo",
-  createReview: async (request) => createDemoReview(request),
-};
 
 const unavailableReviewProvider: ReviewProvider = {
   name: "unavailable",
@@ -425,11 +419,11 @@ export function getReviewProvider() {
   const production = process.env.NODE_ENV === "production";
   const controls = getProviderControlStatus();
 
-  if (configuredMode === "demo") return production ? unavailableReviewProvider : demoReviewProvider;
+  if (configuredMode === "demo") return unavailableReviewProvider;
   if (configuredMode === "endpoint") return production ? unavailableReviewProvider : endpointReviewProvider;
   if (configuredMode && LIVE_PROVIDER_MODES.has(configuredMode)) return production && !controls.enabled ? unavailableReviewProvider : liveVisionReviewProvider;
   if (process.env.OPENROUTER_API_KEY?.trim()) return production && !controls.enabled ? unavailableReviewProvider : liveVisionReviewProvider;
-  return production ? unavailableReviewProvider : demoReviewProvider;
+  return unavailableReviewProvider;
 }
 
 export function getReviewProviderStatus() {

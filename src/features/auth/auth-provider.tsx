@@ -567,6 +567,7 @@ function isAuthSensitivePath(pathname: string) {
     || pathname.startsWith("/admin")
     || pathname.startsWith("/community")
     || pathname.startsWith("/dashboard")
+    || pathname.startsWith("/learn")
     || pathname.startsWith("/onboarding")
     || pathname.startsWith("/profile")
     || pathname.startsWith("/review")

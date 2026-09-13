@@ -26,7 +26,7 @@ export default defineConfig({
     command: `npm run dev -- --webpack --hostname 127.0.0.1 --port ${serverPort}`,
     env: {
       ...process.env,
-      IROGUIDE_GUIDED_LEARNING_ENABLED: "true",
+      IROGUIDE_CAPABILITY_GUIDED_LEARNING: "true",
       IROGUIDE_LAUNCH_PROFILE: "free",
       NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
     },

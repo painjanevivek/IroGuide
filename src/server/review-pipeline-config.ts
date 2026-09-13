@@ -1,22 +1,19 @@
 import "server-only";
 
 import { timingSafeEqual } from "node:crypto";
-import { resolveLaunchCapabilities } from "@/domain/launch-capabilities";
+import { getServerLaunchCapabilities } from "./launch-capabilities";
 
 type ReviewPipelineEnvironment = Readonly<Record<string, string | undefined>>;
 
 export function getReviewPipelineStatus(env: ReviewPipelineEnvironment = process.env) {
-  const capabilities = resolveLaunchCapabilities({
-    nodeEnv: env.NODE_ENV,
-    launchProfile: env.IROGUIDE_LAUNCH_PROFILE,
-  });
+  const capabilities = getServerLaunchCapabilities(env);
   const mode = env.IROGUIDE_REVIEW_PIPELINE_MODE?.trim().toLowerCase() === "internal" ? "internal" : "disabled";
   const workerSecretConfigured = (env.IROGUIDE_INTERNAL_WORKER_KEY?.trim().length ?? 0) >= 32;
   return {
     adapter: mode === "internal" ? "internal-outbox" : "noop",
-    enabled: mode === "internal" && capabilities.aiCritique && workerSecretConfigured,
+    enabled: mode === "internal" && capabilities.liveCritique && capabilities.reviewPipeline && workerSecretConfigured,
     mode,
-    ready: mode === "disabled" || (capabilities.aiCritique && workerSecretConfigured),
+    ready: mode === "disabled" || (capabilities.liveCritique && capabilities.reviewPipeline && workerSecretConfigured),
     workerSecretConfigured,
   } as const;
 }

@@ -1,7 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { waitForAppHydration } from "./auth-helpers";
 
-const publicRoutes = ["/", "/learn", "/auth/sign-in"] as const;
+const publicRoutes = [
+  "/",
+  "/learn",
+  "/auth/sign-in",
+  "/dashboard",
+  "/projects",
+  "/review/new",
+  "/portfolio",
+  "/status",
+  "/community",
+  "/pricing",
+] as const;
 
 for (const route of publicRoutes) {
   test(`${route} keeps its structural accessibility contract`, async ({ page }, testInfo) => {

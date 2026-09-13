@@ -66,7 +66,7 @@ export function LearningPage() {
         <section className="sample-library" aria-labelledby="sample-library-title">
           <header className="learning-section-heading"><div><p className="eyebrow">Three roles, one evidence standard</p><h2 id="sample-library-title">Practice paths with a clear purpose.</h2></div></header>
           <div>
-            {learningSamples.map((sample) => <article key={sample.id}><Image alt="" aria-hidden="true" height={sample.height} sizes="(max-width: 700px) 100vw, 33vw" src={sample.asset} width={sample.width} /><span>{sample.role.replaceAll("-", " ")} / {sample.mode}</span><h3>{sample.title}</h3><p>{sample.educationalOutcome}</p><small><LockKeyhole /> {sample.ownership.owner} {sample.ownership.source}</small></article>)}
+            {learningSamples.map((sample, index) => <article key={sample.id}><Image alt="" aria-hidden="true" height={sample.height} loading={index === 0 ? "eager" : "lazy"} sizes="(max-width: 700px) 100vw, 33vw" src={sample.asset} width={sample.width} /><span>{sample.role.replaceAll("-", " ")} / {sample.mode}</span><h3>{sample.title}</h3><p>{sample.educationalOutcome}</p><small><LockKeyhole /> {sample.ownership.owner} {sample.ownership.source}</small></article>)}
           </div>
         </section>
 

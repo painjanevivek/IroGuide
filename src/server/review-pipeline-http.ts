@@ -6,6 +6,7 @@ import type { RequestContext } from "./observability";
 import { jsonHeaders, logRequestEvent } from "./observability";
 import { getReviewPipelineStatus } from "./review-pipeline-config";
 import { ReviewPipelineError } from "./review-pipeline-storage";
+import { ProjectStorageError } from "./project-storage";
 import { getRequestBodyError } from "./request-body";
 
 export function requireReviewPipeline(context: RequestContext) {
@@ -24,6 +25,7 @@ export function toReviewPipelineErrorResponse(error: unknown, context: RequestCo
   if (error instanceof SyntaxError) return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400, headers: jsonHeaders(context) });
   if (error instanceof ZodError) return NextResponse.json({ error: "Review pipeline identifiers or fields are invalid." }, { status: 400, headers: jsonHeaders(context) });
   if (error instanceof ReviewPipelineError) return NextResponse.json({ error: error.message }, { status: error.status, headers: jsonHeaders(context) });
+  if (error instanceof ProjectStorageError) return NextResponse.json({ error: error.message }, { status: error.status, headers: jsonHeaders(context) });
   return NextResponse.json({ error: "Review pipeline request failed." }, { status: 503, headers: jsonHeaders(context) });
 }
 

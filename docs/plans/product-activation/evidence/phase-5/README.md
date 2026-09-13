@@ -4,7 +4,7 @@
 **Date:** 2026-08-28
 **Starting SHA:** `74e5a52528e22309311df4c1bd42c9c01db337b2`
 **Branch:** `codex/product-activation`
-**Rollback:** redeploy or check out the starting SHA. The new guide endpoint is read-only; disabling `IROGUIDE_GUIDED_LEARNING_ENABLED` fails the guide closed without deleting review or learning records.
+**Rollback:** redeploy or check out the starting SHA. The new guide endpoint is read-only; disabling `IROGUIDE_CAPABILITY_GUIDED_LEARNING` fails the guide closed without deleting review or learning records.
 
 ## Entry and capability outcome
 

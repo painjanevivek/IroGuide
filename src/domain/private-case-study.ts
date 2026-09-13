@@ -3,6 +3,7 @@ import { z } from "zod";
 export const privateCaseStudySchema = z.strictObject({
   schemaVersion: z.literal(1),
   ownerId: z.string().min(1).max(128),
+  projectId: z.uuid().nullable().default(null),
   visibility: z.literal("private"),
   exportStatus: z.literal("disabled"),
   sourceReviewDocumentIds: z.array(z.string().min(1).max(700)).min(1).max(10),
@@ -28,7 +29,7 @@ type CaseStudyReviewEvidence = {
   userId?: string;
 };
 
-export function createPrivateCaseStudyDraft(ownerId: string, review: CaseStudyReviewEvidence) {
+export function createPrivateCaseStudyDraft(ownerId: string, review: CaseStudyReviewEvidence, projectId: string | null = null) {
   if (review.userId !== ownerId || review.trustState !== "server-verified") {
     throw new PrivateCaseStudyEvidenceError();
   }
@@ -41,6 +42,7 @@ export function createPrivateCaseStudyDraft(ownerId: string, review: CaseStudyRe
   return privateCaseStudySchema.parse({
     schemaVersion: 1,
     ownerId,
+    projectId,
     visibility: "private",
     exportStatus: "disabled",
     sourceReviewDocumentIds: [review.documentId],

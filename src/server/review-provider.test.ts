@@ -71,26 +71,22 @@ describe("review provider routing", () => {
     vi.unstubAllGlobals();
   });
 
-  it("uses the deterministic review provider by default", async () => {
+  it("keeps production-path provider routing unavailable by default", async () => {
     vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "");
     vi.stubEnv("OPENROUTER_API_KEY", "");
 
-    const review = await createReview(request);
-
-    expect(getReviewProvider().name).toBe("demo");
-    expect(review.provider).toBe("demo");
+    expect(getReviewProvider().name).toBe("unavailable");
+    await expect(createReview(request)).rejects.toBeInstanceOf(ReviewProviderUnavailableError);
   });
 
-  it("keeps copied local env files usable in auto mode without OpenRouter credentials", async () => {
+  it("does not fall back to demo output in auto mode", async () => {
     vi.stubEnv("IROGUIDE_REVIEW_PROVIDER", "auto");
     vi.stubEnv("OPENROUTER_API_KEY", "");
 
-    const review = await createReview(requestWithImage);
-
-    expect(getReviewProvider().name).toBe("demo");
-    expect(review.provider).toBe("demo");
+    expect(getReviewProvider().name).toBe("unavailable");
+    await expect(createReview(requestWithImage)).rejects.toBeInstanceOf(ReviewProviderUnavailableError);
     expect(getReviewProviderStatus()).toEqual(expect.objectContaining({
-      activeProvider: "demo",
+      activeProvider: "unavailable",
       configuredMode: "auto",
       liveReady: false,
       openRouterConfigured: false,

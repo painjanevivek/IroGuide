@@ -26,7 +26,7 @@ Assumptions already established by the product owner: Vercel-hosted internet exp
 - Internet browser → owner API: ID token, brief, category, mode, upload identifiers over HTTPS; Firebase authentication, account locks, origin checks, Zod schemas, body limits, and rate limits are required.
 - Owner API → Cloud Storage: exact user path, content type, nonce, expiry, and size policy; direct upload keeps image bytes off ordinary Application Functions (`src/server/review-pipeline-storage.ts`).
 - Storage → validator worker: untrusted encoded image bytes; magic signature, decoder format, byte, dimension, page, and pixel limits are enforced (`validateReviewImage`).
-- Internal dispatcher → worker APIs: job identifiers over HTTPS with a constant-time-checked worker bearer secret; pipeline mode and `aiCritique` capability must both be enabled (`getReviewPipelineStatus`, `isValidInternalWorkerRequest`).
+- Internal dispatcher → worker APIs: job identifiers over HTTPS with a constant-time-checked worker bearer secret; internal pipeline mode plus the independent `liveCritique` and `reviewPipeline` capabilities must all be enabled (`getReviewPipelineStatus`, `isValidInternalWorkerRequest`).
 - Worker → provider: bounded prompt plus image under a shared deadline; redirects are rejected and failures are classified (`src/server/review-provider.ts`).
 - Worker → Firestore: validated review output and provenance; owner/idempotency/request-digest state controls retries (`src/server/review-job-contract.ts`, `src/server/review-pipeline-storage.ts`).
 - Offline run operator → blinded reviewers: hashed, candidate-coded outputs without provider identity; ratings return through two reviewers plus adjudication (`scripts/lib/provider-evaluation-runner.mjs`).

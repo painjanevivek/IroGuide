@@ -73,9 +73,13 @@ test.describe("guided dashboard", () => {
     await expect(page.getByRole("link", { name: /open full critique/i })).toBeVisible();
 
     await context.setOffline(true);
-    await expect(page.getByText(/readable history, partial sync/i)).toBeVisible();
+    await expect(page.getByText(/readable history — partial sync/i)).toBeVisible();
+    await expect(page.getByText(/saved reviews remain readable on this device/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /retry when online/i })).toBeDisabled();
+    await expect(page.getByText(/no source image saved/i)).toBeVisible();
     await captureEvidence(page, "guided-dashboard-partial-sync-desktop.png");
     await context.setOffline(false);
+    await expect(page.getByText(/readable history — partial sync/i)).toHaveCount(0);
   });
 
   test("uses a dimensionally stable guide skeleton while session data resolves", async ({ page }) => {

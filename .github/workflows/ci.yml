@@ -38,6 +38,18 @@ jobs:
       - name: Verify repository secret hygiene
         run: npm run security:secret-hygiene
 
+      - name: Verify canonical remediation plan mirror
+        run: npm run planning:verify
+
+      - name: Verify capability and demo isolation
+        run: npm run capabilities:verify
+
+      - name: Verify billing remains gate-closed
+        run: npm run billing:gate
+
+      - name: Verify provider evaluation corpus
+        run: npm run eval:reviews:validate
+
       - name: Check types
         run: npm run typecheck
 
@@ -49,6 +61,43 @@ jobs:
 
       - name: Build production application
         run: npm run build
+
+  performance:
+    name: Route performance budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Enforce route-transfer and Web Vitals budgets
+        shell: bash
+        run: |
+          npm run start > /tmp/iroguide-next.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/status > /dev/null; then break; fi
+            if [ "$attempt" -eq 30 ]; then cat /tmp/iroguide-next.log; exit 1; fi
+            sleep 1
+          done
+          PERFORMANCE_BASE_URL=http://127.0.0.1:3000 npm run perf:budget
 
   firebase-rules:
     name: Firebase authorization rules

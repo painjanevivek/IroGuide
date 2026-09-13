@@ -21,7 +21,7 @@ export default defineConfig({
     env: {
       ...process.env,
       IROGUIDE_LAUNCH_PROFILE: "free",
-      IROGUIDE_GUIDED_LEARNING_ENABLED: "true",
+      IROGUIDE_CAPABILITY_GUIDED_LEARNING: "true",
       NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
     },
     reuseExistingServer: false,

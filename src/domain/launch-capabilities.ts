@@ -1,53 +1,58 @@
 export type LaunchProfile = "free" | "full" | "development";
 
+export const productCapabilityNames = [
+  "guidedLearning",
+  "liveCritique",
+  "improvementTracking",
+  "revisionComparison",
+  "followUpConversation",
+  "privatePortfolio",
+  "publicPortfolio",
+  "community",
+  "billing",
+  "productEvidence",
+  "bugReportEmail",
+  "reviewPipeline",
+  "sourceImageStorage",
+] as const;
+
+export type ProductCapability = (typeof productCapabilityNames)[number];
+
 export type LaunchCapabilities = Readonly<{
   profile: LaunchProfile;
-  aiCritique: boolean;
-  bugReportEmail: boolean;
-  community: boolean;
-  guidedLearning: boolean;
-  sourceImageStorage: boolean;
-}>;
+} & Record<ProductCapability, boolean>>;
 
-type LaunchCapabilityInput = {
+export type LaunchCapabilityInput = {
   nodeEnv?: string;
   launchProfile?: string;
-  guidedLearning?: string;
+  capabilities?: Partial<Record<ProductCapability, string | undefined>>;
 };
 
-const CAPABILITIES: Readonly<Record<LaunchProfile, LaunchCapabilities>> = Object.freeze({
-  free: Object.freeze({
-    profile: "free",
-    aiCritique: false,
-    bugReportEmail: false,
-    community: false,
-    guidedLearning: false,
-    sourceImageStorage: false,
-  }),
-  full: Object.freeze({
-    profile: "full",
-    aiCritique: true,
-    bugReportEmail: true,
-    community: false,
-    guidedLearning: false,
-    sourceImageStorage: true,
-  }),
-  development: Object.freeze({
-    profile: "development",
-    aiCritique: true,
-    bugReportEmail: false,
-    community: false,
-    guidedLearning: false,
-    sourceImageStorage: false,
-  }),
-});
+const CLOSED_CAPABILITIES = Object.freeze(Object.fromEntries(
+  productCapabilityNames.map((capability) => [capability, false]),
+) as Record<ProductCapability, boolean>);
 
-export function resolveLaunchCapabilities({ nodeEnv, launchProfile, guidedLearning }: LaunchCapabilityInput): LaunchCapabilities {
-  const guidedLearningEnabled = guidedLearning === "true";
-  if (launchProfile === "free" || launchProfile === "full") {
-    return Object.freeze({ ...CAPABILITIES[launchProfile], guidedLearning: guidedLearningEnabled });
+export function resolveLaunchCapabilities({
+  nodeEnv,
+  launchProfile,
+  capabilities = {},
+}: LaunchCapabilityInput): LaunchCapabilities {
+  const profile = resolveProfile(nodeEnv, launchProfile);
+  const resolved = Object.fromEntries(productCapabilityNames.map((capability) => [
+    capability,
+    capabilities[capability] === "true",
+  ])) as Record<ProductCapability, boolean>;
+
+  return Object.freeze({ profile, ...CLOSED_CAPABILITIES, ...resolved });
+}
+
+export function isProductCapability(value: string): value is ProductCapability {
+  return productCapabilityNames.includes(value as ProductCapability);
+}
+
+function resolveProfile(nodeEnv: string | undefined, launchProfile: string | undefined): LaunchProfile {
+  if (launchProfile === "free" || launchProfile === "full" || launchProfile === "development") {
+    return launchProfile;
   }
-
-  const profile = nodeEnv === "production" ? CAPABILITIES.free : CAPABILITIES.development;
-  return Object.freeze({ ...profile, guidedLearning: guidedLearningEnabled });
+  return nodeEnv === "production" ? "free" : "development";
 }

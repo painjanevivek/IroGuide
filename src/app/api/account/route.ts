@@ -6,6 +6,7 @@ import { checkRateLimit, getRateLimitHeaders } from "@/server/rate-limit";
 import { deleteReviewDataForUser, ReviewDeletionIncompleteError } from "@/server/review-storage";
 import { deleteActivationDataForUser, ActivationDeletionIncompleteError } from "@/server/product-activation-storage";
 import { CommunityDeletionIncompleteError, deleteCommunityDataForUser } from "@/server/community-storage";
+import { deleteProjectDataForUser } from "@/server/project-storage";
 
 const ACCOUNT_DELETE_RATE_LIMIT = { limit: 4, windowMs: 10 * 60 * 1000 };
 
@@ -38,17 +39,20 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const [reviewOutcome, communityOutcome, activationOutcome] = await Promise.allSettled([
+    const [reviewOutcome, communityOutcome, activationOutcome, projectOutcome] = await Promise.allSettled([
       deleteReviewDataForUser(decodedToken.uid, { retainDeletionLock: true }),
       deleteCommunityDataForUser(decodedToken.uid),
       deleteActivationDataForUser(decodedToken.uid),
+      deleteProjectDataForUser(decodedToken.uid),
     ]);
     if (reviewOutcome.status === "rejected") throw reviewOutcome.reason;
     if (communityOutcome.status === "rejected") throw communityOutcome.reason;
     if (activationOutcome.status === "rejected") throw activationOutcome.reason;
+    if (projectOutcome.status === "rejected") throw projectOutcome.reason;
     const result = reviewOutcome.value;
     const community = communityOutcome.value;
     const activation = activationOutcome.value;
+    const projects = projectOutcome.value;
     await deleteFirebaseUser(decodedToken.uid);
     logRequestEvent("info", "account_delete.completed", context, {
       draftsDeleted: result.draftsDeleted,
@@ -65,10 +69,12 @@ export async function DELETE(request: Request) {
       activationInterestsDeleted: activation.interestsDeleted,
       activationSampleProgressDeleted: activation.sampleProgressDeleted,
       activationSelfReviewsDeleted: activation.selfReviewsDeleted,
+      projectMutationReceiptsDeleted: projects.projectMutationReceiptsDeleted,
+      projectsDeleted: projects.projectsDeleted,
       user: toLogSafeUserId(decodedToken.uid),
     });
 
-    return NextResponse.json({ deleted: true, ...result, activation }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
+    return NextResponse.json({ deleted: true, ...result, activation, projects }, { headers: jsonHeaders(context, getRateLimitHeaders(rateLimit)) });
   } catch (error) {
     if (error instanceof ActivationDeletionIncompleteError) {
       logRequestEvent("error", "account_delete.activation_cleanup_incomplete", context, {

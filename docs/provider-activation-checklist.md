@@ -27,4 +27,4 @@ Activation is a separate product and operational decision. The presence of provi
 - [ ] Staging smoke proves upload, job polling, trusted persistence, retry behavior, deletion, and rollback for the exact release commit.
 - [ ] Product, engineering, security, and budget owners record a signed go decision.
 
-Until every item is complete, production remains `IROGUIDE_LAUNCH_PROFILE=free` and `aiCritique=false`.
+Until every item is complete, production remains `IROGUIDE_LAUNCH_PROFILE=free`, `IROGUIDE_CAPABILITY_LIVE_CRITIQUE=false`, `IROGUIDE_CAPABILITY_REVIEW_PIPELINE=false`, and `IROGUIDE_CAPABILITY_SOURCE_IMAGE_STORAGE=false`.

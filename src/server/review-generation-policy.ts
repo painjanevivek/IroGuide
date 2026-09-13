@@ -4,7 +4,7 @@ import { getServerLaunchCapabilities } from "./launch-capabilities";
 import { jsonHeaders, logRequestEvent, toLogSafeUserId, type RequestContext } from "./observability";
 import { hasReviewGenerationAccess, type ReviewAccessCandidate } from "./review-access";
 
-export const FREE_LAUNCH_REVIEW_MESSAGE = "AI critique is unavailable during IroGuide's free launch.";
+export const FREE_LAUNCH_REVIEW_MESSAGE = "Live critique is unavailable. Continue with the free guided practice instead.";
 export const REVIEW_ACCESS_MESSAGE = "Verify your email and request beta review access before starting a critique.";
 
 type ReviewGenerationPolicyInput = {
@@ -24,7 +24,7 @@ export function enforceReviewGenerationPolicy({
   eventPrefix,
   user,
 }: ReviewGenerationPolicyInput): ReviewGenerationPolicyResult {
-  if (!capabilities.aiCritique) {
+  if (!capabilities.liveCritique) {
     logRequestEvent("info", `${eventPrefix}.capability_disabled`, context, {
       profile: capabilities.profile,
       user: toLogSafeUserId(user.uid),

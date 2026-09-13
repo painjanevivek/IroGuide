@@ -24,6 +24,7 @@ export const reviewUploadSessionSchema = z.strictObject({
   schemaVersion: z.literal(reviewPipelineContractVersion),
   id: z.uuid(),
   userId: z.string().min(1).max(128),
+  projectId: z.uuid().nullable().default(null),
   storagePath: z.string().min(1).max(700),
   state: z.enum(reviewUploadStates),
   maxBytes: z.literal(4 * 1024 * 1024),
@@ -50,6 +51,7 @@ export const reviewJobSchema = z.strictObject({
   schemaVersion: z.literal(reviewPipelineContractVersion),
   id: z.uuid(),
   userId: z.string().min(1).max(128),
+  projectId: z.uuid().nullable().default(null),
   uploadSessionId: z.uuid(),
   idempotencyKey: z.string().min(16).max(128),
   requestDigest: sha256Schema,
@@ -88,10 +90,12 @@ export const reviewJobOutboxSchema = z.strictObject({
 
 export const createReviewUploadRequestSchema = z.strictObject({
   contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  projectId: z.uuid().nullable().default(null),
 });
 
 export const createReviewJobRequestSchema = z.strictObject({
   uploadSessionId: z.uuid(),
+  projectId: z.uuid().nullable().default(null),
   idempotencyKey: z.string().min(16).max(128),
   category: z.enum(reviewCategories),
   mode: z.enum(feedbackModes),

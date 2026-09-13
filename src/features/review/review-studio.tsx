@@ -115,8 +115,8 @@ function getSourcePreviewCaption(preview: string | null, sourceImage: ReviewSour
 }
 
 export function ReviewStudio() {
-  const { aiCritique } = useLaunchCapabilities();
-  return aiCritique ? <ReviewStudioFlow /> : <ReviewUnavailable />;
+  const { liveCritique } = useLaunchCapabilities();
+  return liveCritique ? <ReviewStudioFlow /> : <ReviewUnavailable />;
 }
 
 function ReviewStudioFlow() {
@@ -421,7 +421,7 @@ export function ReviewResult({
   reviewDocumentId?: string | null;
   trustState: ReviewTrustState;
 }) {
-  const { aiCritique } = useLaunchCapabilities();
+  const { liveCritique } = useLaunchCapabilities();
   const [checked, setChecked] = useState<number[]>([]);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
   const saveState = initialSaveState;
@@ -530,7 +530,7 @@ export function ReviewResult({
               <div className="checklist">{review.checklist.map((item, index) => <label key={item.label} className={checked.includes(index) ? "checked" : ""}><input type="checkbox" checked={checked.includes(index)} onChange={() => setChecked((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index])} /><span><Check /></span><p>{item.label}</p><b>{item.priority}</b></label>)}</div>
             </section>
           </Reveal>
-          {aiCritique ? (
+          {liveCritique ? (
             <>
               <Reveal delay={0.18}><ImprovementPanel review={review} /></Reveal>
               <Reveal delay={0.2}><ComparisonPanel review={review} originalPreview={preview} /></Reveal>

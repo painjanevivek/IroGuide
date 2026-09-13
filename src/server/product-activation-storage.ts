@@ -31,6 +31,7 @@ import {
 } from "@/domain/product-activation";
 import { ACCOUNT_DELETION_LOCKS_COLLECTION, assertAccountDeletionUnlocked, assertAccountDeletionUnlockedInTransaction } from "./account-deletion-lock";
 import { getFirebaseAdminFirestore } from "./firebase-admin";
+import { assertOwnedProject } from "./project-storage";
 
 export const ACTIVATION_COLLECTIONS = Object.freeze({
   accountExperiences: "accountExperiences",
@@ -140,9 +141,11 @@ export async function listSelfReviews(userId: string, id?: string) {
 }
 
 export async function createSelfReview(userId: string, input: SelfReviewCreate, now = new Date()) {
+  if (input.projectId) await assertOwnedProject(userId, input.projectId);
   const db = await getFirebaseAdminFirestore();
   const reference = db.collection(ACTIVATION_COLLECTIONS.selfReviewSessions).doc(ownedDocumentId(userId, input.id));
   const timestamp = now.toISOString();
+  const responses = input.responses ?? [];
   return db.runTransaction(async (transaction) => {
     await assertAccountDeletionUnlockedInTransaction({ db, transaction, userId });
     const snapshot = await transaction.get(reference);
@@ -158,9 +161,10 @@ export async function createSelfReview(userId: string, input: SelfReviewCreate, 
       revision: 0,
       rubricVersion: input.rubricVersion,
       category: input.category,
+      projectId: input.projectId,
       goalLabel: input.goalLabel,
-      responses: input.responses,
-      priorityItemIds: derivePriorityItemIds(input.category, input.responses),
+      responses,
+      priorityItemIds: derivePriorityItemIds(input.category, responses),
       status: "draft",
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -172,6 +176,7 @@ export async function createSelfReview(userId: string, input: SelfReviewCreate, 
 }
 
 export async function patchSelfReview(userId: string, input: SelfReviewPatch, now = new Date()) {
+  if (input.changes.projectId) await assertOwnedProject(userId, input.changes.projectId);
   const db = await getFirebaseAdminFirestore();
   const reference = db.collection(ACTIVATION_COLLECTIONS.selfReviewSessions).doc(ownedDocumentId(userId, input.id));
   return db.runTransaction(async (transaction) => {
@@ -223,6 +228,7 @@ export async function listDesignBriefs(userId: string, id?: string) {
 }
 
 export async function putDesignBrief(userId: string, input: DesignBriefPut, now = new Date(), importedFromLegacy = false) {
+  if (input.projectId) await assertOwnedProject(userId, input.projectId);
   const db = await getFirebaseAdminFirestore();
   const reference = db.collection(ACTIVATION_COLLECTIONS.designBriefDrafts).doc(ownedDocumentId(userId, input.id));
   return db.runTransaction(async (transaction) => {
@@ -241,6 +247,7 @@ export async function putDesignBrief(userId: string, input: DesignBriefPut, now 
       schemaVersion: ACTIVATION_SCHEMA_VERSION,
       revision: current ? current.revision + 1 : 0,
       category: input.category,
+      projectId: input.projectId,
       audience: input.audience,
       purpose: input.purpose,
       style: input.style,

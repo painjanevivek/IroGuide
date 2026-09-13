@@ -14,6 +14,7 @@ export const accountExportEnvelopeSchema = z.strictObject({
     emailVerified: z.boolean(),
   }),
   learning: z.unknown(),
+  projects: z.array(z.unknown()),
   reviews: z.array(z.unknown()),
   reviewDrafts: z.array(z.unknown()),
   comparisons: z.array(z.unknown()),

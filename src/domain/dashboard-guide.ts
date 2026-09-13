@@ -59,7 +59,7 @@ export type GuideInput = {
   activeReviewJob: boolean;
   comparisonDraft: boolean;
   caseStudyDraft: boolean;
-  aiCritique: boolean;
+  liveCritique: boolean;
 };
 
 export function deriveDashboardGuide(input: GuideInput): DashboardGuide {
@@ -81,7 +81,7 @@ export function deriveDashboardGuide(input: GuideInput): DashboardGuide {
 
   let state: DashboardGuide["state"];
   let nextAction: DashboardGuide["nextAction"];
-  if (input.activeReviewJob && input.aiCritique) {
+  if (input.activeReviewJob && input.liveCritique) {
     state = "review-job-active";
     nextAction = action("continue-review-job", "Live critique", "Your private critique is still processing.", "Return to the job without submitting the design again.", "/review/new", "View critique status", "Processing critique");
   } else if (!onboardingComplete) {
@@ -96,7 +96,7 @@ export function deriveDashboardGuide(input: GuideInput): DashboardGuide {
   } else if (!readyBrief) {
     state = draftBrief ? "brief-in-progress" : "self-review-complete";
     nextAction = action(draftBrief ? "continue-brief" : "start-brief", "Step 4 of 4", draftBrief ? "Finish the context you started." : "Prepare a useful critique brief.", "Describe the audience, purpose, goal, and concern without uploading an image.", "/learn?tool=brief#practice", draftBrief ? "Continue brief" : "Build my brief", "Ready image-free brief");
-  } else if (input.reviewDraftCount > 0 && input.aiCritique) {
+  } else if (input.reviewDraftCount > 0 && input.liveCritique) {
     state = "review-draft-ready";
     nextAction = action("continue-review-draft", "Saved work", "Continue your private critique draft.", "The context is saved; return to the protected review flow to complete the artifact.", "/review/new", "Continue review draft", "Submitted review job");
   } else if (input.comparisonDraft) {
@@ -107,7 +107,7 @@ export function deriveDashboardGuide(input: GuideInput): DashboardGuide {
     nextAction = action("continue-case-study", "Private portfolio", "Continue the case study you started.", "Return to the private evidence-backed draft without publishing it.", "/portfolio", "Continue case study", "Private case study draft");
   } else if (input.access?.status === "invited") {
     state = "invited";
-    nextAction = input.aiCritique
+    nextAction = input.liveCritique
       ? action("view-access", "Access approved", "Your invite-only critique access is ready.", "Review the privacy, retention, quota, and processing terms before any upload.", "/review/new", "Review access terms", "Acknowledged review access")
       : action("view-access", "Access recorded", "Your entitlement is saved, but the provider remains paused.", "Continue free practice; payment or invitation state cannot override the provider gate.", "/learn?tool=access#practice", "View access status", "Saved access state");
   } else if (input.reviewCount > 0) {

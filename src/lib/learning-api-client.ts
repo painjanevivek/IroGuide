@@ -74,21 +74,20 @@ export async function clearLearningHistory(user: User) {
 }
 
 async function requestJson(user: User, url: string, init: RequestInit) {
-  let token: string;
-  try {
-    token = await user.getIdToken();
-  } catch {
-    throw new LearningRequestError("Your session expired. Sign in again to continue.", 401);
-  }
   let response: Response;
   try {
-    response = await fetch(url, {
-      ...init,
-      cache: "no-store",
-      headers: { ...init.headers, Authorization: `Bearer ${token}` },
-    });
-  } catch {
+    response = await fetchWithToken(user, url, init);
+  } catch (error) {
+    if (error instanceof LearningRequestError) throw error;
     throw new LearningRequestError("The learning workspace could not reach the server. Your current answers remain on this screen.", 503);
+  }
+  if (response.status === 401) {
+    try {
+      response = await fetchWithToken(user, url, init, true);
+    } catch (error) {
+      if (error instanceof LearningRequestError) throw error;
+      throw new LearningRequestError("The learning workspace could not reach the server. Your current answers remain on this screen.", 503);
+    }
   }
   const payload = await readPayload(response);
   if (!response.ok) {
@@ -99,6 +98,20 @@ async function requestJson(user: User, url: string, init: RequestInit) {
     );
   }
   return payload;
+}
+
+async function fetchWithToken(user: User, url: string, init: RequestInit, forceRefresh = false) {
+  let token: string;
+  try {
+    token = await user.getIdToken(forceRefresh);
+  } catch {
+    throw new LearningRequestError("Your session expired. Sign in again to continue.", 401);
+  }
+  return fetch(url, {
+    ...init,
+    cache: "no-store",
+    headers: { ...init.headers, Authorization: `Bearer ${token}` },
+  });
 }
 
 function parsePublicSelfReview(record: unknown): PublicSelfReview {

@@ -13,6 +13,7 @@ import {
 } from "./account-deletion-lock";
 import { getFirebaseAdminFirestore, getFirebaseAdminStorageBucket } from "./firebase-admin";
 import { getServerLaunchCapabilities } from "./launch-capabilities";
+import { assertOwnedProject } from "./project-storage";
 import { createTrustedReviewDocument } from "./review-provenance";
 
 const REVIEWS_COLLECTION = "reviews";
@@ -59,19 +60,22 @@ export class ReviewDeletionIncompleteError extends Error {
 export async function saveReviewForUser({
   category,
   documentId,
+  projectId = null,
   review,
   sourceImage,
   userId,
 }: {
   category: ReviewCategory;
   documentId?: string;
+  projectId?: string | null;
   review: ReviewOutput;
   sourceImage?: ReviewSourceImageUpload;
   userId: string;
 }) {
   await assertAccountDeletionUnlocked(userId);
+  if (projectId) await assertOwnedProject(userId, projectId);
   const capabilities = getServerLaunchCapabilities();
-  const createdDocument = createTrustedReviewDocument({ userId, review, category });
+  const createdDocument = createTrustedReviewDocument({ userId, review, category, projectId });
   const baseDocument = documentId ? { ...createdDocument, id: documentId } : createdDocument;
   const persistedSourceImage = sourceImage && capabilities.sourceImageStorage
     ? await uploadReviewSourceImage({ documentId: baseDocument.id, sourceImage, userId })
@@ -91,6 +95,7 @@ export async function syncReviewDocumentsForUser(userId: string, documents: Revi
   const capabilities = getServerLaunchCapabilities();
   const results = await Promise.allSettled(documents.map(async (input) => {
     const { document, sourceImage } = normalizeSyncDocumentInput(input);
+    if (document.projectId) await assertOwnedProject(userId, document.projectId);
     const normalizedDocument = createImportedReviewDocument({
       userId,
       review: document.review,

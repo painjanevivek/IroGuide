@@ -60,12 +60,14 @@ const review = {
 describe("review generation authorization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("IROGUIDE_CAPABILITY_LIVE_CRITIQUE", "true");
     vi.mocked(createReview).mockResolvedValue(review);
     vi.mocked(saveReviewForUser).mockResolvedValue({
       id: "document-1",
       userId: "approved-account",
       category: "logo",
       categoryLabel: "Logo",
+      projectId: null,
       review,
       provider: "live",
       status: "complete",
@@ -135,6 +137,7 @@ describe("review generation authorization", () => {
 
   it("stops a free-launch request before provider use even for an entitled account", async () => {
     vi.stubEnv("IROGUIDE_LAUNCH_PROFILE", "free");
+    vi.stubEnv("IROGUIDE_CAPABILITY_LIVE_CRITIQUE", "false");
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "approved-account",
       sub: "approved-account",
@@ -146,12 +149,13 @@ describe("review generation authorization", () => {
 
     const response = await POST(createRequest());
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
-      error: "AI critique is unavailable during IroGuide's free launch.",
+      error: "Live critique is unavailable. Continue with the free guided practice instead.",
     });
     expect(createReview).not.toHaveBeenCalled();
     expect(saveReviewForUser).not.toHaveBeenCalled();
+    expect(verifyFirebaseIdToken).not.toHaveBeenCalled();
   });
 
   afterEach(() => {
@@ -162,8 +166,11 @@ describe("review generation authorization", () => {
 describe("review authentication abuse controls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("IROGUIDE_CAPABILITY_LIVE_CRITIQUE", "true");
     vi.mocked(verifyFirebaseIdToken).mockRejectedValue(new FirebaseTokenVerificationError());
   });
+
+  afterEach(() => vi.unstubAllEnvs());
 
   it("throttles repeated forged tokens before further verification work", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);

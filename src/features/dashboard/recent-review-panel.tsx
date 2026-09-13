@@ -3,7 +3,19 @@ import type { Route } from "next";
 import { ArrowRight, BadgeCheck, RotateCcw, Sparkles } from "lucide-react";
 import type { DashboardReviewSummary } from "@/domain/dashboard-review";
 
-export function RecentReviewPanel({ review, reviewHref }: { review: DashboardReviewSummary; reviewHref: Route }) {
+export function RecentReviewPanel({
+  review,
+  reviewHref,
+  sourceImageStorage,
+}: {
+  review: DashboardReviewSummary;
+  reviewHref: Route;
+  sourceImageStorage: boolean;
+}) {
+  const sourceImageLabel = review.sourceImageSaved
+    ? sourceImageStorage ? "Private source image saved" : "Private source image access paused"
+    : "No source image saved";
+
   return (
     <section className="recent-review-panel" aria-labelledby="recent-review-title">
       <div className="recent-review-copy">
@@ -28,7 +40,7 @@ export function RecentReviewPanel({ review, reviewHref }: { review: DashboardRev
       </div>
 
       <div className="recent-review-actions">
-        <span className="recent-review-storage">{review.sourceImageSaved ? "Private source image saved" : "Source image still syncing"}</span>
+        <span className="recent-review-storage">{sourceImageLabel}</span>
         <Link className="button button-dark" href={reviewHref} data-analytics-event="dashboard_open_recent_review">Open critique <ArrowRight size={17} /></Link>
         <Link className="button-secondary" href="/review/new?revision=latest" data-analytics-event="dashboard_review_next_version">Review next version <RotateCcw size={16} /></Link>
       </div>
