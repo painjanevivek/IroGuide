@@ -10,6 +10,8 @@ test.describe("guided dashboard", () => {
     await expect(page.getByRole("heading", { name: /confidence-building learning path/i })).toBeVisible();
     await expect(page.getByText(/0 of 4 foundation steps/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /choose my path/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /new critique/i })).toHaveAttribute("href", "/review/new");
+    await expect(page.getByRole("link", { name: /start learning/i })).toHaveAttribute("href", "/learn#practice");
     await expect(page.locator(".guide-checklist li")).toHaveCount(4);
     await expect(page.locator(".progress-grid")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /clear learning history/i })).toHaveAttribute("href", /tool=data/);
@@ -23,6 +25,28 @@ test.describe("guided dashboard", () => {
     await expect(page.getByRole("heading", { name: /temporarily locked/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /retry guide/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /account controls/i })).toBeVisible();
+  });
+
+  test("loads the updated guide after a failed request is retried", async ({ page }) => {
+    let attempts = 0;
+    await page.route("**/api/dashboard/guide", (route) => {
+      attempts += 1;
+      if (attempts === 1) {
+        return route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          json: { error: "Your guide is being updated. Please retry." },
+        });
+      }
+      return json(route, guide("new-account"));
+    });
+    await signIn(page);
+
+    await expect(page.getByRole("heading", { name: /next step could not load/i })).toBeVisible();
+    await page.getByRole("button", { name: /retry guide/i }).click();
+
+    await expect(page.getByRole("heading", { name: /confidence-building learning path/i })).toBeVisible();
+    expect(attempts).toBe(2);
   });
 
   test("keeps the last guide visible when the device goes offline", async ({ page, context }) => {
@@ -60,6 +84,7 @@ test.describe("guided dashboard", () => {
   });
 
   test("keeps cached history readable through partial sync and a filtered-empty state", async ({ page, context }) => {
+    await page.setViewportSize({ width: 1491, height: 900 });
     await mockGuide(page, guide("existing-reviews"));
     await signIn(page);
     await seedSavedReview(page, "dashboard@iroguide.test");
@@ -71,6 +96,20 @@ test.describe("guided dashboard", () => {
     await expect(page.getByText(/no critiques match this filter/i)).toBeVisible();
     await page.getByRole("button", { name: /clear filter/i }).click();
     await expect(page.getByRole("link", { name: /open full critique/i })).toBeVisible();
+
+    const metadataGap = await page.locator(".history-card-meta").evaluate((element) => {
+      const [category, trustBadge] = Array.from(element.children);
+      return trustBadge.getBoundingClientRect().left - category.getBoundingClientRect().right;
+    });
+    expect(metadataGap).toBeGreaterThanOrEqual(12);
+
+    const insightTitles = await page.locator(".recent-review-details article strong").evaluateAll((elements) => elements.map((element) => {
+      const bounds = element.getBoundingClientRect();
+      return { bottom: bounds.bottom, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth };
+    }));
+    expect(insightTitles).toHaveLength(2);
+    expect(Math.abs(insightTitles[0].bottom - insightTitles[1].bottom)).toBeLessThanOrEqual(1);
+    expect(insightTitles.every(({ clientWidth, scrollWidth }) => scrollWidth <= clientWidth)).toBe(true);
 
     await context.setOffline(true);
     await expect(page.getByText(/readable history — partial sync/i)).toBeVisible();
@@ -151,9 +190,9 @@ async function seedSavedReview(page: Page, email: string) {
     id: documentId, userId, category: "website", categoryLabel: "Website / landing page", provider: "demo", status: "complete", savedAt: timestamp, updatedAt: timestamp, syncState: "local",
     review: {
       id: reviewId, createdAt: timestamp, overallScore: 7, summary: "A private cached critique remains readable during recovery.", strengths: ["The primary action is visible."],
-      scores: [{ label: "Hierarchy", score: 7 }], rubricVersion: "dashboard-e2e-v1", annotations: [], followUps: ["What should I refine next?"], provider: "demo",
-      issues: [{ id: "issue-1", category: "Hierarchy", score: 7, priority: "medium", observation: "The heading has a visible role.", impact: "Readers identify the message.", recommendation: "Keep the heading dominant.", actions: ["Preserve the current scale."] }],
-      checklist: [{ label: "Preserve the current scale.", priority: "medium" }],
+      scores: [{ label: "Visual Appeal", score: 8 }, { label: "Readability", score: 6 }], rubricVersion: "dashboard-e2e-v1", annotations: [], followUps: ["What should I refine next?"], provider: "demo",
+      issues: [{ id: "issue-1", category: "Readability", score: 6, priority: "medium", observation: "The background softens text contrast.", impact: "Readers work harder to scan the message.", recommendation: "Increase the background contrast.", actions: ["Adjust background contrast."] }],
+      checklist: [{ label: "Adjust background contrast.", priority: "medium" }],
     },
   };
   await page.evaluate(({ key, value }) => localStorage.setItem(key, JSON.stringify([value])), { key: `iroguide:dashboard-reviews:v1:${encodeURIComponent(userId)}`, value: document });

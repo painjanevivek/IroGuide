@@ -231,7 +231,7 @@ async function writeImportedReviewDocument(document: ImportedReviewDocument & { 
 
   await db.runTransaction(async (transaction) => {
     await assertAccountDeletionUnlockedInTransaction({ db, transaction, userId: document.userId });
-    transaction.set(db.collection(REVIEW_DRAFTS_COLLECTION).doc(document.id), {
+    transaction.set(db.collection(REVIEWS_COLLECTION).doc(document.id), {
       ...document,
       syncState: "cloud",
       savedAt: FieldValue.serverTimestamp(),

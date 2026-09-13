@@ -67,6 +67,7 @@ export function useAccountReviews({
       try {
         await syncPendingAccountReviews({
           getIdToken: () => currentUser.getIdToken(),
+          revalidateCloudImports: syncAttempt > 0,
           userId: currentUser.uid,
         });
       } catch {

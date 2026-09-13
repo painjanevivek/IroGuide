@@ -107,6 +107,28 @@ describe("review sync", () => {
     expect(postJsonWithFallbackMock).not.toHaveBeenCalled();
   });
 
+  it("revalidates cached cloud imports during a manual recovery attempt", async () => {
+    const review = createDemoReview(request);
+    const document = {
+      ...createStoredReviewDocument({ userId: "user-a", review, category: "logo" }),
+      syncState: "cloud" as const,
+    };
+    cacheReviewDocument(document, storage);
+    postJsonWithFallbackMock.mockResolvedValue({
+      failedIds: [],
+      savedIds: [document.id],
+      sourceImages: [],
+    });
+
+    await expect(syncPendingAccountReviews({
+      getIdToken: async () => "token",
+      revalidateCloudImports: true,
+      userId: "user-a",
+    })).resolves.toEqual({ attempted: true, failedCount: 0, pendingCount: 1, syncedCount: 1 });
+
+    expect(postJsonWithFallbackMock).toHaveBeenCalledOnce();
+  });
+
   it("preserves synced source image metadata returned by account storage", async () => {
     const review = createDemoReview(request);
     const document = createStoredReviewDocument({ userId: "user-a", review, category: "logo" });

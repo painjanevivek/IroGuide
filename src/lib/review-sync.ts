@@ -2,12 +2,14 @@ import { createImportedReviewDocument, reviewSyncResponseSchema } from "@/domain
 import { postJsonWithFallback } from "@/lib/api-client";
 import {
   cacheReviewDocument,
+  getCachedReviewDocuments,
   getPendingLocalReviewDocuments,
   type StoredReviewDocument,
 } from "@/lib/review-persistence";
 
 type AccountReviewSyncInput = {
   getIdToken: () => Promise<string>;
+  revalidateCloudImports?: boolean;
   userId: string;
 };
 
@@ -20,9 +22,12 @@ export type AccountReviewSyncResult = {
 
 export async function syncPendingAccountReviews({
   getIdToken,
+  revalidateCloudImports = false,
   userId,
 }: AccountReviewSyncInput): Promise<AccountReviewSyncResult> {
-  const pendingDocuments = getPendingLocalReviewDocuments(userId);
+  const pendingDocuments = revalidateCloudImports
+    ? getCachedReviewDocuments(userId).filter((document) => document.review.provider !== "live")
+    : getPendingLocalReviewDocuments(userId);
   if (pendingDocuments.length === 0) {
     return { attempted: false, failedCount: 0, pendingCount: 0, syncedCount: 0 };
   }

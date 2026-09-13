@@ -141,7 +141,7 @@ describe("review storage", () => {
     }), { merge: true });
   });
 
-  it("stores pending sync documents as untrusted imports for the verified user", async () => {
+  it("stores pending sync documents in readable review history as untrusted imports", async () => {
     const review = createDemoReview(request);
     const clientDocument = createImportedReviewDocument({
       userId: "forged-user",
@@ -160,8 +160,8 @@ describe("review storage", () => {
 
     expect(result.failedIds).toEqual([]);
     expect(result.savedIds).toEqual([savedPayload.id]);
-    expect(firestoreMock.collection).toHaveBeenCalledWith("reviewDrafts");
-    expect(firestoreMock.collection).not.toHaveBeenCalledWith("reviews");
+    expect(firestoreMock.collection).toHaveBeenCalledWith("reviews");
+    expect(firestoreMock.collection).not.toHaveBeenCalledWith("reviewDrafts");
     expect(savedPayload.userId).toBe("verified-user");
     expect(savedPayload.id).not.toContain("forged-user");
     expect(savedPayload.origin).toBe("imported");

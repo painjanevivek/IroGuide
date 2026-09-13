@@ -276,8 +276,10 @@ export function Dashboard() {
                 {reviewImageUrls[review.documentId] ? <Image src={reviewImageUrls[review.documentId]} alt={`${review.category ?? "Design"} source image`} fill unoptimized /> : <FileImage />}
               </div>
             )}
-            <span>{review.category ?? "Design review"}</span>
-            <span className={`review-trust-badge is-${review.trustState}`}>{review.trustState === "server-verified" ? "Verified" : "Unverified import"}</span>
+            <div className="history-card-meta">
+              <span>{review.category ?? "Design review"}</span>
+              <span className={`review-trust-badge is-${review.trustState}`}>{review.trustState === "server-verified" ? "Verified" : "Unverified import"}</span>
+            </div>
             <strong>{review.overallScore}<small>/10</small></strong><p>{review.summary}</p><time>{new Date(review.createdAt).toLocaleDateString()}</time>
           </Link></StaggerItem>)}</Stagger>}
         </>
