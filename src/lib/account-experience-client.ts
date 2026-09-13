@@ -40,21 +40,20 @@ export async function saveAccountExperience(user: User, input: AccountExperience
 }
 
 async function requestAccountExperience(user: User, init: RequestInit) {
-  let token: string;
-  try {
-    token = await user.getIdToken();
-  } catch {
-    throw new AccountExperienceRequestError("Your session expired. Sign in again to continue.", 401);
-  }
   let response: Response;
   try {
-    response = await fetch("/api/account/experience", {
-      ...init,
-      cache: "no-store",
-      headers: { ...init.headers, Authorization: `Bearer ${token}` },
-    });
-  } catch {
+    response = await fetchWithToken(user, init);
+  } catch (error) {
+    if (error instanceof AccountExperienceRequestError) throw error;
     throw new AccountExperienceRequestError("Learning progress could not reach the server. Your answers remain on this screen.", 503);
+  }
+  if (response.status === 401) {
+    try {
+      response = await fetchWithToken(user, init, true);
+    } catch (error) {
+      if (error instanceof AccountExperienceRequestError) throw error;
+      throw new AccountExperienceRequestError("Learning progress could not reach the server. Your answers remain on this screen.", 503);
+    }
   }
   const payload = await readPayload(response);
   if (!response.ok) {
@@ -65,6 +64,20 @@ async function requestAccountExperience(user: User, init: RequestInit) {
     );
   }
   return parseBundle(payload);
+}
+
+async function fetchWithToken(user: User, init: RequestInit, forceRefresh = false) {
+  let token: string;
+  try {
+    token = await user.getIdToken(forceRefresh);
+  } catch {
+    throw new AccountExperienceRequestError("Your session expired. Sign in again to continue.", 401);
+  }
+  return fetch("/api/account/experience", {
+    ...init,
+    cache: "no-store",
+    headers: { ...init.headers, Authorization: `Bearer ${token}` },
+  });
 }
 
 function parseBundle(payload: unknown): AccountExperienceBundle {
