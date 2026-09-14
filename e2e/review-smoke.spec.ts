@@ -5,10 +5,12 @@ import { dirname } from "node:path";
 import { signInWithEmail } from "./auth-helpers";
 
 const useFirebaseFlow = process.env.E2E_AUTH_MODE === "firebase";
+const useLiveCritiqueFlow = useFirebaseFlow || process.env.IROGUIDE_CAPABILITY_LIVE_CRITIQUE === "true";
 const testEmail = process.env.E2E_EMAIL ?? "designer@iroguide.test";
 const testPassword = process.env.E2E_PASSWORD ?? "iroguide-e2e-password";
 
 test("signs in, submits a review, and shows private source-image status on the dashboard", async ({ page }, testInfo) => {
+  test.skip(!useLiveCritiqueFlow, "Live critique stays excluded from the free-launch test profile.");
   if (useFirebaseFlow && (!process.env.E2E_EMAIL || !process.env.E2E_PASSWORD)) {
     test.skip(true, "Set E2E_EMAIL and E2E_PASSWORD for Firebase-backed Playwright runs.");
   }

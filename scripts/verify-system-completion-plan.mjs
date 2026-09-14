@@ -12,7 +12,10 @@ const [source, mirror, tasks] = await Promise.all([
 ]);
 
 const expected = mirror.match(/Canonical SHA-256:\*\* `([a-f0-9]{64})`/)?.[1];
-const actual = createHash("sha256").update(source).digest("hex");
+// Git may check the same Markdown out with CRLF on Windows and LF in CI.
+// Hash a canonical LF representation so this governance gate is portable.
+const canonicalSource = source.replaceAll("\r\n", "\n");
+const actual = createHash("sha256").update(canonicalSource).digest("hex");
 if (!expected || expected !== actual) {
   throw new Error(`Canonical plan diverged from its Spec Kit mirror: expected ${expected ?? "missing"}, received ${actual}.`);
 }

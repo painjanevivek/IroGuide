@@ -16,9 +16,11 @@ export function DashboardHeaderActions() {
           Start learning
         </Link>
       )}
-      <Link className="button button-small" href="/review/new" prefetch={false} data-analytics-event="dashboard_new_critique_click">
-        New critique <ArrowRight size={17} />
-      </Link>
+      {liveCritique && (
+        <Link className="button button-small" href="/review/new" prefetch={false} data-analytics-event="dashboard_new_critique_click">
+          New critique <ArrowRight size={17} />
+        </Link>
+      )}
     </>
   );
 }

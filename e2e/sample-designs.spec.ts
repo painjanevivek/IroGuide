@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signInWithEmail } from "./auth-helpers";
 
 test("uses real sample artwork and matching critique context", async ({ page }) => {
+  test.skip(process.env.IROGUIDE_CAPABILITY_LIVE_CRITIQUE !== "true", "Live critique stays excluded from the free-launch test profile.");
   await signInWithEmail(page, "designer@iroguide.test", "iroguide-e2e-password");
   await page.getByRole("link", { name: /new review/i }).first().click();
 
