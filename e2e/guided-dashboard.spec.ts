@@ -10,7 +10,7 @@ test.describe("guided dashboard", () => {
     await expect(page.getByRole("heading", { name: /confidence-building learning path/i })).toBeVisible();
     await expect(page.getByText(/0 of 4 foundation steps/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /choose my path/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /new critique/i })).toHaveAttribute("href", "/review/new");
+    await expect(page.getByRole("link", { name: /new critique/i })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /start learning/i })).toHaveAttribute("href", "/learn#practice");
     await expect(page.locator(".guide-checklist li")).toHaveCount(4);
     await expect(page.locator(".progress-grid")).toHaveCount(0);
@@ -65,7 +65,9 @@ test.describe("guided dashboard", () => {
     await mockGuide(page, guide("sample-complete"));
     await signIn(page);
     await dismissCookieNotice(page);
-    await page.getByRole("link", { name: /start self-review/i }).first().click();
+    const nextAction = page.locator(".dashboard-guide").getByRole("link", { name: /start self-review/i });
+    await expect(nextAction).toHaveAttribute("href", "/learn?tool=self-review#practice");
+    await nextAction.click();
 
     await expect(page).toHaveURL(/\/learn\?tool=self-review#practice/);
     await expect(page.getByRole("button", { name: "Self-review", exact: true })).toHaveAttribute("aria-current", "page");

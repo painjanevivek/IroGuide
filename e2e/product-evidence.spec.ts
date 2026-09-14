@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { signInWithEmail } from "./auth-helpers";
 
+test.skip(process.env.IROGUIDE_CAPABILITY_PRODUCT_EVIDENCE !== "true", "Research evidence collection stays excluded from the free-launch test profile.");
+
 test("research journey is bounded, honest, and responsive", async ({ page }) => {
   await signInWithEmail(page, "researcher@iroguide.test", "iroguide-e2e-password");
   await page.setViewportSize({ width: 390, height: 844 });

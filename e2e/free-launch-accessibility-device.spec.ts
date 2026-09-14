@@ -18,6 +18,9 @@ for (const route of publicRoutes) {
   test(`${route} keeps its structural accessibility contract`, async ({ page }, testInfo) => {
     await page.goto(route, { waitUntil: "domcontentloaded" });
     await waitForAppHydration(page);
+    const pageHeading = page.getByRole("heading", { level: 1 });
+    await expect(pageHeading, "wait for the settled page heading").toHaveCount(1);
+    await expect(pageHeading).toBeVisible();
 
     const audit = await page.evaluate(() => {
       const visible = (element: Element) => {

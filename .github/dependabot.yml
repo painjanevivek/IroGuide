@@ -12,6 +12,13 @@ updates:
     labels:
       - dependencies
       - npm
+    ignore:
+      # eslint-config-next's bundled React/import/a11y plugins are not yet
+      # fully compatible with ESLint 10. Keep receiving ESLint 9 patches
+      # until the upstream plugin chain supports the next major.
+      - dependency-name: eslint
+        update-types:
+          - version-update:semver-major
     groups:
       development-routine-updates:
         dependency-type: development

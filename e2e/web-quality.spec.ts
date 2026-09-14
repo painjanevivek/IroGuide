@@ -60,8 +60,8 @@ test.describe("public web quality", () => {
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
     await expect(page.getByText(/Example critique—not an analysis of your work.*visible evidence to a useful next move/i)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Review my design" }).first()).toHaveAttribute("href", "/review/new");
-    await expect(page.getByRole("link", { name: "Start a real review" })).toHaveAttribute("href", "/review/new");
+    await expect(page.getByRole("link", { name: "Start free learning" }).first()).toHaveAttribute("href", "/learn#practice");
+    await expect(page.getByRole("link", { name: "Inspect the full example" })).toHaveAttribute("href", "/learn");
 
     await context.close();
   });

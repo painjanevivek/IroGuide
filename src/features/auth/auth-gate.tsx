@@ -15,6 +15,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return (
       <main className="auth-gate">
         <LoaderCircle className="spin" />
+        <h1>Loading your workspace</h1>
         <p>Checking your IroGuide session...</p>
       </main>
     );

@@ -2,7 +2,7 @@
 
 **Canonical source:** `docs/plans/iroguide-system-completion-remediation-plan.md`
 
-**Canonical SHA-256:** `8cbd15a6cb3896921e7fecd4fdfe2e3e887d6c06a96a54dadb119170dd8332b6`
+**Canonical SHA-256:** `177694987187ad1c525dde2fc196b08cfcecf868420f6ef428d97586f27e56f1`
 
 This Spec Kit plan is a controlled mirror of the canonical remediation plan. The
 canonical document owns phase ordering, evidence gates, exit criteria, release
@@ -11,7 +11,7 @@ digest or the mirrored phase coverage diverges.
 
 ## Technical context
 
-- Next.js 16.3.2 App Router, React 19.2, TypeScript 6, Zod 4.
+- Next.js 16.3.4 App Router, React 19.2, TypeScript 6, Zod 4.
 - Firebase Admin is the only persistence authority for product records.
 - Server Components are the default; interactive behavior is isolated in small
   client components and heavy gated UI is loaded only after authorization.
