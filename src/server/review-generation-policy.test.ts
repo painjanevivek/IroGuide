@@ -18,12 +18,12 @@ const fullCapabilities: LaunchCapabilities = {
 };
 
 describe("review generation policy", () => {
-  it("denies an otherwise entitled user when critique is disabled", async () => {
+  it("denies a verified user when critique is disabled", async () => {
     const result = enforceReviewGenerationPolicy({
       capabilities: freeCapabilities,
       context: getContext(),
       eventPrefix: "review",
-      user: verifiedEntitledUser,
+      user: verifiedUser,
     });
 
     expect(result.allowed).toBe(false);
@@ -34,39 +34,35 @@ describe("review generation policy", () => {
     });
   });
 
-  it.each([
-    { name: "unverified", user: { ...verifiedEntitledUser, email_verified: false } },
-    { name: "unentitled", user: { uid: "unentitled", email_verified: true } },
-  ])("denies a full-profile $name user", async ({ user }) => {
+  it("denies an unverified full-profile user", async () => {
     const result = enforceReviewGenerationPolicy({
       capabilities: fullCapabilities,
       context: getContext(),
       eventPrefix: "review",
-      user,
+      user: { ...verifiedUser, email_verified: false },
     });
 
     expect(result.allowed).toBe(false);
     if (result.allowed) throw new Error("Expected account access to be denied.");
     expect(result.response.status).toBe(403);
     await expect(result.response.json()).resolves.toEqual({
-      error: "Verify your email and request beta review access before starting a critique.",
+      error: "Verify your email before starting a personalized critique.",
     });
   });
 
-  it("allows a verified entitled user only when critique is enabled", () => {
+  it("allows every verified user when critique is enabled", () => {
     expect(enforceReviewGenerationPolicy({
       capabilities: fullCapabilities,
       context: getContext(),
       eventPrefix: "review",
-      user: verifiedEntitledUser,
+      user: verifiedUser,
     })).toEqual({ allowed: true });
   });
 });
 
-const verifiedEntitledUser = {
-  uid: "verified-entitled",
+const verifiedUser = {
+  uid: "verified-user",
   email_verified: true,
-  iroguide_review_entitled: true,
 };
 
 function getContext() {

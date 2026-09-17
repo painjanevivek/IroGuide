@@ -78,7 +78,7 @@ export function ImprovementPanel({ review }: { review: ReviewOutput }) {
           <div>
             <Sparkles className="sparkle-blink-glow" />
             <strong>No automatic redesign</strong>
-            <p>IroGuide can translate existing critique evidence into an ordered brief. The result is labeled as derived guidance, while image generation and new AI analysis remain separate capabilities.</p>
+            <p>IroGuide can translate existing critique feedback into an ordered brief. The result is labeled as derived guidance, while image generation and new AI analysis remain separate capabilities.</p>
           </div>
           <button type="button" className="button button-lime" onClick={generate} disabled={loading}>
             {loading ? <><LoaderCircle className="spin" /> Deriving brief...</> : <>Create derived action brief <Sparkles /></>}

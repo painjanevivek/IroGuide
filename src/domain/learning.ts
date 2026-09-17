@@ -82,7 +82,7 @@ export const learningSamples: readonly LearningSample[] = [
       constraint: "Balance calm editorial character with product specificity",
     },
     alt: "Fieldnote landing page with a large research-focused headline, green actions, a detailed product interface, and a testimonial section.",
-    educationalOutcome: "Connect hero clarity, repeated actions, interface evidence, and readability into one conversion-path critique.",
+    educationalOutcome: "Connect hero clarity, repeated actions, interface cues, and readability into one conversion-path critique.",
     regions: [
       { id: "hero-copy", label: "Hero promise and supporting copy", x: 3, y: 27, width: 35, height: 31 },
       { id: "primary-actions", label: "Repeated Start a workspace actions", x: 3, y: 3, width: 93, height: 60 },
@@ -91,7 +91,7 @@ export const learningSamples: readonly LearningSample[] = [
     findings: [
       { id: "finding-1", actionId: "action-1", regionId: "primary-actions", priority: "high", what: "Two primary actions compete before product intent is established.", evidence: "Start a workspace appears in both the header and hero with equal green emphasis.", why: "Repeating the same high-commitment action can add noise when a new visitor still needs proof and orientation.", how: "Keep one dominant start action and make the second path an explicit low-commitment product tour." },
       { id: "finding-2", actionId: "action-2", regionId: "product-ui", priority: "medium", what: "The interface proves depth, but its smallest details cannot carry meaning alone.", evidence: "Labels, note metadata, and tags are reduced inside a large screenshot.", why: "Visitors may perceive realism without understanding the most valuable workflow.", how: "Pair the preview with two or three readable callouts tied to the core research tasks." },
-      { id: "finding-3", actionId: "action-3", regionId: "hero-copy", priority: "strength", what: "The promise and product view reinforce one another.", evidence: "Research stays connected sits beside a concrete shared-notes interface rather than abstract decoration.", why: "The first viewport links an outcome to believable product evidence.", how: "Retain this outcome-to-interface pairing while simplifying the action hierarchy." },
+      { id: "finding-3", actionId: "action-3", regionId: "hero-copy", priority: "strength", what: "The promise and product view reinforce one another.", evidence: "Research stays connected sits beside a concrete shared-notes interface rather than abstract decoration.", why: "The first viewport links an outcome to a believable product experience.", how: "Retain this outcome-to-interface pairing while simplifying the action hierarchy." },
     ],
   },
   {

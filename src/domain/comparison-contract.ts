@@ -26,7 +26,7 @@ export const comparisonIssueMatchSchema = z.strictObject({
   evidence: z.array(z.string().min(1).max(500)).max(5),
 }).superRefine((match, context) => {
   if (match.outcome !== "low-confidence" && match.evidence.length === 0) {
-    context.addIssue({ code: "custom", message: "A comparison outcome requires observed evidence.", path: ["evidence"] });
+    context.addIssue({ code: "custom", message: "A comparison outcome requires an observed detail.", path: ["evidence"] });
   }
   if (match.outcome === "low-confidence" && match.confidence >= comparisonMatchConfidenceThreshold) {
     context.addIssue({ code: "custom", message: "Low-confidence outcomes must remain below the match threshold.", path: ["confidence"] });

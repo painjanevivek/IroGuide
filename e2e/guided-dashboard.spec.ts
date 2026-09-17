@@ -11,7 +11,7 @@ test.describe("guided dashboard", () => {
     await expect(page.getByText(/0 of 4 foundation steps/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /choose my path/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /new critique/i })).toHaveAttribute("href", "/review/new");
-    await expect(page.getByRole("link", { name: /start learning/i })).toHaveAttribute("href", "/learn#practice");
+    await expect(page.getByRole("link", { name: /inspect what you can see/i })).toHaveAttribute("href", "/learn#practice");
     await expect(page.locator(".guide-checklist li")).toHaveCount(4);
     await expect(page.locator(".progress-grid")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /clear learning history/i })).toHaveAttribute("href", /tool=data/);
@@ -161,12 +161,12 @@ function guide(state: "new-account" | "onboarding-incomplete" | "sample-in-progr
   const actions = {
     "new-account": { id: "finish-onboarding", eyebrow: "Step 1 of 4", title: "Set up a confidence-building learning path.", description: "Choose three short preferences so the examples match your work.", href: "/onboarding", label: "Choose my path", artifact: "Saved learning path", completed: 0 },
     "onboarding-incomplete": { id: "finish-onboarding", eyebrow: "Step 1 of 4", title: "Continue your saved setup.", description: "Your earlier choices remain private and editable.", href: "/onboarding", label: "Continue setup", artifact: "Saved learning path", completed: 0 },
-    "sample-in-progress": { id: "continue-sample", eyebrow: "Step 2 of 4", title: "Continue where you left off.", description: "Return to the evidence you revealed.", href: "/learn#practice", label: "Continue sample", artifact: "Completed sample reflection", completed: 1 },
+    "sample-in-progress": { id: "continue-sample", eyebrow: "Step 2 of 4", title: "Continue where you left off.", description: "Return to the feedback you revealed.", href: "/learn#practice", label: "Continue sample", artifact: "Completed sample reflection", completed: 1 },
     "sample-complete": { id: "start-self-review", eyebrow: "Step 3 of 4", title: "Apply the same standard to your own work.", description: "Your answers produce at most three priorities.", href: "/learn?tool=self-review#practice", label: "Start self-review", artifact: "Saved self-review priorities", completed: 2 },
     "brief-ready": { id: "request-access", eyebrow: "Free path complete", title: "You have a brief ready for a future critique.", description: "Record revocable interest without an upload or provider call.", href: "/learn?tool=access#practice", label: "Review access options", artifact: "Revocable access interest", completed: 4 },
     "access-requested": { id: "view-access", eyebrow: "Free path complete", title: "Your access interest is recorded.", description: "No email or provider job was created.", href: "/learn?tool=access#practice", label: "View access status", artifact: "Revocable access interest", completed: 4 },
     "invited": { id: "view-access", eyebrow: "Access recorded", title: "Your invite is saved, but the provider remains paused.", description: "Invitation state cannot override the provider gate.", href: "/learn?tool=access#practice", label: "View access status", artifact: "Saved access state", completed: 4 },
-    "existing-reviews": { id: "open-review-history", eyebrow: "Owned history", title: "Continue from your latest saved critique.", description: "Review evidence already attached to your account.", href: "/dashboard#recent-reviews", label: "Open recent critique", artifact: "Reviewed saved critique", completed: 4 },
+    "existing-reviews": { id: "open-review-history", eyebrow: "Owned history", title: "Continue from your latest saved critique.", description: "Review feedback already attached to your account.", href: "/dashboard#recent-reviews", label: "Open recent critique", artifact: "Reviewed saved critique", completed: 4 },
   } as const;
   const action = actions[state];
   const { completed, ...nextAction } = action;
@@ -174,7 +174,7 @@ function guide(state: "new-account" | "onboarding-incomplete" | "sample-in-progr
     schemaVersion: 1, state, cohort: "beginner-designer", nextAction, completionCount: completed, reviewCount: 0, recentActivity: [],
     checklist: [
       { id: "choose-path", label: "Choose your learning path", outcome: "Role saved", completed: completed >= 1, href: "/onboarding" },
-      { id: "inspect-sample", label: "Inspect visible evidence", outcome: "First fix chosen", completed: completed >= 2, href: "/learn#practice" },
+      { id: "inspect-sample", label: "Inspect what you can see", outcome: "First fix chosen", completed: completed >= 2, href: "/learn#practice" },
       { id: "practice-rubric", label: "Run a self-review", outcome: "Priorities derived", completed: completed >= 3, href: "/learn?tool=self-review#practice" },
       { id: "prepare-brief", label: "Prepare critique context", outcome: "Brief ready", completed: completed >= 4, href: "/learn?tool=brief#practice" },
     ],

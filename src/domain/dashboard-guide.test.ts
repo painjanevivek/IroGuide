@@ -28,6 +28,21 @@ describe("dashboard guide", () => {
     expect(JSON.stringify(guide.recentActivity)).not.toContain("client");
   });
 
+  it("opens personalized review to every prepared user when live critique is enabled", () => {
+    const guide = deriveDashboardGuide({
+      ...base,
+      liveCritique: true,
+      sampleProgress: [sampleDone()],
+      selfReviews: [{ category: "ui", status: "completed", updatedAt: now }],
+      briefs: [{ category: "ui", status: "ready", updatedAt: now }],
+    });
+
+    expect(guide).toMatchObject({
+      state: "brief-ready",
+      nextAction: { id: "start-review", href: "/review/new", label: "Start personalized review" },
+    });
+  });
+
   it("returns exactly four bounded checklist outcomes", () => {
     const guide = deriveDashboardGuide({ ...base, sampleProgress: [sampleDone()] });
     expect(guide.checklist).toHaveLength(4);

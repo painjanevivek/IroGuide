@@ -20,7 +20,7 @@ export function LearningPage() {
           <div>
             <p className="eyebrow"><BookOpenCheck /> Free design learning</p>
             <h1>Learn to see the decision behind the design.</h1>
-            <p>Inspect visible evidence, understand why it matters, and choose a first useful fix. No image upload or personalized analysis is used in this free path.</p>
+            <p>Inspect what you can see, understand why it matters, and choose a first useful fix. No image upload or personalized analysis is used in this free path.</p>
             <div className="learning-hero-actions"><a className="button button-dark" href="#example">Read the example <ArrowRight /></a><a className="button-secondary" href="#practice">Try the exercise</a></div>
           </div>
           <aside aria-label="Free learning boundaries">
@@ -32,7 +32,7 @@ export function LearningPage() {
 
         <section className="public-critique" id="example" aria-labelledby="public-example-title">
           <header className="learning-section-heading">
-            <div><p className="eyebrow">Example critique—not an analysis of your work</p><h2 id="public-example-title">{publicSample.title}: evidence before opinion.</h2></div>
+            <div><p className="eyebrow">Example critique—not an analysis of your work</p><h2 id="public-example-title">{publicSample.title}: feedback before opinion.</h2></div>
             <span>{publicSample.category} / {publicSample.mode} / {publicSample.version}</span>
           </header>
 
@@ -56,7 +56,7 @@ export function LearningPage() {
                 <article>
                   <p className={`finding-priority priority-${finding.priority}`}>{finding.priority}</p>
                   <h3>{finding.what}</h3>
-                  <dl><div><dt>Visible evidence</dt><dd>{finding.evidence}</dd></div><div><dt>Why it matters</dt><dd>{finding.why}</dd></div><div><dt>{index === 0 ? "Fix first" : "What to try"}</dt><dd>{finding.how}</dd></div></dl>
+                  <dl><div><dt>What we noticed</dt><dd>{finding.evidence}</dd></div><div><dt>Why it matters</dt><dd>{finding.why}</dd></div><div><dt>{index === 0 ? "Fix first" : "What to try"}</dt><dd>{finding.how}</dd></div></dl>
                 </article>
               </li>
             ))}
@@ -64,7 +64,7 @@ export function LearningPage() {
         </section>
 
         <section className="sample-library" aria-labelledby="sample-library-title">
-          <header className="learning-section-heading"><div><p className="eyebrow">Three roles, one evidence standard</p><h2 id="sample-library-title">Practice paths with a clear purpose.</h2></div></header>
+          <header className="learning-section-heading"><div><p className="eyebrow">Three roles, one feedback standard</p><h2 id="sample-library-title">Practice paths with a clear purpose.</h2></div></header>
           <div>
             {learningSamples.map((sample, index) => <article key={sample.id}><Image alt="" aria-hidden="true" height={sample.height} loading={index === 0 ? "eager" : "lazy"} sizes="(max-width: 700px) 100vw, 33vw" src={sample.asset} width={sample.width} /><span>{sample.role.replaceAll("-", " ")} / {sample.mode}</span><h3>{sample.title}</h3><p>{sample.educationalOutcome}</p><small><LockKeyhole /> {sample.ownership.owner} {sample.ownership.source}</small></article>)}
           </div>

@@ -112,7 +112,7 @@ export function AuthTemplateShell({ children, mode }: AuthTemplateShellProps) {
           </p>
           <h2>{isSignUp ? "Start a private design learning workspace." : "Return to your learning workspace."}</h2>
           <p>
-            Practice with owned examples, learn a self-review rubric, and prepare a stronger brief. Personalized critique remains invite-only.
+            Practice with owned examples, learn a self-review rubric, or start a personalized critique. No invitation is required.
           </p>
         </div>
 

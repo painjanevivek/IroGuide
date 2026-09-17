@@ -53,7 +53,7 @@ test("operator insights distinguish disabled collection from measured zero", asy
   });
 
   await page.goto("/admin/insights");
-  await expect(page.getByRole("heading", { name: "Free-launch evidence." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Free-launch feedback." })).toBeVisible();
   await expect(page.getByText("Collection is safely disabled")).toBeVisible();
   await expect(page.locator('.insights-metrics article[data-observed="false"]')).toHaveCount(12);
   await expect(page.locator('.insights-funnels article[data-status="not-observed"]')).toHaveCount(7);

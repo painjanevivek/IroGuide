@@ -222,7 +222,7 @@ export function OnboardingFlow() {
         <div><p className="eyebrow">Private learning setup</p><h1 ref={headingRef} tabIndex={-1}>{stepTitle(step)}</h1><p>{stepDescription(step, role)}</p></div>
         <div className="onboarding-progress" aria-label={`Step ${step} of 3`}><span>STEP {step} / 3</span><progress max="3" value={step}>Step {step} of 3</progress></div>
       </header>
-      {user.email && !user.emailVerified ? <p className="onboarding-verification" role="status">Your email is not verified yet. Free learning remains available, but live review access will require verification.</p> : null}
+      {user.email && !user.emailVerified ? <p className="onboarding-verification" role="status">Verify your email before submitting a personalized review. Learning tools remain available while you do that.</p> : null}
 
       <section className="onboarding-card">
         {step === 1 ? <RoleStep value={role} onChange={setRole} /> : null}

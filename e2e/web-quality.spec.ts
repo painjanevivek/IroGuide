@@ -59,8 +59,8 @@ test.describe("public web quality", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: /design critique/i }).first()).toBeVisible();
-    await expect(page.getByText(/Example critique—not an analysis of your work.*visible evidence to a useful next move/i)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Review my design" }).first()).toHaveAttribute("href", "/review/new");
+    await expect(page.getByText(/Example critique—not an analysis of your work.*what is visible to a useful next move/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Get my design critiqued" }).first()).toHaveAttribute("href", "/review/new");
     await expect(page.getByRole("link", { name: "Start a real review" })).toHaveAttribute("href", "/review/new");
 
     await context.close();
@@ -73,7 +73,7 @@ test.describe("public web quality", () => {
     await page.getByRole("link", { name: "Explore an example critique" }).click();
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page.getByText("Example critique—not an analysis of your work.", { exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /evidence before opinion/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /feedback before opinion/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /try the exercise/i })).toHaveAttribute("href", "#practice");
   });
 });

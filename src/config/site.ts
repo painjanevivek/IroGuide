@@ -9,9 +9,9 @@ function getCanonicalSiteUrl() {
 export const siteConfig = {
   name: "IroGuide",
   url: getCanonicalSiteUrl(),
-  title: "IroGuide - Learn Evidence-Based Design Critique",
+  title: "IroGuide - Learn Feedback-Led Design Critique",
   description:
-    "Learn how to turn visual evidence into clear design decisions with a free example critique. Personalized AI review remains invite-only.",
+    "Learn from a free example critique, then sign in for personalized AI feedback on your own design. No invitation required.",
   shortDescription:
     "Structured design critique learning that explains what matters, why it matters, and what to fix first.",
   keywords: [

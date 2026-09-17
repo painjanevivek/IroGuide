@@ -50,10 +50,10 @@ npx firebase-tools deploy --only firestore:rules --project <firebase-project-id>
 
 The browser signs in with Firebase and sends the ID token to the review API.
 The API verifies the token server-side before saving completed reviews.
-Live review generation additionally requires a verified email plus either the
-signed Firebase custom claim `iroguide_review_entitled=true` or membership in
-the server-only `IROGUIDE_REVIEW_ENTITLED_UIDS` beta allowlist. This gate must
-be configured before enabling paid provider credentials.
+When live review is enabled, every verified signed-in account can request a
+personalized critique. There is no invitation, custom entitlement claim, or UID
+allowlist; same-origin enforcement, validation, rate limits, provider quotas,
+spend caps, and the emergency kill switch remain mandatory.
 
 ### Security rules emulator tests
 
@@ -130,7 +130,7 @@ production values fail closed to `free`; credentials never enable a capability.
 Do not set `full` until all of these are ready and explicitly approved:
 
 - a live review provider with cost and abuse controls;
-- verified-email plus signed review-entitlement issuance;
+- verified account authentication plus tested public-access abuse controls;
 - an active Firebase Storage bucket with deployed owner-only rules;
 - verified Resend sender/recipient configuration;
 - green enabled-path Playwright, security smoke, and capability-driven production smoke results.
@@ -138,7 +138,7 @@ Do not set `full` until all of these are ready and explicitly approved:
 Community remains gated even in `full`; it requires a separate product, safety,
 rules, moderation, and operational approval.
 
-The production smoke reads `/api/readiness` once and treats its capability object as the oracle. Free mode positively verifies a `403` generation denial and Firestore isolation without contacting paid services; full mode verifies an entitled successful review plus Storage isolation.
+The production smoke reads `/api/readiness` once and treats its capability object as the oracle. Free mode positively verifies a `403` generation denial and Firestore isolation without contacting paid services; full mode verifies a successful review from a verified signed-in account plus Storage isolation.
 
 ## Live vision setup
 
@@ -155,7 +155,7 @@ OPENROUTER_APP_NAME=IroGuide
 ```
 
 Do not commit `OPENROUTER_API_KEY`. Provider budget, direct upload, durable job,
-evaluation, entitlement, and rollback gates must pass before a production
+evaluation, public-access abuse, and rollback gates must pass before a production
 profile change.
 
 ## Architecture notes

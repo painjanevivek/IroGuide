@@ -59,7 +59,7 @@ export function PortfolioWorkshop() {
       <section className="portfolio-builder section-pad">
         <div className="portfolio-intro">
           <div><p className="eyebrow">Case study anatomy</p><h2>A polished result<br />needs a clear story.</h2></div>
-          <p>Use a saved critique as evidence. Explain the constraint, the decision, and the effect instead of presenting unexplained before-and-after images.</p>
+          <p>Use a saved critique as feedback. Explain the constraint, the decision, and the effect instead of presenting unexplained before-and-after images.</p>
         </div>
 
         <SourceReviewCard
@@ -87,9 +87,9 @@ export function PortfolioWorkshop() {
           </div>
         </div>
         <div className="portfolio-preview-copy">
-          <p className="eyebrow light"><Eye /> Private evidence preview</p>
+          <p className="eyebrow light"><Eye /> Private feedback preview</p>
           <h2>Designed to explain,<br />not decorate.</h2>
-          <p>{caseDraft ? `${caseDraft.title} traces every displayed claim to your owned review. An outcome stays blank until a trusted comparison supplies evidence.` : "Choose an owned, server-verified review to prepare a traceable private case-study draft."}</p>
+          <p>{caseDraft ? `${caseDraft.title} traces every displayed claim to your owned review. An outcome stays blank until a trusted comparison confirms it.` : "Choose an owned, server-verified review to prepare a traceable private case-study draft."}</p>
           <button className="button button-lime" disabled>Export and publishing disabled</button>
         </div>
       </section>
@@ -129,7 +129,7 @@ function SourceReviewCard({
           <h3>{source.category ?? "Design project"} / {source.overallScore}/10</h3>
           <p>{source.summary}</p>
         </div>
-        <span>{source.trustState === "server-verified" ? "Verified evidence" : hasCachedOnlyReviews || source.syncState === "local" ? "Private unverified" : "Not evidence-ready"}</span>
+        <span>{source.trustState === "server-verified" ? "Verified feedback" : hasCachedOnlyReviews || source.syncState === "local" ? "Private unverified" : "Not ready for a case study"}</span>
       </div>
     );
   }
@@ -149,7 +149,7 @@ function SourceReviewCard({
       <FileText />
       <div>
         <span className="mono-label">{loadError ? "REVIEWS UNAVAILABLE" : "NO SAVED CRITIQUE SELECTED"}</span>
-        <h3>{loadError ? "Could not load reviews" : "Start with evidence"}</h3>
+        <h3>{loadError ? "Could not load reviews" : "Start with feedback"}</h3>
         <p>{loadError || <>Complete a critique first. IroGuide will use its issues and strengths to seed a private case-study outline. <Link href="/docs">Read the docs</Link> for what to submit.</>}</p>
       </div>
       <ReviewLaunchLink className="button button-dark" enabledLabel="Review a design" />

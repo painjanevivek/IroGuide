@@ -26,6 +26,7 @@ export default defineConfig({
       ...(useFirebaseFlow ? {} : {
         IROGUIDE_LAUNCH_PROFILE: "full",
         IROGUIDE_CAPABILITY_GUIDED_LEARNING: "true",
+        IROGUIDE_CAPABILITY_LIVE_CRITIQUE: "true",
         NEXT_PUBLIC_E2E_LOCAL_AUTH: "true",
       }),
     },

@@ -10,7 +10,7 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 | Capability | Default state | Activation boundary | Authority |
 | --- | --- | --- | --- |
 | Guided learning | off unless explicitly enabled | owner-scoped Phase 2 APIs and readiness | `IROGUIDE_CAPABILITY_GUIDED_LEARNING` |
-| Live critique | off | Provider GO, entitlement, readiness, quotas, and kill switch | `IROGUIDE_CAPABILITY_LIVE_CRITIQUE` |
+| Live critique | off | Provider GO, verified authentication, public-access abuse controls, readiness, quotas, and kill switch | `IROGUIDE_CAPABILITY_LIVE_CRITIQUE` |
 | Improvement tracking | off | verified owned review and Retention gate | `IROGUIDE_CAPABILITY_IMPROVEMENT_TRACKING` |
 | Revision comparison | off | compatible verified evidence and Retention gate | `IROGUIDE_CAPABILITY_REVISION_COMPARISON` |
 | Follow-up conversation | off | owned review, bounded conversation, and Retention gate | `IROGUIDE_CAPABILITY_FOLLOW_UP_CONVERSATION` |
@@ -19,7 +19,7 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 | Billing | off and provider absent | separate approved billing phase | `IROGUIDE_CAPABILITY_BILLING` |
 | Product evidence | off | consented, privacy-safe first-party collection | `IROGUIDE_CAPABILITY_PRODUCT_EVIDENCE` |
 | Bug-report email | off; Firestore remains authoritative | accepted provider/privacy/retry/bounce/support operations | `IROGUIDE_CAPABILITY_BUG_REPORT_EMAIL` |
-| Review pipeline / source images | off independently | invited cohort and validated owner-bound infrastructure | exact pipeline and Storage capabilities |
+| Review pipeline / source images | off independently | public authenticated cohort and validated owner-bound infrastructure | exact pipeline and Storage capabilities |
 
 ## Page routes
 
@@ -49,9 +49,9 @@ The server-resolved capability object is authoritative. UI labels may explain a 
 | `GET/POST /api/projects` and `GET/PATCH/DELETE /api/projects/[id]` | owner-scoped projects, revisions, idempotency, and safe transfer/delete | same | 16 KiB mutation |
 | `GET/POST/PATCH/DELETE /api/self-reviews` | owner-scoped image-free learning records | same | 32 KiB |
 | `GET/PUT/DELETE /api/design-briefs` | owner-scoped image-free drafts | same | 32 KiB |
-| `POST/DELETE /api/access-interest` | idempotent contact preference; no email | approved operator invitation for later entitlement | 8 KiB |
+| `POST/DELETE /api/access-interest` | optional idempotent capacity preference; no email | not an access or entitlement gate | 8 KiB |
 | `POST /api/account/export` | bounded owner-scoped JSON attachment after Phase 6 | same | no creative request body |
-| `POST /api/reviews` | policy denial before body/provider | verified email, entitlement, live readiness | JSON 512 KiB; multipart 4.45 MB |
+| `POST /api/reviews` | policy denial before body/provider | verified signed-in account and live readiness | JSON 512 KiB; multipart 4.45 MB |
 | `POST /api/reviews/sync` | owned text sync; source image not persisted | Storage capability for image persistence | JSON 2 MiB; multipart 4.45 MB |
 | `POST /api/follow-ups` | policy denial | owned trusted review and AI capability | 4.45 MB hard ceiling; schema is smaller |
 | `POST /api/comparisons` | policy denial | owned compatible review and AI capability | 4.45 MB hard ceiling |

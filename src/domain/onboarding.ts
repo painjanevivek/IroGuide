@@ -25,7 +25,7 @@ export const categoryOptions = [
 
 export const critiqueStyleOptions = [
   { id: "friendly", label: "Friendly", description: "Encouraging language with a gentle first step." },
-  { id: "mentor", label: "Mentor", description: "Balanced teaching with evidence and practical direction." },
+  { id: "mentor", label: "Mentor", description: "Balanced teaching with feedback and practical direction." },
   { id: "direct", label: "Direct", description: "Concise priorities with minimal framing." },
 ] as const;
 
@@ -43,7 +43,7 @@ export function getRecommendedSample(role: OnboardingRole | null) {
 
 export function getCohortWelcome(role: OnboardingRole | null) {
   if (role === "freelancer") return "Build a clear pre-handoff critique habit.";
-  if (role === "ui-ux-designer") return "Practice evidence-based interface critique.";
+  if (role === "ui-ux-designer") return "Practice feedback-led interface critique.";
   if (role === "beginner-designer") return "Learn what to inspect and why it matters.";
   return "Build a critique habit around the work you want to improve.";
 }

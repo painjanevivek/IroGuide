@@ -1,6 +1,6 @@
 # Live Provider Activation Checklist
 
-Activation is a separate product and operational decision. The presence of provider credentials must never bypass this checklist or change the free profile automatically.
+Activation is a separate product and operational decision. The presence of provider credentials must never bypass this checklist or change the free profile automatically. Once activated, personalized reviews are public to every verified signed-in account; no invitation, entitlement claim, or UID allowlist is required.
 
 ## Contract and data boundary
 
@@ -23,6 +23,7 @@ Activation is a separate product and operational decision. The presence of provi
 
 - [ ] Every approved scenario in `docs/provider-evaluation-suite.md` passes with two human reviewers and no blocking failure.
 - [ ] A fixed daily and monthly spend cap, per-user quota, and emergency provider kill switch are tested.
+- [ ] Public-access account creation, verification, IP throttling, quota exhaustion, and spend-cap behavior are load- and abuse-tested.
 - [ ] Privacy terms, retention, deletion propagation, and provider data-use terms receive product/legal approval.
 - [ ] Staging smoke proves upload, job polling, trusted persistence, retry behavior, deletion, and rollback for the exact release commit.
 - [ ] Product, engineering, security, and budget owners record a signed go decision.

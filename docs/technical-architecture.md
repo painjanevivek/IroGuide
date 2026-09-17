@@ -49,7 +49,7 @@ Client modules never import `src/server/`. Route handlers authenticate and autho
 
 | Capability | development | free production | full production |
 | --- | --- | --- | --- |
-| AI critique | deterministic local provider | denied | eligible only with provider readiness and entitlement |
+| AI critique | deterministic local provider | denied | public to verified signed-in accounts when provider readiness passes |
 | Source-image storage | off by default | denied for new images | eligible with private Storage readiness |
 | Bug-report email | off | stored, delivery disabled | eligible with verified Resend configuration |
 | Community | gated | gated | gated until separate safety approval |
@@ -85,7 +85,7 @@ Every mutation applies the relevant sequence before business work:
 1. Same-origin and content-type checks.
 2. Trusted client identity and distributed rate limit.
 3. Firebase token verification and, for destructive actions, recent-login verification.
-4. Server capability and entitlement policy.
+4. Server capability and verified-account policy.
 5. Actual-stream byte budget before JSON or multipart parsing.
 6. Zod/domain validation.
 7. UID-scoped repository/provider work.

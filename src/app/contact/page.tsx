@@ -8,7 +8,7 @@ import { BugReportForm } from "@/features/contact/bug-report-form";
 export const metadata: Metadata = {
   title: `Contact ${siteConfig.name}`,
   description:
-    `Contact IroGuide support at ${siteConfig.supportEmail}, request beta access, or report a product bug.`,
+    `Contact IroGuide support at ${siteConfig.supportEmail} for account or review help, or report a product bug.`,
   alternates: {
     canonical: "/contact",
   },

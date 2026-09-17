@@ -14,8 +14,8 @@ export async function captureProductEvidence(user: User | null, event: ProductEv
     const token = await user.getIdToken();
     await requestJsonWithFallback({
       path: "/api/product-evidence",
-      unavailableMessage: "Product evidence is unavailable.",
-      failureMessage: "Product evidence was not accepted.",
+      unavailableMessage: "Product feedback is unavailable.",
+      failureMessage: "Product feedback was not accepted.",
       init: {
         method: "POST",
         headers: {

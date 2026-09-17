@@ -25,7 +25,7 @@ test.describe("truthful free learning", () => {
     const exercise = page.getByRole("heading", { name: /practice with form together/i });
     await expect(exercise).toBeVisible();
     await page.getByLabel(/event type becomes fragile/i).check();
-    await page.getByRole("button", { name: /reveal the evidence/i }).click();
+    await page.getByRole("button", { name: /reveal the feedback/i }).click();
     await expect(page.locator(".learning-practice-shell").getByText(/supporting line is narrow/i)).toBeVisible();
     await page.getByRole("button", { name: /choose this first fix/i }).click();
     await page.getByLabel(/apply the first fix/i).check();
@@ -51,7 +51,7 @@ test.describe("truthful free learning", () => {
     await dismissCookieNotice(page);
 
     await page.getByLabel(/interface proves depth/i).check();
-    await page.getByRole("button", { name: /reveal the evidence/i }).click();
+    await page.getByRole("button", { name: /reveal the feedback/i }).click();
     await page.getByRole("button", { name: /choose this first fix/i }).click();
     await page.getByLabel(/apply the first fix/i).check();
 
@@ -74,14 +74,9 @@ test.describe("truthful free learning", () => {
     await page.getByRole("button", { name: /mark brief ready/i }).click();
     await expect(page.getByText(/your brief is ready/i)).toBeVisible();
 
-    await page.getByRole("button", { name: "Review access" }).click();
-    await page.getByLabel(/preferred category/i).selectOption("ui");
-    await page.getByLabel(/personal or practice work/i).check();
-    await page.getByLabel(/allow IroGuide to record/i).check();
-    await page.getByRole("button", { name: /record review interest/i }).click();
-    await expect(page.getByText(/access interest is recorded/i)).toBeVisible();
-    await page.getByRole("button", { name: /revoke interest now/i }).click();
-    await expect(page.getByRole("heading", { name: /tell us whether future review access fits/i })).toBeVisible();
+    await page.getByRole("button", { name: "Review availability" }).click();
+    await expect(page.getByRole("heading", { name: /personalized reviews are open/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /start personalized review/i })).toHaveAttribute("href", "/review/new");
 
     expect(forbiddenRequests).toEqual([]);
     await captureEvidence(page, "free-learning-complete-desktop.png");

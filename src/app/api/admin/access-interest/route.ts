@@ -53,7 +53,7 @@ async function authorizeOperator(request: Request, mutation: boolean) {
   }
   const auth = await requireVerifiedFirebaseUser(request, context, "access_operations", { missing: "Sign in with an operator account." });
   if ("response" in auth) return auth;
-  if (!isIroGuideAdmin(auth.user)) return { response: NextResponse.json({ error: "This account cannot operate review access." }, { status: 403, headers: jsonHeaders(context) }) };
+  if (!isIroGuideAdmin(auth.user)) return { response: NextResponse.json({ error: "This account cannot operate review-availability research." }, { status: 403, headers: jsonHeaders(context) }) };
   const rate = await enforceRateLimit({ context, eventPrefix: "access_operations", key: `access-operations:${auth.userLogId}`, limit: mutation ? 30 : 60, message: "Too many access operations.", request, windowMs: 10 * 60 * 1_000 });
   if ("response" in rate) return rate;
   return { context, userId: auth.user.uid, userLogId: auth.userLogId };

@@ -117,7 +117,7 @@ export function ProjectsWorkspace() {
   return (
     <main className="projects-workspace">
       <section className="projects-hero">
-        <div><p className="eyebrow"><FolderKanban /> Private projects</p><h1>Organize the work.<br /><span>Keep the evidence.</span></h1><p>Group learning artifacts and future verified critiques without changing or deleting legacy records.</p></div>
+        <div><p className="eyebrow"><FolderKanban /> Private projects</p><h1>Organize the work.<br /><span>Keep the feedback.</span></h1><p>Group learning artifacts and future verified critiques without changing or deleting legacy records.</p></div>
         <Link className="button button-dark" href="/learn">Continue learning <ArrowRight /></Link>
       </section>
 
@@ -175,7 +175,7 @@ function nextActionCopy(action: PublicProject["nextAction"]) {
   if (action === "start-learning") return "Next: create the first learning artifact.";
   if (action === "prepare-brief") return "Next: prepare a critique-ready brief.";
   if (action === "review-archive") return "Archived projects stay private and restorable.";
-  return "Next: continue from the latest project evidence.";
+  return "Next: continue from the latest project feedback.";
 }
 
 function messageFor(error: unknown) {

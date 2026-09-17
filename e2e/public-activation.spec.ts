@@ -14,6 +14,18 @@ test.describe("public activation clarity", () => {
     await expect(page.getByText(/example critique—not an analysis of your work/i).first()).toBeVisible();
   });
 
+  test("carries the landing-page critique intent through sign-up", async ({ page }) => {
+    await page.goto("/");
+
+    const critiqueAction = page.getByRole("link", { name: "Get my design critiqued" });
+    await expect(critiqueAction).toHaveAttribute("href", "/auth?mode=sign-up&next=%2Freview%2Fnew");
+    await critiqueAction.click();
+
+    await expect(page).toHaveURL(/\/auth\?mode=sign-up&next=%2Freview%2Fnew$/);
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+    await expect(page).toHaveURL(/\/review\/new$/);
+  });
+
   for (const width of responsiveWidths) {
     test(`keeps repaired public routes inside the ${width}px viewport`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });

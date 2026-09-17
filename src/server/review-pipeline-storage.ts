@@ -359,7 +359,7 @@ export async function runReviewJob(id: string, workerId: string, now = new Date(
   const upload = parseUpload(uploadSnapshot.data());
   if (upload.userId !== leased.userId || upload.state !== "consumed" || !upload.validation) {
     await failLeasedJob(document.ref, leased, workerId, "policy", now);
-    throw new ReviewPipelineError("Review job upload evidence is invalid.", 409);
+    throw new ReviewPipelineError("Review upload could not be verified.", 409);
   }
   let bytes: Buffer;
   try {

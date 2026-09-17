@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     capability: "productEvidence",
     context,
     eventPrefix: "product_evidence",
-    message: "Product evidence collection is disabled.",
+    message: "Product feedback collection is disabled.",
   });
   if (!capability.allowed) return capability.response;
   const originCheck = enforceSameOriginRequest(request, context, "product_evidence");
@@ -27,14 +27,14 @@ export async function POST(request: Request) {
   if (request.headers.get("x-iroguide-analytics-consent") !== "v1") {
     logRequestEvent("warn", "product_evidence.consent_missing", context);
     return NextResponse.json(
-      { error: "Analytics consent is required before recording product evidence." },
+      { error: "Analytics consent is required before recording product feedback." },
       { status: 403, headers: jsonHeaders(context) },
     );
   }
 
   const auth = await requireVerifiedFirebaseUser(request, context, "product_evidence", {
-    missing: "Sign in with a verified account before recording product evidence.",
-    unavailable: "Product evidence is not available right now.",
+    missing: "Sign in with a verified account before recording product feedback.",
+    unavailable: "Product feedback is not available right now.",
   });
   if ("response" in auth) return auth.response;
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     eventPrefix: "product_evidence",
     key: `product-evidence:${auth.userLogId}`,
     limit: PRODUCT_EVIDENCE_RATE_LIMIT.limit,
-    message: "Too many product evidence events. Please try again shortly.",
+    message: "Too many product feedback events. Please try again shortly.",
     request,
     windowMs: PRODUCT_EVIDENCE_RATE_LIMIT.windowMs,
   });
@@ -66,9 +66,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof ZodError) {
       logRequestEvent("warn", "product_evidence.rejected", context, { user: auth.userLogId });
-      return NextResponse.json({ error: "Product evidence fields are not allowed." }, { status: 400, headers: jsonHeaders(context) });
+      return NextResponse.json({ error: "Product feedback fields are not allowed." }, { status: 400, headers: jsonHeaders(context) });
     }
     logRequestEvent("error", "product_evidence.failed", context, { user: auth.userLogId });
-    return NextResponse.json({ error: "Product evidence could not be recorded." }, { status: 503, headers: jsonHeaders(context) });
+    return NextResponse.json({ error: "Product feedback could not be recorded." }, { status: 503, headers: jsonHeaders(context) });
   }
 }

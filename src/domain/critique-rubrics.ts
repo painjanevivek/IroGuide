@@ -116,7 +116,7 @@ function validateFinding(rubric: CritiqueRubric, finding: GroundedReviewFinding)
   if (!criterion || !rubric.criteria.some((item) => item.id === finding.rubricId)) {
     return [`Unknown rubric criterion: ${finding.rubricId}.`];
   }
-  if (!finding.evidenceDescription.trim()) return [`${finding.rubricId} requires visible or brief evidence.`];
+  if (!finding.evidenceDescription.trim()) return [`${finding.rubricId} requires a visible detail or brief context.`];
 
   const allText = [finding.observation, finding.impact, finding.recommendation, ...finding.actions].join(" ").toLowerCase();
   const prohibited = criterion.disallowedClaims.find((claim) => allText.includes(claim));

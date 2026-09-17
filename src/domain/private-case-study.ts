@@ -47,7 +47,7 @@ export function createPrivateCaseStudyDraft(ownerId: string, review: CaseStudyRe
     exportStatus: "disabled",
     sourceReviewDocumentIds: [review.documentId],
     sourceComparisonIds: [],
-    title: `${review.categoryLabel ?? "Design"} improvement evidence`,
+    title: `${review.categoryLabel ?? "Design"} improvement feedback`,
     context: review.summary,
     decision,
     outcome: null,

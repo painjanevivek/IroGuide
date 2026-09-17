@@ -79,14 +79,14 @@ export function ProductInsightsReport() {
   return (
     <main className="insights-shell">
       <header className="insights-heading">
-        <div><p className="eyebrow"><BarChart3 /> Operator aggregate</p><h1>Free-launch evidence.</h1><p>Observed event totals are separated from absent evidence. Zero does not imply a failed journey when collection is disabled.</p></div>
+        <div><p className="eyebrow"><BarChart3 /> Operator aggregate</p><h1>Free-launch feedback.</h1><p>Observed event totals are separated from missing signals. Zero does not imply a failed journey when collection is disabled.</p></div>
         <button className="button-secondary" onClick={() => void loadReport()}><RefreshCw /> Refresh</button>
       </header>
       <section className="insights-boundary">
         <ShieldCheck />
-        <div><strong>{report.collectionMode === "noop" ? "Collection is safely disabled" : `${report.environment} aggregates only`}</strong><span>{report.collectionMode === "noop" ? "The default no-op adapter has not stored product evidence." : `From ${new Date(report.from).toLocaleDateString()} through ${new Date(report.generatedAt).toLocaleString()}.`}</span></div>
+        <div><strong>{report.collectionMode === "noop" ? "Collection is safely disabled" : `${report.environment} aggregates only`}</strong><span>{report.collectionMode === "noop" ? "The default no-op adapter has not stored product feedback." : `From ${new Date(report.from).toLocaleDateString()} through ${new Date(report.generatedAt).toLocaleString()}.`}</span></div>
       </section>
-      <section className="insights-metrics" aria-label="Product evidence metrics">
+      <section className="insights-metrics" aria-label="Product feedback metrics">
         {Object.entries(metricLabels).map(([key, label]) => {
           const metric = report.metrics[key] ?? { observed: false, total: 0 };
           return <article key={key} data-observed={metric.observed}><span>{label}</span><strong>{metric.observed ? metric.total : "—"}</strong><p>{metric.observed ? "Observed event total" : "Not observed"}</p></article>;
@@ -98,7 +98,7 @@ export function ProductInsightsReport() {
         <article><span>Research responses</span><strong>{report.feedback.responseCount}</strong></article>
         <article><span>Research consent</span><strong>{report.feedback.researchConsentCount}</strong></article>
       </section>
-      <section className="insights-funnels" aria-label="Activation funnel evidence">{Object.entries(funnelLabels).map(([key, label]) => { const funnel = report.funnels[key] ?? { denominator: 0, numerator: 0, rate: null, status: "not-observed" }; return <article key={key} data-status={funnel.status}><span>{label}</span><strong>{funnel.rate === null ? "—" : `${Math.round(funnel.rate * 100)}%`}</strong><p>{formatFunnelStatus(funnel)}</p></article>; })}</section>
+      <section className="insights-funnels" aria-label="Activation funnel feedback">{Object.entries(funnelLabels).map(([key, label]) => { const funnel = report.funnels[key] ?? { denominator: 0, numerator: 0, rate: null, status: "not-observed" }; return <article key={key} data-status={funnel.status}><span>{label}</span><strong>{funnel.rate === null ? "—" : `${Math.round(funnel.rate * 100)}%`}</strong><p>{formatFunnelStatus(funnel)}</p></article>; })}</section>
       {report.partial && <p className="form-error" role="status"><AlertCircle /> This bounded report reached its 5,000-row limit; use a shorter approved reporting window before making decisions.</p>}
     </main>
   );

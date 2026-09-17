@@ -36,14 +36,14 @@ test.describe("evidence and access operations", () => {
     await signInWithEmail(page, "operator@iroguide.test", "iroguide-e2e-password");
     await page.goto("/admin/access-interest");
 
-    await expect(page.getByRole("heading", { name: /decide invites without opening/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /review demand without restricting public access/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /website/i })).toBeVisible();
     await captureEvidence(page, "access-operations-desktop.png");
     await page.setViewportSize({ width: 390, height: 844 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await captureEvidence(page, "access-operations-mobile.png");
-    await page.getByRole("button", { name: "Approve" }).click();
-    await expect(page.getByText(/approval recorded with immutable audit/i)).toBeVisible();
+    await page.getByRole("button", { name: "Mark reviewed" }).click();
+    await expect(page.getByText(/review recorded with immutable audit/i)).toBeVisible();
     expect(decisions).toHaveLength(1);
     expect(decisions[0]).toMatchObject({ targetUserId: "candidate-user", expectedRevision: 0, decision: "approve", reasonCode: "cohort-fit" });
     expect(emailRequests).toEqual([]);

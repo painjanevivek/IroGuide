@@ -7,6 +7,6 @@ describe("onboarding recommendations", () => {
     expect(getRecommendedCritiqueStyle("freelancer")).toBe("direct");
     expect(getRecommendedCritiqueStyle("ui-ux-designer")).toBe("mentor");
     expect(getRecommendedSample("freelancer")).toBe("signal-noise-direct");
-    expect(getCohortWelcome("ui-ux-designer")).toContain("evidence-based");
+    expect(getCohortWelcome("ui-ux-designer")).toContain("feedback-led");
   });
 });

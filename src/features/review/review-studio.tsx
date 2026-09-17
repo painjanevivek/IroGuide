@@ -516,7 +516,7 @@ export function ReviewResult({
                         onMouseLeave={() => setActiveIssueId(null)}
                       >
                         <header><span>{String(index + 1).padStart(2, "0")}</span><div><p>{issue.category}</p><strong>{issue.score}/10</strong></div><b>{issue.priority} priority</b></header>
-                        <div><h3>What we see</h3><p>{issue.observation}</p>{issue.evidenceDescription && <><h3>Evidence</h3><p>{issue.evidenceDescription}</p></>}<h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul>{trustState === "server-verified" && reviewDocumentId && <ReviewFindingFeedback reviewDocumentId={reviewDocumentId} issueId={issueId} rubricId={issue.rubricId ?? "legacy-unmapped"} />}</div>
+                        <div><h3>What we see</h3><p>{issue.observation}</p>{issue.evidenceDescription && <><h3>Supporting feedback</h3><p>{issue.evidenceDescription}</p></>}<h3>Why it matters</h3><p>{issue.impact}</p><h3>How to improve</h3><p>{issue.recommendation}</p><ul>{issue.actions.map((action) => <li key={action}>{action}</li>)}</ul>{trustState === "server-verified" && reviewDocumentId && <ReviewFindingFeedback reviewDocumentId={reviewDocumentId} issueId={issueId} rubricId={issue.rubricId ?? "legacy-unmapped"} />}</div>
                       </article>
                     </StaggerItem>
                   );

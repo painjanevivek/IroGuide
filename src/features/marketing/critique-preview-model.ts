@@ -13,7 +13,7 @@ export const critiqueBeats = [
   {
     id: "capture",
     label: "Read the context",
-    title: "Start with the evidence",
+    title: "Start with the feedback",
     copy: "This illustrative example begins with the layout, type, contrast, and stated goal before assigning a judgment.",
     outcome: "Outcome: identify the first visual decision worth discussing.",
     x: 145,

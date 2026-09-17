@@ -49,8 +49,8 @@ const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
-    ["What is IroGuide?", "IroGuide teaches a structured design critique method using owned examples and clear evidence-to-action explanations."],
-    ["What can I use now?", "The free launch includes a public example critique. Personalized design analysis remains invite-only and unavailable in the free profile."],
+    ["What is IroGuide?", "IroGuide teaches a structured design critique method using owned examples and clear feedback-to-action explanations."],
+    ["What can I use now?", "Anyone can explore the example critique, and every verified signed-in user can start a personalized design review when live review is available."],
     ["Does the free example upload my work?", "No. The example is illustrative and does not upload or analyze your design."],
     ["Does IroGuide replace a designer?", "No. IroGuide provides structured critique and practical next steps so designers, students, creators, and founders can make better decisions."],
   ].map(([question, answer]) => ({

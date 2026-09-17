@@ -11,8 +11,8 @@ const review = {
   userId: "owner",
 };
 
-describe("private case-study evidence", () => {
-  it("keeps every claim private and traceable to owned evidence", () => {
+describe("private case-study feedback", () => {
+  it("keeps every claim private and traceable to owned feedback", () => {
     const draft = createPrivateCaseStudyDraft("owner", review);
     expect(draft.visibility).toBe("private");
     expect(draft.exportStatus).toBe("disabled");
@@ -20,7 +20,7 @@ describe("private case-study evidence", () => {
     expect(draft.claims.every((claim) => claim.sourceId === review.documentId)).toBe(true);
   });
 
-  it("rejects cross-owner and unverified evidence", () => {
+  it("rejects cross-owner and unverified feedback", () => {
     expect(() => createPrivateCaseStudyDraft("attacker", review)).toThrow(PrivateCaseStudyEvidenceError);
     expect(() => createPrivateCaseStudyDraft("owner", { ...review, trustState: "legacy-unverified" })).toThrow(PrivateCaseStudyEvidenceError);
   });

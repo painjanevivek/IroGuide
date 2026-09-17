@@ -37,7 +37,6 @@ describe("secondary review generation routes", () => {
       auth_time: 1,
       iat: 1,
       email_verified: true,
-      iroguide_review_entitled: true,
     });
   });
 

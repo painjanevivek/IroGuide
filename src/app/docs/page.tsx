@@ -45,7 +45,7 @@ const quickStartSteps = [
   },
   {
     icon: Target,
-    title: "Find the evidence",
+    title: "Find the feedback",
     text: "Name the exact visual decision you can see before deciding whether it helps or hurts the goal.",
   },
   {
@@ -134,7 +134,7 @@ export default function DocsPage() {
             <h1>Learn the critique method, then make a better first decision.</h1>
             <p>
               A practical documentation hub for new users, beginners, students, creators, and advanced learners who want
-              a practical evidence-to-action method before personalized review becomes available.
+              a practical feedback-to-action method and personalized feedback on their own work.
             </p>
             <div className={styles.heroActions}>
               <ReviewLaunchLink className="button button-dark" enabledLabel="Try a review" />

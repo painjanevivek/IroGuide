@@ -111,7 +111,7 @@ describe("production smoke helpers", () => {
     });
   });
 
-  it("derives full-mode smoke behavior with entitlement and storage", () => {
+  it("derives full-mode smoke behavior with public verified access and storage", () => {
     expect(getSmokeExpectations("full")).toEqual({
       ok: true,
       profile: "full",

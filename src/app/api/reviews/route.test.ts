@@ -89,7 +89,6 @@ describe("review generation authorization", () => {
       auth_time: 1,
       iat: 1,
       email_verified: false,
-      iroguide_review_entitled: true,
     });
 
     const response = await POST(createRequest());
@@ -98,7 +97,7 @@ describe("review generation authorization", () => {
     expect(createReview).not.toHaveBeenCalled();
   });
 
-  it("stops a verified but unentitled account before provider use", async () => {
+  it("allows every verified account without an invitation or entitlement", async () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "verified-but-unapproved",
       sub: "verified-but-unapproved",
@@ -109,18 +108,17 @@ describe("review generation authorization", () => {
 
     const response = await POST(createRequest());
 
-    expect(response.status).toBe(403);
-    expect(createReview).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(createReview).toHaveBeenCalledOnce();
   });
 
-  it("preserves provider use for verified entitled accounts", async () => {
+  it("preserves provider use for verified accounts", async () => {
     vi.mocked(verifyFirebaseIdToken).mockResolvedValue({
       uid: "approved-account",
       sub: "approved-account",
       auth_time: 1,
       iat: 1,
       email_verified: true,
-      iroguide_review_entitled: true,
     });
 
     const response = await POST(createRequest());
@@ -144,7 +142,6 @@ describe("review generation authorization", () => {
       auth_time: 1,
       iat: 1,
       email_verified: true,
-      iroguide_review_entitled: true,
     });
 
     const response = await POST(createRequest());

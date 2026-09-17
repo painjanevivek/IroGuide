@@ -5,7 +5,7 @@ import { jsonHeaders, logRequestEvent, toLogSafeUserId, type RequestContext } fr
 import { hasReviewGenerationAccess, type ReviewAccessCandidate } from "./review-access";
 
 export const FREE_LAUNCH_REVIEW_MESSAGE = "Live critique is unavailable. Continue with the free guided practice instead.";
-export const REVIEW_ACCESS_MESSAGE = "Verify your email and request beta review access before starting a critique.";
+export const REVIEW_ACCESS_MESSAGE = "Verify your email before starting a personalized critique.";
 
 type ReviewGenerationPolicyInput = {
   capabilities?: LaunchCapabilities;

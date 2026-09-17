@@ -67,9 +67,9 @@ const modes = [
 
 const faqs = [
   ["Will IroGuide redesign my work automatically?", "No. Critique comes first. You stay in control and can optionally request an improvement plan later."],
-  ["What can I use today?", "You can inspect a free example critique and learn how evidence becomes a practical first fix. Personalized critique remains invite-only."],
-  ["Is my work uploaded in free mode?", "No. The current free learning path does not upload your design or send it to a provider."],
-  ["Does the score decide whether my design is good?", "No. Scores are navigation aids. The evidence, audience fit, and recommended changes matter more than a single number."],
+  ["What can I use today?", "You can inspect a free example critique or sign in to get a personalized critique of your own work. No invitation is required."],
+  ["When is my work uploaded?", "Only when you choose a personalized review. The free example never uploads your design; a personalized review sends your validated image to the configured critique provider."],
+  ["Does the score decide whether my design is good?", "No. Scores are navigation aids. The feedback, audience fit, and recommended changes matter more than a single number."],
 ] as const;
 
 export function LandingPage() {
@@ -83,10 +83,10 @@ export function LandingPage() {
         <div className="hero-copy reveal">
           <p className="eyebrow"><span className="signal-dot" /> Official IroGuide website</p>
           <h1><span className="hero-title-line">IroGuide</span><span className="hero-title-line display-accent">Design critique.</span></h1>
-          <p className="hero-lede">Learn how strong design critique turns visual evidence into a clear first fix. Explore a free example now; personalized review remains invite-only.</p>
+          <p className="hero-lede">Learn how strong design critique turns what you can see into a clear first fix. Explore a free example now, or sign in for a personalized review of your own work.</p>
           <div className="hero-actions">
-            <ReviewLaunchLink className="button button-large" enabledLabel="Review my design" disabledHref="/learn#practice" disabledLabel="Start free learning" eventName="hero_review_design_click" />
             <LandingHeroAuthButton />
+            <Link className="button-secondary" href="/learn#practice" data-analytics-event="hero_learning_click">Start free learning <ArrowRight size={18} /></Link>
             <a className="button-quiet" href="/learn" data-analytics-event="hero_example_click">Explore an example critique <ArrowRight size={18} /></a>
           </div>
           <div className="micro-proof">
@@ -150,7 +150,7 @@ export function LandingPage() {
       <section className="modes-section section-pad" id="modes">
         <div className="section-heading-row">
           <div><p className="eyebrow light">Choose your critic</p><h2>Same standards.<br />Your preferred voice.</h2></div>
-          <p>Every mode examines the same evidence. Only the tone and level of explanation change.</p>
+          <p>Every mode examines the same design details. Only the tone and level of explanation change.</p>
         </div>
         <Stagger className="mode-grid" revealOnScroll>
           {modes.map((mode) => <StaggerItem as="article" className={`mode-card accent-${mode.accent}`} key={mode.title}><span className="mode-number">{mode.number}</span><div className="mode-icon"><MessageSquareText /></div><p className="mono-label">{mode.label}</p><h3>{mode.title}</h3><p>{mode.copy}</p><ReviewLaunchLink enabledLabel={`Try ${mode.title} mode`} disabledHref="/learn#practice" disabledLabel={`Practice ${mode.title} guidance`} eventName="mode_review_click" /></StaggerItem>)}
@@ -191,7 +191,7 @@ export function LandingPage() {
       <section className="trust-strip section-pad">
         <LockKeyhole size={36} />
         <div><p className="eyebrow light">Your work is still your work</p><h2>Private by default.<br />Useful by design.</h2></div>
-        <p>When review processing is enabled, validated uploads are used only for the requested critique. The current free profile sends no new design to a provider, Community is closed, and deletion stays within reach.</p>
+        <p>For personalized reviews, validated uploads are used only for the critique you request. Your review stays tied to your account, Community remains separate, and deletion stays within reach.</p>
       </section>
 
       <section className="faq-section section-pad" id="faq">
@@ -203,7 +203,7 @@ export function LandingPage() {
         <div className="cta-spark" aria-hidden="true"><Sparkles /><Sparkles /><Sparkles /></div>
         <p className="eyebrow light">Your next version starts here</p>
         <h2>Stop guessing.<br /><span>Start refining.</span></h2>
-        <p>Start with an example. Leave with a more useful way to evaluate design.</p>
+        <p>Sign in, share the work in progress, and leave with a clear first fix.</p>
         <LandingFinalAuthActions />
       </section>
 

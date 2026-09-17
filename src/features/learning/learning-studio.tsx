@@ -18,7 +18,7 @@ const tools = [
   { id: "sample", label: "Sample exercise", icon: BookOpenCheck },
   { id: "self-review", label: "Self-review", icon: ClipboardCheck },
   { id: "brief", label: "Brief builder", icon: FilePenLine },
-  { id: "access", label: "Review access", icon: TicketCheck },
+  { id: "access", label: "Review availability", icon: TicketCheck },
   { id: "data", label: "History controls", icon: RotateCcw },
 ] as const;
 

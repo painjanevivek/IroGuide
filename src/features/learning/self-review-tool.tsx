@@ -122,7 +122,7 @@ export function SelfReviewTool({ user }: { user: User }) {
 
   return (
     <section className="learning-tool" aria-labelledby="self-review-title">
-      <header><div><p className="mono-label">{categoryLabels[session.category]} / {session.rubricVersion}</p><h3 id="self-review-title">Check the work you can see.</h3><p>Answer honestly; Unsure is useful evidence, and Not applicable never becomes a priority.</p></div><span>{responses.length} / {rubric.length} answered</span></header>
+      <header><div><p className="mono-label">{categoryLabels[session.category]} / {session.rubricVersion}</p><h3 id="self-review-title">Check the work you can see.</h3><p>Answer honestly; Unsure is useful feedback, and Not applicable never becomes a priority.</p></div><span>{responses.length} / {rubric.length} answered</span></header>
       <div className="self-review-list">
         {rubric.map((item, index) => {
           const selected = responses.find((response) => response.itemId === item.id)?.answer;

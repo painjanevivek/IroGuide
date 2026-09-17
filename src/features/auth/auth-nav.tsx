@@ -5,6 +5,7 @@ import { ArrowRight, Upload } from "lucide-react";
 import { AuthTransitionLink } from "./auth-transition-link";
 import { useAuth } from "./auth-provider";
 import { UserMenu } from "./user-menu";
+import { withAuthReturn } from "@/domain/auth-return";
 import { ReviewLaunchLink } from "@/features/capabilities/review-launch-link";
 import { useLaunchCapabilities } from "@/features/capabilities/launch-capabilities-provider";
 
@@ -69,15 +70,16 @@ export function HeaderAuthLinks({ includeDashboard = true }: { includeDashboard?
 
 export function LandingHeroAuthButton() {
   const { user, loading } = useAuth();
+  const reviewPath = "/review/new";
 
   return (
     <span className="hero-auth-slot">
       {loading ? (
-        <span className="button-secondary hero-auth-button hero-auth-placeholder" aria-hidden="true">Sign up free <ArrowRight size={18} /></span>
+        <Link className="button button-large hero-auth-button" href={reviewPath} prefetch={false} data-analytics-event="hero_personal_critique_click">Get my design critiqued <ArrowRight size={18} /></Link>
       ) : user ? (
-        <Link className="button-secondary hero-auth-button" href="/dashboard" prefetch={false} data-analytics-event="hero_workspace_click">Open workspace <ArrowRight size={18} /></Link>
+        <Link className="button button-large hero-auth-button" href={reviewPath} prefetch={false} data-analytics-event="hero_personal_critique_click">Get my design critiqued <ArrowRight size={18} /></Link>
       ) : (
-        <AuthTransitionLink className="button-secondary hero-auth-button" href="/auth?mode=sign-up" prefetch={false} data-analytics-event="hero_sign_up_click">Sign up free <ArrowRight size={18} /></AuthTransitionLink>
+        <AuthTransitionLink className="button button-large hero-auth-button" href={withAuthReturn("/auth", reviewPath, "sign-up")} prefetch={false} data-analytics-event="hero_personal_critique_click">Get my design critiqued <ArrowRight size={18} /></AuthTransitionLink>
       )}
     </span>
   );

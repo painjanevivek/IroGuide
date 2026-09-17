@@ -284,9 +284,6 @@ async function authenticatedReviewSmoke(expectations) {
       email: `${uid}@iroguide.test`,
       emailVerified: true,
     });
-    if (expectations.profile === "full") {
-      await auth.setCustomUserClaims(uid, { iroguide_review_entitled: true });
-    }
     const customToken = await auth.createCustomToken(uid);
     const idToken = await exchangeCustomToken(apiKey, customToken);
     const response = await submitReview(idToken);

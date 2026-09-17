@@ -9,7 +9,7 @@ import { ProjectsWorkspace } from "@/features/projects/projects-workspace";
 export const metadata: Metadata = {
   title: `${siteConfig.name} Projects`,
   description:
-    "Create and organize private design-learning projects, briefs, self-reviews, and future verified critique evidence.",
+    "Create and organize private design-learning projects, briefs, self-reviews, and future verified critique feedback.",
   alternates: {
     canonical: "/projects",
   },
